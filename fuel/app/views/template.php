@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title><?php echo isset($title) ? $title : 'Aplicación Base'; ?></title>
+	<title><?php echo isset($title) ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') : 'ERP Multi-tenant'; ?></title>
 	<?php echo Asset::css('bootstrap.css'); ?>
 	<style>
 		body {
@@ -39,11 +39,43 @@
 			background-color: #764ba2;
 			border-color: #764ba2;
 		}
+		.navbar-erp {
+			background-color: #667eea;
+			border-color: #5a6fd6;
+		}
+		.navbar-erp .navbar-brand,
+		.navbar-erp .navbar-nav > li > a {
+			color: #fff;
+		}
+		.navbar-erp .navbar-nav > li > a:hover,
+		.navbar-erp .navbar-nav > li > a:focus {
+			color: #e0e0e0;
+			background-color: #5a6fd6;
+		}
+		.navbar-erp .navbar-nav > .active > a,
+		.navbar-erp .navbar-nav > .active > a:hover,
+		.navbar-erp .navbar-nav > .active > a:focus {
+			background-color: #764ba2;
+			color: #fff;
+		}
+		.navbar-erp .navbar-toggle {
+			border-color: #fff;
+		}
+		.navbar-erp .navbar-toggle .icon-bar {
+			background-color: #fff;
+		}
+		.dropdown-menu > li > a {
+			color: #333;
+		}
+		.dropdown-menu > li > a:hover {
+			background-color: #667eea;
+			color: #fff;
+		}
 	</style>
 </head>
 <body>
-	<!-- Navegación -->
-	<nav class="navbar navbar-default">
+	<!-- Navegación Principal -->
+	<nav class="navbar navbar-erp">
 		<div class="container">
 			<div class="navbar-header">
 				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -52,11 +84,27 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" href="/">Aplicación Base</a>
+				<a class="navbar-brand" href="/">ERP Multi-tenant</a>
 			</div>
 			<div id="navbar" class="navbar-collapse collapse">
 				<ul class="nav navbar-nav">
-					<li class="active"><a href="/">Inicio</a></li>
+					<li><a href="<?php echo Uri::base(); ?>">Inicio</a></li>
+					<li><a href="<?php echo Uri::base(); ?>landing">Landing</a></li>
+					<li><a href="<?php echo Uri::base(); ?>tienda">Tienda</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+							Backends <span class="caret"></span>
+						</a>
+						<ul class="dropdown-menu">
+							<li><a href="<?php echo Uri::base(); ?>admin">Admin</a></li>
+							<li><a href="<?php echo Uri::base(); ?>provider">Proveedor</a></li>
+							<li><a href="<?php echo Uri::base(); ?>sellers">Vendedores</a></li>
+							<li><a href="<?php echo Uri::base(); ?>clients">Clientes</a></li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="<?php echo Uri::base(); ?>contacto">Contacto</a></li>
 				</ul>
 			</div>
 		</div>
@@ -65,7 +113,7 @@
 	<!-- Header -->
 	<div class="header-title">
 		<div class="container">
-			<h1><?php echo isset($title) ? $title : 'Bienvenido'; ?></h1>
+			<h1><?php echo isset($title) ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') : 'Bienvenido'; ?></h1>
 		</div>
 	</div>
 
@@ -93,7 +141,7 @@
 		<footer class="footer">
 			<div class="row">
 				<div class="col-md-6">
-					<p>&copy; <?php echo date('Y'); ?> Aplicación Base. Todos los derechos reservados.</p>
+					<p>&copy; <?php echo date('Y'); ?> ERP Multi-tenant. Todos los derechos reservados.</p>
 					<p><small>Versión: <?php echo Fuel::VERSION; ?></small></p>
 				</div>
 				<div class="col-md-6 text-right">
@@ -102,5 +150,7 @@
 			</div>
 		</footer>
 	</div>
+	<?php echo Asset::js('jquery.min.js'); ?>
+	<?php echo Asset::js('bootstrap.min.js'); ?>
 </body>
 </html>
