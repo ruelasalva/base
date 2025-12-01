@@ -20,6 +20,8 @@
   "homepage": "https://github.com/ruelasalva/base#readme",
   "dependencies": {
     "@vitejs/plugin-vue": "^6.0.2",
+    "datatables.net": "^2.3.5",
+    "datatables.net-dt": "^2.3.5",
     "jquery": "^3.7.1",
     "vite": "^7.2.6",
     "vue": "^3.5.25"
