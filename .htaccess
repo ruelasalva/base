@@ -1,0 +1,20 @@
+# Redirect all requests to the public folder
+# This allows accessing the application at /base instead of /base/public
+
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+
+    # Don't rewrite requests that are already targeting the public folder
+    RewriteCond %{REQUEST_URI} !^/public/
+
+    # Don't rewrite requests for existing files in the root
+    RewriteCond %{REQUEST_FILENAME} !-f
+
+    # Rewrite if: (not a directory) OR (is the root path "/")
+    # This ensures directories like /fuel are not rewritten, but root "/" is rewritten
+    RewriteCond %{REQUEST_FILENAME} !-d [OR]
+    RewriteCond %{REQUEST_URI} ^/$
+
+    # Redirect all other requests to the public folder
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
