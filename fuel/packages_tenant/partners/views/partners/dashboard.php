@@ -1,6 +1,6 @@
 <div class="row">
 	<div class="col-md-12">
-		<h2><span class="glyphicon glyphicon-handshake-o"></span> <?php echo htmlspecialchars($module_name, ENT_QUOTES, 'UTF-8'); ?></h2>
+		<h2><span class="glyphicon glyphicon-link"></span> <?php echo htmlspecialchars($module_name, ENT_QUOTES, 'UTF-8'); ?></h2>
 		<hr>
 	</div>
 </div>

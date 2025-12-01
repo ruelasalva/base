@@ -68,7 +68,7 @@
 	<div class="col-lg-2 col-md-4 col-sm-6">
 		<div class="panel panel-default" style="border-color: #9b59b6;">
 			<div class="panel-heading" style="background: #9b59b6; color: white; border-color: #9b59b6;">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-handshake-o"></span> Partners</h3>
+				<h3 class="panel-title"><span class="glyphicon glyphicon-link"></span> Partners</h3>
 			</div>
 			<div class="panel-body">
 				<p>Portal para socios comerciales.</p>
