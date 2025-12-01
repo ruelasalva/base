@@ -21,7 +21,11 @@
         "paragonie/random_compat": "^9.99",
         "respect/validation": "^2.2",
         "paragonie/constant_time_encoding": "^3.1",
-        "doctrine/dbal": "^3.10"
+        "doctrine/dbal": "^3.10",
+        "monolog/monolog": "^3.6",
+        "nesbot/carbon": "^3.0",
+        "ramsey/uuid": "^4.7",
+        "intervention/image": "^3.0"
     },
     "require-dev": {
         "fuel/docs": "1.8.*",
