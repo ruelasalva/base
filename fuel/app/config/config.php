@@ -441,6 +441,8 @@ return array(
 
 	'package_paths' => array(
 		PKGPATH,
+		// Tenant-specific packages path (defined in bootstrap.php)
+		// TENANT_PKGPATH will be added dynamically after initialization
 	),
 
 	/**

@@ -21,5 +21,53 @@
  */
 
 return array(
+	/**
+	 * -------------------------------------------------------------------------
+	 *  Master database connection for multi-tenant ERP
+	 * -------------------------------------------------------------------------
+	 *
+	 *  This connection is used to query the tenants table and resolve
+	 *  the tenant-specific database based on HTTP_HOST.
+	 *
+	 */
+	'master' => array(
+		'type'        => 'pdo',
+		'connection'  => array(
+			'dsn'      => 'mysql:host=localhost;dbname=erp_master',
+			'username' => 'root',
+			'password' => '',
+		),
+		'identifier'  => '`',
+		'table_prefix' => '',
+		'charset'     => 'utf8',
+		'collation'   => false,
+		'enable_cache' => true,
+		'profiling'   => false,
+		'readonly'    => false,
+	),
 
+	/**
+	 * -------------------------------------------------------------------------
+	 *  Default connection (will be reconfigured per-tenant)
+	 * -------------------------------------------------------------------------
+	 *
+	 *  This connection is dynamically configured based on the tenant
+	 *  resolved from HTTP_HOST in config_tenant.php
+	 *
+	 */
+	'default' => array(
+		'type'        => 'pdo',
+		'connection'  => array(
+			'dsn'      => 'mysql:host=localhost;dbname=erp_master',
+			'username' => 'root',
+			'password' => '',
+		),
+		'identifier'  => '`',
+		'table_prefix' => '',
+		'charset'     => 'utf8',
+		'collation'   => false,
+		'enable_cache' => true,
+		'profiling'   => false,
+		'readonly'    => false,
+	),
 );
