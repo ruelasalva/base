@@ -60,6 +60,6 @@ class Model_Ejemplo extends \Model
 			->execute()
 			->as_array();
 
-		return ! empty($result) ? $result[0] : null;
+		return isset($result[0]) ? $result[0] : null;
 	}
 }

@@ -38,16 +38,24 @@ function modulo_ejemplo_is_active()
 		return false;
 	}
 
-	// Unserialize the active modules array
-	$active_modules = @unserialize(TENANT_ACTIVE_MODULES);
+	// Unserialize the active modules array with proper error handling
+	$serialized = TENANT_ACTIVE_MODULES;
 
-	if ( ! is_array($active_modules))
+	// Validate serialized format before unserializing
+	if (empty($serialized) || ! is_string($serialized))
+	{
+		return false;
+	}
+
+	$active_modules = unserialize($serialized, array('allowed_classes' => false));
+
+	if ($active_modules === false || ! is_array($active_modules))
 	{
 		return false;
 	}
 
 	// Check if this module's key is in the active modules
-	return in_array(MODULO_EJEMPLO_KEY, $active_modules);
+	return in_array(MODULO_EJEMPLO_KEY, $active_modules, true);
 }
 
 /**

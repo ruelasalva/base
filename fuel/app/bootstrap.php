@@ -68,23 +68,36 @@ if (\Config::get('tenant.enabled', true))
 // Define tenant packages path constant
 if ( ! defined('TENANT_PKGPATH'))
 {
-	define('TENANT_PKGPATH', realpath(APPPATH.'../').DIRECTORY_SEPARATOR.'packages_tenant'.DIRECTORY_SEPARATOR);
+	$base_path = realpath(APPPATH.'..');
+
+	// Only define path if base path exists
+	if ($base_path !== false)
+	{
+		define('TENANT_PKGPATH', $base_path.DIRECTORY_SEPARATOR.'packages_tenant'.DIRECTORY_SEPARATOR);
+	}
+	else
+	{
+		define('TENANT_PKGPATH', false);
+	}
 }
 
 // Load tenant packages if directory exists
-if (is_dir(TENANT_PKGPATH))
+if (TENANT_PKGPATH !== false && is_dir(TENANT_PKGPATH))
 {
 	// Get list of tenant packages
 	$tenant_packages = glob(TENANT_PKGPATH.'*', GLOB_ONLYDIR);
 
-	foreach ($tenant_packages as $package_path)
+	if ($tenant_packages !== false)
 	{
-		$bootstrap_file = $package_path.DIRECTORY_SEPARATOR.'bootstrap.php';
-
-		// Load package bootstrap if it exists
-		if (file_exists($bootstrap_file))
+		foreach ($tenant_packages as $package_path)
 		{
-			require_once $bootstrap_file;
+			$bootstrap_file = $package_path.DIRECTORY_SEPARATOR.'bootstrap.php';
+
+			// Load package bootstrap if it exists
+			if (file_exists($bootstrap_file))
+			{
+				require_once $bootstrap_file;
+			}
 		}
 	}
 }

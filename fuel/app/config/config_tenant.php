@@ -80,6 +80,36 @@ class Tenant_Resolver
 	}
 
 	/**
+	 * Validate domain format
+	 *
+	 * @param string $domain The domain to validate
+	 * @return bool True if valid, false otherwise
+	 */
+	protected static function validate_domain($domain)
+	{
+		// Check for empty or invalid type
+		if (empty($domain) || ! is_string($domain))
+		{
+			return false;
+		}
+
+		// Check length (reasonable limit for domain names)
+		if (strlen($domain) > 253)
+		{
+			return false;
+		}
+
+		// Allow localhost and standard domains
+		// Domain pattern: letters, numbers, hyphens, and dots
+		if ( ! preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\-\.]*[a-zA-Z0-9]$|^localhost$/', $domain))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Query master database to get tenant by domain
 	 *
 	 * @param string $domain The domain to lookup
@@ -87,6 +117,13 @@ class Tenant_Resolver
 	 */
 	protected static function resolve_tenant($domain)
 	{
+		// Validate domain format before querying
+		if ( ! static::validate_domain($domain))
+		{
+			\Log::warning('Tenant Resolver: Invalid domain format: ' . substr($domain, 0, 50));
+			return null;
+		}
+
 		try
 		{
 			// Get master database configuration

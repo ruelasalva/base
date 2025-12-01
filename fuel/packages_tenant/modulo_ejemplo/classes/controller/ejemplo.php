@@ -40,9 +40,22 @@ class Controller_Ejemplo extends \Controller
 	 */
 	public function action_info()
 	{
-		$tenant_modules = defined('TENANT_ACTIVE_MODULES')
-			? @unserialize(TENANT_ACTIVE_MODULES)
-			: array();
+		$tenant_modules = array();
+
+		if (defined('TENANT_ACTIVE_MODULES'))
+		{
+			$serialized = TENANT_ACTIVE_MODULES;
+
+			if ( ! empty($serialized) && is_string($serialized))
+			{
+				$unserialized = unserialize($serialized, array('allowed_classes' => false));
+
+				if ($unserialized !== false && is_array($unserialized))
+				{
+					$tenant_modules = $unserialized;
+				}
+			}
+		}
 
 		$data = array(
 			'module_key' => MODULO_EJEMPLO_KEY,
