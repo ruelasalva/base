@@ -330,9 +330,6 @@ abstract class Module_Abstract
 
 		try
 		{
-			// Cargar clase de migraciones de FuelPHP
-			\Package::load('oil');
-
 			// Obtener archivos de migración ordenados
 			$migration_files = glob($migrations_path . DIRECTORY_SEPARATOR . '*.php');
 

@@ -85,10 +85,30 @@ class Model_Tenant extends Model_Base
 		// Sanitizar dominio (solo caracteres válidos de dominio)
 		$domain = strtolower(trim($domain));
 
-		if ( ! preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\-\.]*[a-zA-Z0-9]$|^localhost$/', $domain))
+		// Validar formato de dominio más estricto:
+		// - Permitir localhost
+		// - Permitir dominios estándar (sin puntos al inicio/fin, sin doble puntos)
+		// - Limitar longitud de etiquetas individuales (máximo 63 caracteres)
+		if ($domain !== 'localhost')
 		{
-			\Log::warning('Model_Tenant: Invalid domain format: ' . substr($domain, 0, 50));
-			return null;
+			// No permitir puntos al inicio o final, ni puntos dobles
+			if (preg_match('/^\.|\.$|\.\./', $domain))
+			{
+				\Log::warning('Model_Tenant: Invalid domain format (dots): ' . substr($domain, 0, 50));
+				return null;
+			}
+
+			// Validar cada etiqueta del dominio
+			$labels = explode('.', $domain);
+			foreach ($labels as $label)
+			{
+				// Cada etiqueta: 1-63 caracteres, alfanuméricos y guiones (no al inicio/fin)
+				if ( ! preg_match('/^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?$/', $label))
+				{
+					\Log::warning('Model_Tenant: Invalid domain label format: ' . substr($domain, 0, 50));
+					return null;
+				}
+			}
 		}
 
 		try

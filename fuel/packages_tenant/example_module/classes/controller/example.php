@@ -41,9 +41,13 @@ class Controller_Example extends \Controller_Module_Base
 	);
 
 	/**
-	 * @var bool Para este ejemplo, no requerimos autenticación
+	 * @var bool Requerir autenticación (por defecto es true)
+	 *
+	 * NOTA: En producción, siempre debe ser true.
+	 * Se establece en false solo para demostración sin sistema de auth configurado.
+	 * En un entorno real, configurar FuelPHP Auth y mantener este valor en true.
 	 */
-	protected $require_auth = false;
+	protected $require_auth = true;
 
 	/**
 	 * Index action - displays module status
