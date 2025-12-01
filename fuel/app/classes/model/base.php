@@ -33,11 +33,15 @@ class Model_Base extends Model
 	/**
 	 * Obtener todos los registros
 	 *
+	 * Nota: Sobrescribir en modelos hijos para especificar columnas si es necesario
+	 *
 	 * @return  array
 	 */
 	public static function get_all()
 	{
-		return DB::select('*')
+		$columns = ! empty(static::$_fillable) ? static::$_fillable : '*';
+
+		return DB::select_array((array) $columns)
 			->from(static::$_table_name)
 			->execute()
 			->as_array();
@@ -64,7 +68,7 @@ class Model_Base extends Model
 	 * Insertar un nuevo registro
 	 *
 	 * @param   array  $data  Datos a insertar
-	 * @return  array  ID insertado
+	 * @return  array  Array con insert_id y affected_rows
 	 */
 	public static function insert_record(array $data)
 	{
