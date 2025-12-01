@@ -97,9 +97,10 @@
 						</a>
 						<ul class="dropdown-menu">
 							<li><a href="<?php echo Uri::base(); ?>admin">Admin</a></li>
-							<li><a href="<?php echo Uri::base(); ?>provider">Proveedor</a></li>
-							<li><a href="<?php echo Uri::base(); ?>sellers">Vendedores</a></li>
-							<li><a href="<?php echo Uri::base(); ?>clients">Clientes</a></li>
+							<li><a href="<?php echo Uri::base(); ?>providers">Providers</a></li>
+							<li><a href="<?php echo Uri::base(); ?>partners">Partners</a></li>
+							<li><a href="<?php echo Uri::base(); ?>sellers">Sellers</a></li>
+							<li><a href="<?php echo Uri::base(); ?>clients">Clients</a></li>
 						</ul>
 					</li>
 				</ul>

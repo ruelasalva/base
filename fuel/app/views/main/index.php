@@ -2,7 +2,7 @@
 	<div class="col-md-12">
 		<div class="jumbotron">
 			<h2>¡Bienvenido al ERP Multi-tenant!</h2>
-			<p>Sistema ERP completo con backends para administración, proveedores, vendedores y clientes, además de tienda online y landing page.</p>
+			<p>Sistema ERP completo con backends para administración, proveedores, partners, vendedores y clientes, además de tienda online y landing page.</p>
 			<p>
 				<a class="btn btn-primary btn-lg" href="<?php echo Uri::base(); ?>tienda" role="button">
 					<span class="glyphicon glyphicon-shopping-cart"></span> Ir a la Tienda
@@ -25,15 +25,15 @@
 
 <div class="row">
 	<!-- Backend Admin -->
-	<div class="col-md-3 col-sm-6">
+	<div class="col-lg-2 col-md-4 col-sm-6">
 		<div class="panel panel-primary">
 			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-cog"></span> Administración</h3>
+				<h3 class="panel-title"><span class="glyphicon glyphicon-cog"></span> Admin</h3>
 			</div>
 			<div class="panel-body">
-				<p>Panel de control para administradores del sistema.</p>
-				<ul class="list-unstyled">
-					<li><span class="glyphicon glyphicon-ok"></span> Gestión de Usuarios</li>
+				<p>Panel de administración del sistema.</p>
+				<ul class="list-unstyled small">
+					<li><span class="glyphicon glyphicon-ok"></span> Usuarios</li>
 					<li><span class="glyphicon glyphicon-ok"></span> Configuración</li>
 					<li><span class="glyphicon glyphicon-ok"></span> Reportes</li>
 				</ul>
@@ -44,36 +44,56 @@
 		</div>
 	</div>
 
-	<!-- Backend Proveedor -->
-	<div class="col-md-3 col-sm-6">
+	<!-- Backend Providers -->
+	<div class="col-lg-2 col-md-4 col-sm-6">
 		<div class="panel panel-success">
 			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-briefcase"></span> Proveedores</h3>
+				<h3 class="panel-title"><span class="glyphicon glyphicon-briefcase"></span> Providers</h3>
 			</div>
 			<div class="panel-body">
-				<p>Portal para proveedores y gestión de inventario.</p>
-				<ul class="list-unstyled">
-					<li><span class="glyphicon glyphicon-ok"></span> Gestión de Productos</li>
+				<p>Portal para proveedores.</p>
+				<ul class="list-unstyled small">
+					<li><span class="glyphicon glyphicon-ok"></span> Productos</li>
 					<li><span class="glyphicon glyphicon-ok"></span> Inventario</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Órdenes de Compra</li>
+					<li><span class="glyphicon glyphicon-ok"></span> Órdenes</li>
 				</ul>
 			</div>
 			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>provider" class="btn btn-success btn-block">Acceder</a>
+				<a href="<?php echo Uri::base(); ?>providers" class="btn btn-success btn-block">Acceder</a>
 			</div>
 		</div>
 	</div>
 
-	<!-- Backend Vendedores -->
-	<div class="col-md-3 col-sm-6">
-		<div class="panel panel-info">
-			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-usd"></span> Vendedores</h3>
+	<!-- Backend Partners -->
+	<div class="col-lg-2 col-md-4 col-sm-6">
+		<div class="panel panel-default" style="border-color: #9b59b6;">
+			<div class="panel-heading" style="background: #9b59b6; color: white; border-color: #9b59b6;">
+				<h3 class="panel-title"><span class="glyphicon glyphicon-handshake-o"></span> Partners</h3>
 			</div>
 			<div class="panel-body">
-				<p>Panel para equipo de ventas y CRM.</p>
-				<ul class="list-unstyled">
-					<li><span class="glyphicon glyphicon-ok"></span> Gestión de Ventas</li>
+				<p>Portal para socios comerciales.</p>
+				<ul class="list-unstyled small">
+					<li><span class="glyphicon glyphicon-ok"></span> Alianzas</li>
+					<li><span class="glyphicon glyphicon-ok"></span> Contratos</li>
+					<li><span class="glyphicon glyphicon-ok"></span> Comisiones</li>
+				</ul>
+			</div>
+			<div class="panel-footer">
+				<a href="<?php echo Uri::base(); ?>partners" class="btn btn-block" style="background: #9b59b6; color: white; border-color: #8e44ad;">Acceder</a>
+			</div>
+		</div>
+	</div>
+
+	<!-- Backend Sellers -->
+	<div class="col-lg-2 col-md-4 col-sm-6">
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<h3 class="panel-title"><span class="glyphicon glyphicon-usd"></span> Sellers</h3>
+			</div>
+			<div class="panel-body">
+				<p>Panel para vendedores.</p>
+				<ul class="list-unstyled small">
+					<li><span class="glyphicon glyphicon-ok"></span> Ventas</li>
 					<li><span class="glyphicon glyphicon-ok"></span> Clientes</li>
 					<li><span class="glyphicon glyphicon-ok"></span> Comisiones</li>
 				</ul>
@@ -84,17 +104,17 @@
 		</div>
 	</div>
 
-	<!-- Backend Clientes -->
-	<div class="col-md-3 col-sm-6">
+	<!-- Backend Clients -->
+	<div class="col-lg-2 col-md-4 col-sm-6">
 		<div class="panel panel-warning">
 			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-user"></span> Clientes</h3>
+				<h3 class="panel-title"><span class="glyphicon glyphicon-user"></span> Clients</h3>
 			</div>
 			<div class="panel-body">
-				<p>Portal de autoservicio para clientes.</p>
-				<ul class="list-unstyled">
-					<li><span class="glyphicon glyphicon-ok"></span> Mis Pedidos</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Mi Perfil</li>
+				<p>Portal para clientes.</p>
+				<ul class="list-unstyled small">
+					<li><span class="glyphicon glyphicon-ok"></span> Pedidos</li>
+					<li><span class="glyphicon glyphicon-ok"></span> Perfil</li>
 					<li><span class="glyphicon glyphicon-ok"></span> Soporte</li>
 				</ul>
 			</div>

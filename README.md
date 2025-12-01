@@ -17,10 +17,15 @@ Este es un sistema ERP completo multi-tenant que incluye:
   - Configuración del sistema
   - Reportes y estadísticas
 
-- **Provider** (`/provider`) - Portal para proveedores
+- **Providers** (`/providers`) - Portal para proveedores
   - Gestión de productos
   - Control de inventario
   - Órdenes de compra
+
+- **Partners** (`/partners`) - Portal para socios comerciales
+  - Gestión de alianzas
+  - Contratos
+  - Comisiones de partner
 
 - **Sellers** (`/sellers`) - Portal para vendedores
   - Gestión de ventas
@@ -72,12 +77,13 @@ CREATE TABLE tenants (
 
 ### Módulos Disponibles
 
-- `erp_admin` - Panel de administración
-- `erp_provider` - Portal de proveedores
-- `erp_sellers` - Portal de vendedores
-- `erp_clients` - Portal de clientes
-- `erp_store` - Tienda online
-- `erp_landing` - Landing page
+- `admin` - Panel de administración
+- `providers` - Portal de proveedores
+- `partners` - Portal de socios comerciales
+- `sellers` - Portal de vendedores
+- `clients` - Portal de clientes
+- `store` - Tienda online
+- `landing` - Landing page
 
 ## Estructura del Proyecto
 
@@ -94,12 +100,13 @@ fuel/
 │   └── views/              # Vistas principales
 ├── packages/               # Paquetes de FuelPHP
 └── packages_tenant/        # Módulos del ERP
-    ├── erp_admin/
-    ├── erp_provider/
-    ├── erp_sellers/
-    ├── erp_clients/
-    ├── erp_store/
-    └── erp_landing/
+    ├── admin/
+    ├── providers/
+    ├── partners/
+    ├── sellers/
+    ├── clients/
+    ├── store/
+    └── landing/
 ```
 
 ## Instalación
@@ -116,7 +123,7 @@ Para activar módulos para un tenant, actualizar el campo `active_modules`:
 
 ```sql
 UPDATE tenants 
-SET active_modules = '["erp_admin", "erp_store", "erp_landing"]'
+SET active_modules = '["admin", "providers", "partners", "sellers", "clients", "store", "landing"]'
 WHERE domain = 'ejemplo.com';
 ```
 
