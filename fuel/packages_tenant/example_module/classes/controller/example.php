@@ -2,6 +2,9 @@
 /**
  * Example Module - Example Controller
  *
+ * Este controlador demuestra cómo usar Controller_Module_Base
+ * para obtener verificación automática de módulo activo y permisos.
+ *
  * @package    Example_Module
  * @version    1.0.0
  * @author     ERP Development Team
@@ -11,16 +14,41 @@
 namespace Example_Module;
 
 /**
- * Example Controller for the Example Module package
+ * Controller_Example
  *
- * This controller demonstrates a basic multi-tenant module structure.
+ * Controlador de ejemplo que extiende Controller_Module_Base
+ * para demostrar la arquitectura modular unificada.
  */
-class Controller_Example extends \Controller
+class Controller_Example extends \Controller_Module_Base
 {
+	/**
+	 * @var string Clave del módulo
+	 */
+	protected $module_key = 'example_module';
+
+	/**
+	 * @var string Permiso requerido para acceder al controlador
+	 */
+	protected $required_permission = 'example_module.access';
+
+	/**
+	 * @var array Permisos específicos por acción
+	 */
+	protected $action_permissions = array(
+		'agregar'  => 'example_module.create',
+		'editar'   => 'example_module.edit',
+		'eliminar' => 'example_module.delete',
+	);
+
+	/**
+	 * @var bool Para este ejemplo, no requerimos autenticación
+	 */
+	protected $require_auth = false;
+
 	/**
 	 * Index action - displays module status
 	 *
-	 * @return \Response
+	 * @return void
 	 */
 	public function action_index()
 	{
@@ -30,7 +58,8 @@ class Controller_Example extends \Controller
 			'message' => 'This module is active for the current tenant.',
 		);
 
-		return \Response::forge(\View::forge('example_module/index', $data, false));
+		$this->template->title = 'Example Module';
+		$this->template->content = \View::forge('example_module/index', $data, false);
 	}
 
 	/**
@@ -40,30 +69,38 @@ class Controller_Example extends \Controller
 	 */
 	public function action_info()
 	{
-		$tenant_modules = array();
+		// Desactivar auto-render para respuesta JSON
+		$this->auto_render = false;
 
-		if (defined('TENANT_ACTIVE_MODULES'))
-		{
-			$serialized = TENANT_ACTIVE_MODULES;
-
-			if ( ! empty($serialized) && is_string($serialized))
-			{
-				$unserialized = unserialize($serialized, array('allowed_classes' => false));
-
-				if ($unserialized !== false && is_array($unserialized))
-				{
-					$tenant_modules = $unserialized;
-				}
-			}
-		}
+		$tenant_modules = \Model_Tenant::get_current_active_modules();
 
 		$data = array(
 			'module_key' => EXAMPLE_MODULE_KEY,
 			'active_modules' => $tenant_modules,
+			'module_info' => array(
+				'name' => 'Example Module',
+				'version' => '1.0.0',
+				'is_active' => $this->is_module_active($this->module_key),
+			),
 		);
 
 		return \Response::forge(json_encode($data), 200, array(
 			'Content-Type' => 'application/json',
 		));
+	}
+
+	/**
+	 * Agregar action - ejemplo de acción protegida
+	 *
+	 * @return void
+	 */
+	public function action_agregar()
+	{
+		$data = array(
+			'title' => 'Agregar nuevo ejemplo',
+		);
+
+		$this->template->title = $data['title'];
+		$this->template->content = \View::forge('example_module/agregar', $data, false);
 	}
 }
