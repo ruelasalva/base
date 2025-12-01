@@ -1,21 +1,21 @@
 <?php
 /**
- * Modulo Ejemplo - Example Controller
+ * Example Module - Example Controller
  *
- * @package    Modulo_Ejemplo
+ * @package    Example_Module
  * @version    1.0.0
  * @author     ERP Development Team
  * @license    MIT License
  */
 
-namespace Modulo_Ejemplo;
+namespace Example_Module;
 
 /**
- * Example Controller for the Modulo Ejemplo package
+ * Example Controller for the Example Module package
  *
  * This controller demonstrates a basic multi-tenant module structure.
  */
-class Controller_Ejemplo extends \Controller
+class Controller_Example extends \Controller
 {
 	/**
 	 * Index action - displays module status
@@ -25,12 +25,12 @@ class Controller_Ejemplo extends \Controller
 	public function action_index()
 	{
 		$data = array(
-			'module_name' => 'Modulo Ejemplo',
+			'module_name' => 'Example Module',
 			'status' => 'active',
 			'message' => 'This module is active for the current tenant.',
 		);
 
-		return \Response::forge(\View::forge('modulo_ejemplo/index', $data, false));
+		return \Response::forge(\View::forge('example_module/index', $data, false));
 	}
 
 	/**
@@ -58,7 +58,7 @@ class Controller_Ejemplo extends \Controller
 		}
 
 		$data = array(
-			'module_key' => MODULO_EJEMPLO_KEY,
+			'module_key' => EXAMPLE_MODULE_KEY,
 			'active_modules' => $tenant_modules,
 		);
 

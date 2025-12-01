@@ -1,8 +1,8 @@
 <?php
 /**
- * Modulo Ejemplo - Multi-tenant Module Bootstrap
+ * Example Module - Multi-tenant Module Bootstrap
  *
- * @package    Modulo_Ejemplo
+ * @package    Example_Module
  * @version    1.0.0
  * @author     ERP Development Team
  * @license    MIT License
@@ -17,20 +17,20 @@
  *  based on whether the module is active for the current tenant.
  *
  *  The module will only load its routes and register its classes
- *  if 'modulo_ejemplo' key is present in TENANT_ACTIVE_MODULES.
+ *  if 'example_module' key is present in TENANT_ACTIVE_MODULES.
  *
  */
 
 // Define module key for this module
-if ( ! defined('MODULO_EJEMPLO_KEY'))
+if ( ! defined('EXAMPLE_MODULE_KEY'))
 {
-	define('MODULO_EJEMPLO_KEY', 'modulo_ejemplo');
+	define('EXAMPLE_MODULE_KEY', 'example_module');
 }
 
 /**
  * Check if this module is active for the current tenant
  */
-function modulo_ejemplo_is_active()
+function example_module_is_active()
 {
 	// Check if TENANT_ACTIVE_MODULES constant is defined
 	if ( ! defined('TENANT_ACTIVE_MODULES'))
@@ -55,35 +55,35 @@ function modulo_ejemplo_is_active()
 	}
 
 	// Check if this module's key is in the active modules
-	return in_array(MODULO_EJEMPLO_KEY, $active_modules, true);
+	return in_array(EXAMPLE_MODULE_KEY, $active_modules, true);
 }
 
 /**
  * Initialize the module only if active for current tenant
  */
-if (modulo_ejemplo_is_active())
+if (example_module_is_active())
 {
 	// Register module classes with autoloader
 	\Autoloader::add_classes(array(
-		'Modulo_Ejemplo\\Controller_Ejemplo' => __DIR__.'/classes/controller/ejemplo.php',
-		'Modulo_Ejemplo\\Model_Ejemplo'      => __DIR__.'/classes/model/ejemplo.php',
-		'Modulo_Ejemplo\\Service_Ejemplo'    => __DIR__.'/classes/service/ejemplo.php',
+		'Example_Module\\Controller_Example' => __DIR__.'/classes/controller/example.php',
+		'Example_Module\\Model_Example'      => __DIR__.'/classes/model/example.php',
+		'Example_Module\\Service_Example'    => __DIR__.'/classes/service/example.php',
 	));
 
 	// Add namespace for the module
-	\Autoloader::add_namespace('Modulo_Ejemplo', __DIR__.'/classes/');
+	\Autoloader::add_namespace('Example_Module', __DIR__.'/classes/');
 
 	// Register module routes
 	\Router::add(array(
-		'ejemplo'          => 'modulo_ejemplo/ejemplo/index',
-		'ejemplo/(:any)'   => 'modulo_ejemplo/ejemplo/$1',
+		'example'          => 'example_module/example/index',
+		'example/(:any)'   => 'example_module/example/$1',
 	));
 
 	// Log module activation
-	\Log::info('Modulo Ejemplo: Module loaded and activated for tenant');
+	\Log::info('Example Module: Module loaded and activated for tenant');
 }
 else
 {
 	// Log that module is not active
-	\Log::debug('Modulo Ejemplo: Module not active for current tenant');
+	\Log::debug('Example Module: Module not active for current tenant');
 }

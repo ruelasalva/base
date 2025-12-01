@@ -1,26 +1,26 @@
 <?php
 /**
- * Modulo Ejemplo - Example Model
+ * Example Module - Example Model
  *
- * @package    Modulo_Ejemplo
+ * @package    Example_Module
  * @version    1.0.0
  * @author     ERP Development Team
  * @license    MIT License
  */
 
-namespace Modulo_Ejemplo;
+namespace Example_Module;
 
 /**
- * Example Model for the Modulo Ejemplo package
+ * Example Model for the Example Module package
  *
  * This model demonstrates a basic multi-tenant module model structure.
  */
-class Model_Ejemplo extends \Model
+class Model_Example extends \Model
 {
 	/**
 	 * @var string Table name
 	 */
-	protected static $_table_name = 'ejemplos';
+	protected static $_table_name = 'examples';
 
 	/**
 	 * @var array Properties

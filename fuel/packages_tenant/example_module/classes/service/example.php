@@ -1,21 +1,21 @@
 <?php
 /**
- * Modulo Ejemplo - Example Service
+ * Example Module - Example Service
  *
- * @package    Modulo_Ejemplo
+ * @package    Example_Module
  * @version    1.0.0
  * @author     ERP Development Team
  * @license    MIT License
  */
 
-namespace Modulo_Ejemplo;
+namespace Example_Module;
 
 /**
- * Example Service for the Modulo Ejemplo package
+ * Example Service for the Example Module package
  *
  * This service demonstrates a basic multi-tenant module service structure.
  */
-class Service_Ejemplo
+class Service_Example
 {
 	/**
 	 * Process example data
