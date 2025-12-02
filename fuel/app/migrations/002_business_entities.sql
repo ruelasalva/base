@@ -382,7 +382,7 @@ CREATE TABLE IF NOT EXISTS `inventory` (
     `warehouse_id` INT(11) UNSIGNED NOT NULL,
     `quantity` INT(11) NOT NULL DEFAULT 0 COMMENT 'Current quantity',
     `reserved` INT(11) NOT NULL DEFAULT 0 COMMENT 'Reserved/committed quantity',
-    `available` INT(11) GENERATED ALWAYS AS (`quantity` - `reserved`) STORED COMMENT 'Available quantity',
+    `available` INT(11) GENERATED ALWAYS AS (`quantity` - `reserved`) VIRTUAL COMMENT 'Available quantity',
     `location` VARCHAR(50) DEFAULT NULL COMMENT 'Location within warehouse (aisle, shelf, bin)',
     `last_counted_at` DATETIME DEFAULT NULL COMMENT 'Last inventory count date',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

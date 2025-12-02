@@ -174,10 +174,10 @@ class Controller_Install extends Controller
 						// Crear la base de datos si no existe
 						if ( ! $db_exists)
 						{
-							// Validar nombre de base de datos (solo caracteres seguros)
-							if ( ! preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $db_name))
+							// Validar nombre de base de datos (solo caracteres seguros y longitud máxima de 64)
+							if ( ! preg_match('/^[a-zA-Z][a-zA-Z0-9_]{0,63}$/', $db_name))
 							{
-								throw new \Exception('El nombre de la base de datos contiene caracteres inválidos');
+								throw new \Exception('El nombre de la base de datos contiene caracteres inválidos o es muy largo (máximo 64 caracteres)');
 							}
 
 							// Usar identificador escapado para el nombre de la base de datos
@@ -197,16 +197,16 @@ class Controller_Install extends Controller
 						if (isset($data['db_created']) && $data['db_created'])
 						{
 							$data['success'] = 'Base de datos creada y conexión exitosa. La configuración ha sido guardada.';
-							Session::set_flash('success', 'Base de datos creada correctamente. Configuración guardada.');
+							Session::set_flash('success', 'Base de datos creada correctamente. Ahora puede ejecutar las migraciones.');
 						}
 						else
 						{
 							$data['success'] = 'Conexión exitosa. La configuración ha sido guardada.';
-							Session::set_flash('success', 'Configuración de base de datos guardada correctamente.');
+							Session::set_flash('success', 'Configuración de base de datos guardada correctamente. Ahora puede ejecutar las migraciones.');
 						}
 
-						// Redirigir al instalador
-						Response::redirect('install');
+						// Redirigir a la instalación automática
+						Response::redirect('install/auto_install');
 					}
 					catch (\PDOException $e)
 					{

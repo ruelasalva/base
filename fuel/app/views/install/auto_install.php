@@ -89,7 +89,7 @@
 							<?php echo htmlspecialchars($migration['name'], ENT_QUOTES, 'UTF-8'); ?>
 						</span>
 						<div class="migration-description">
-							<?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $migration['description'])), ENT_QUOTES, 'UTF-8'); ?>
+							<?php echo htmlspecialchars(ucwords(str_replace('_', ' ', isset($migration['description']) ? $migration['description'] : '')), ENT_QUOTES, 'UTF-8'); ?>
 						</div>
 					</div>
 					<div class="migration-status">
