@@ -157,9 +157,35 @@ class Controller_Install extends Controller
 				}
 				else
 				{
-					// Probar conexión
+					// Probar conexión y crear base de datos si no existe
 					try
 					{
+						// Primero intentamos conectar sin especificar la base de datos
+						$dsn_no_db = "mysql:host={$db_host}";
+						$pdo = new \PDO($dsn_no_db, $db_user, $db_pass, array(
+							\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+						));
+
+						// Verificar si la base de datos existe
+						$stmt = $pdo->prepare("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = :dbname");
+						$stmt->execute(array(':dbname' => $db_name));
+						$db_exists = $stmt->fetch() !== false;
+
+						// Crear la base de datos si no existe
+						if ( ! $db_exists)
+						{
+							// Validar nombre de base de datos (solo caracteres seguros)
+							if ( ! preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $db_name))
+							{
+								throw new \Exception('El nombre de la base de datos contiene caracteres inválidos');
+							}
+
+							// Usar identificador escapado para el nombre de la base de datos
+							$pdo->exec("CREATE DATABASE `" . str_replace('`', '``', $db_name) . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+							$data['db_created'] = true;
+						}
+
+						// Ahora conectar a la base de datos específica
 						$dsn = "mysql:host={$db_host};dbname={$db_name}";
 						$pdo = new \PDO($dsn, $db_user, $db_pass, array(
 							\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
@@ -167,15 +193,28 @@ class Controller_Install extends Controller
 
 						// Conexión exitosa, guardar configuración
 						$this->save_database_config($db_host, $db_name, $db_user, $db_pass);
-						$data['success'] = 'Conexión exitosa. La configuración ha sido guardada.';
+
+						if (isset($data['db_created']) && $data['db_created'])
+						{
+							$data['success'] = 'Base de datos creada y conexión exitosa. La configuración ha sido guardada.';
+							Session::set_flash('success', 'Base de datos creada correctamente. Configuración guardada.');
+						}
+						else
+						{
+							$data['success'] = 'Conexión exitosa. La configuración ha sido guardada.';
+							Session::set_flash('success', 'Configuración de base de datos guardada correctamente.');
+						}
 
 						// Redirigir al instalador
-						Session::set_flash('success', 'Configuración de base de datos guardada correctamente.');
 						Response::redirect('install');
 					}
 					catch (\PDOException $e)
 					{
 						$data['error'] = 'Error de conexión: ' . $e->getMessage();
+					}
+					catch (\Exception $e)
+					{
+						$data['error'] = 'Error: ' . $e->getMessage();
 					}
 				}
 			}
@@ -351,6 +390,75 @@ class Controller_Install extends Controller
 	}
 
 	/**
+	 * AUTO INSTALL
+	 *
+	 * Ejecuta automáticamente todas las migraciones pendientes.
+	 * Este método es llamado después de configurar la base de datos.
+	 *
+	 * @return  void
+	 */
+	public function action_auto_install()
+	{
+		$data = array();
+		$data['results'] = array();
+		$data['error'] = null;
+		$data['success'] = null;
+
+		if (Input::method() === 'POST')
+		{
+			// Validar CSRF
+			if ( ! Security::check_token())
+			{
+				$data['error'] = 'Token de seguridad inválido.';
+			}
+			else
+			{
+				// Obtener todas las migraciones pendientes
+				$pending_migrations = $this->get_pending_migrations();
+
+				if (empty($pending_migrations))
+				{
+					$data['success'] = 'No hay migraciones pendientes. El sistema ya está actualizado.';
+				}
+				else
+				{
+					$all_success = true;
+
+					foreach ($pending_migrations as $migration)
+					{
+						$result = $this->execute_migration($migration['name']);
+						$data['results'][] = $result;
+
+						if ( ! $result['success'])
+						{
+							$all_success = false;
+						}
+					}
+
+					if ($all_success)
+					{
+						$this->mark_as_installed();
+						$data['success'] = 'Todas las migraciones ejecutadas correctamente.';
+						Session::set_flash('success', 'Migraciones ejecutadas correctamente.');
+					}
+					else
+					{
+						$data['error'] = 'Algunas migraciones fallaron. Revise los detalles.';
+					}
+				}
+			}
+		}
+
+		// Verificar estado actual
+		$data['db_connected'] = $this->check_database_connection();
+		$data['pending_migrations'] = $data['db_connected'] ? $this->get_pending_migrations() : array();
+		$data['executed_migrations'] = $data['db_connected'] ? $this->get_executed_migrations() : array();
+
+		$this->template->title = 'Instalación Automática';
+		$this->template->content = View::forge('install/auto_install', $data);
+	}
+
+	/**
 	 * VERIFICAR BASE DATOS
 	 *
 	 * Verifica la conexión a la base de datos via AJAX.
@@ -371,15 +479,33 @@ class Controller_Install extends Controller
 
 		try
 		{
-			$dsn = "mysql:host={$db_host};dbname={$db_name}";
-			$pdo = new \PDO($dsn, $db_user, $db_pass, array(
+			// Primero intentamos conectar sin especificar la base de datos
+			$dsn_no_db = "mysql:host={$db_host}";
+			$pdo = new \PDO($dsn_no_db, $db_user, $db_pass, array(
 				\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
 			));
 
-			$response = array(
-				'success' => true,
-				'message' => 'Conexión exitosa',
-			);
+			// Verificar si la base de datos existe
+			$stmt = $pdo->prepare("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = :dbname");
+			$stmt->execute(array(':dbname' => $db_name));
+			$db_exists = $stmt->fetch() !== false;
+
+			if ($db_exists)
+			{
+				$response = array(
+					'success' => true,
+					'message' => 'Conexión exitosa. La base de datos existe.',
+					'db_exists' => true,
+				);
+			}
+			else
+			{
+				$response = array(
+					'success' => true,
+					'message' => 'Conexión exitosa. La base de datos será creada automáticamente.',
+					'db_exists' => false,
+				);
+			}
 		}
 		catch (\PDOException $e)
 		{

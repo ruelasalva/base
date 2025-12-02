@@ -42,6 +42,7 @@ return array(
 	'install'              => 'install/index',
 	'install/configurar'   => 'install/configurar',
 	'install/ejecutar'     => 'install/ejecutar',
+	'install/auto_install' => 'install/auto_install',
 	'install/crear_admin'  => 'install/crear_admin',
 	'install/completado'   => 'install/completado',
 	'install/verificar_db' => 'install/verificar_db',

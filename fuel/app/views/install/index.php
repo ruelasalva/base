@@ -168,11 +168,11 @@
 					<?php endif; ?>
 
 					<div class="col-md-4 text-center mb-3">
-						<a href="<?php echo Uri::create('install/ejecutar'); ?>" class="btn btn-installer btn-lg btn-block <?php echo ! $db_connected ? 'disabled' : ''; ?>">
-							<span class="glyphicon glyphicon-upload"></span>
-							Ejecutar Migraciones
+						<a href="<?php echo Uri::create('install/auto_install'); ?>" class="btn btn-installer btn-lg btn-block <?php echo ! $db_connected ? 'disabled' : ''; ?>">
+							<span class="glyphicon glyphicon-flash"></span>
+							Instalación Rápida
 						</a>
-						<p class="text-muted mt-2">Crear/Actualizar tablas de la base de datos</p>
+						<p class="text-muted mt-2">Ejecutar todas las migraciones automáticamente</p>
 					</div>
 
 					<div class="col-md-4 text-center mb-3">
@@ -181,6 +181,16 @@
 							Crear Administrador
 						</a>
 						<p class="text-muted mt-2">Crear el usuario administrador inicial</p>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-4 col-md-offset-4 text-center mb-3">
+						<a href="<?php echo Uri::create('install/ejecutar'); ?>" class="btn btn-installer-outline btn-block <?php echo ! $db_connected ? 'disabled' : ''; ?>">
+							<span class="glyphicon glyphicon-upload"></span>
+							Migraciones Manual
+						</a>
+						<p class="text-muted mt-2">Seleccionar migraciones a ejecutar</p>
 					</div>
 				</div>
 			</div>

@@ -51,7 +51,7 @@
 					   value="<?php echo htmlspecialchars(Input::post('db_name', $current_db), ENT_QUOTES, 'UTF-8'); ?>"
 					   placeholder="nombre_base_datos"
 					   required>
-				<small class="text-muted">La base de datos debe existir previamente</small>
+				<small class="text-muted">Si no existe, se creará automáticamente</small>
 			</div>
 		</div>
 	</div>
@@ -139,7 +139,9 @@ document.addEventListener('DOMContentLoaded', function() {
 					try {
 						var response = JSON.parse(xhr.responseText);
 						if (response.success) {
-							resultDiv.innerHTML = '<div class="alert alert-success"><span class="glyphicon glyphicon-ok-circle"></span> ' + response.message + '</div>';
+							var alertClass = response.db_exists ? 'alert-success' : 'alert-info';
+							var icon = response.db_exists ? 'glyphicon-ok-circle' : 'glyphicon-info-sign';
+							resultDiv.innerHTML = '<div class="alert ' + alertClass + '"><span class="glyphicon ' + icon + '"></span> ' + response.message + '</div>';
 						} else {
 							resultDiv.innerHTML = '<div class="alert alert-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> ' + response.message + '</div>';
 						}
