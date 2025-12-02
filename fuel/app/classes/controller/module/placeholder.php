@@ -152,10 +152,7 @@ class Controller_Module_Placeholder extends Controller_Base
 	 */
 	public function router($method, $params)
 	{
-		// El primer segmento es el nombre del módulo
-		$module = $method;
-
-		// Si el método tiene guiones bajos, el primer segmento es el módulo
+		// Si el método tiene slashes, el primer segmento es el módulo
 		$parts = explode('/', $method);
 		$module = $parts[0];
 

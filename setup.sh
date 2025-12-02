@@ -109,7 +109,7 @@ echo "Creando directorios necesarios..."
 mkdir -p fuel/app/logs
 mkdir -p fuel/app/cache
 mkdir -p fuel/app/tmp
-chmod -R 777 fuel/app/logs fuel/app/cache fuel/app/tmp 2>/dev/null || print_warning "No se pudieron establecer permisos (ejecute como root si es necesario)"
+chmod -R 775 fuel/app/logs fuel/app/cache fuel/app/tmp 2>/dev/null || print_warning "No se pudieron establecer permisos (ejecute como root si es necesario)"
 print_status "Directorios creados"
 
 # Verificar que fuel/core existe

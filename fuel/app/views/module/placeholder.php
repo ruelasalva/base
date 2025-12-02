@@ -68,10 +68,10 @@
 				</div>
 			</div>
 			<div class="panel-footer text-center">
-				<a href="<?php echo Uri::base(); ?>" class="btn btn-default">
+				<a href="<?php echo Uri::create('/'); ?>" class="btn btn-default">
 					<span class="glyphicon glyphicon-home"></span> Volver al Inicio
 				</a>
-				<a href="<?php echo Uri::base(); ?>install" class="btn btn-primary">
+				<a href="<?php echo Uri::create('install'); ?>" class="btn btn-primary">
 					<span class="glyphicon glyphicon-cog"></span> Ir al Instalador
 				</a>
 			</div>
