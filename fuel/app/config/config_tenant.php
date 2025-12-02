@@ -57,8 +57,8 @@ class Tenant_Resolver
 		// En modo DEVELOPMENT, cargar todos los módulos sin verificar BD
 		if (\Fuel::$env === \Fuel::DEVELOPMENT)
 		{
-			// Cargar todos los módulos disponibles en development
-			$all_modules = array('admin', 'partners', 'sellers', 'store', 'clients', 'providers', 'landing');
+			// Cargar todos los módulos disponibles en development (admin deshabilitado por conflicto)
+			$all_modules = array('partners', 'sellers', 'store', 'clients', 'providers', 'landing');
 			static::$active_modules = $all_modules;
 			
 			// Define constant con todos los módulos

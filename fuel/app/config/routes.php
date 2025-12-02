@@ -90,24 +90,42 @@ return array(
 
 	/**
 	 * -------------------------------------------------------------------------
-	 *  Module Placeholder Routes
+	 *  Backend Routes - Admin, Proveedores, Socios, etc.
 	 * -------------------------------------------------------------------------
 	 *
-	 *  Routes for modules that are still in development.
-	 *  These show a user-friendly placeholder page instead of 404 errors.
+	 *  Rutas para los backends del sistema
 	 *
 	 */
 
-	'admin'             => 'module/placeholder/admin',
-	'admin/:any'        => 'module/placeholder/admin',
-	'providers'         => 'module/placeholder/providers',
-	'providers/:any'    => 'module/placeholder/providers',
-	'partners'          => 'module/placeholder/partners',
-	'partners/:any'     => 'module/placeholder/partners',
+	// Admin routes
+	'admin'                       => 'admin/index',
+	'admin/login'                 => 'admin/login',
+	'admin/logout'                => 'admin/logout',
+	'admin/configuracion'         => 'admin/configuracion/index',
+	'admin/configuracion/(:any)'  => 'admin/configuracion/$1',
+	'admin/themes'                => 'admin/themes',
+	'admin/change_theme'          => 'admin/change_theme',
+	'admin/(:any)'                => 'admin/$1',
+
+	// Providers routes
+	'proveedores'       => 'proveedores/index',
+	'proveedores/login' => 'proveedores/login',
+	'proveedores/(:any)' => 'proveedores/$1',
+
+	// Partners routes
+	'socios'            => 'socios/index',
+	'socios/login'      => 'socios/login',
+	'socios/(:any)'     => 'socios/$1',
+
+	// Sellers routes (en desarrollo)
 	'sellers'           => 'module/placeholder/sellers',
 	'sellers/:any'      => 'module/placeholder/sellers',
+
+	// Clients routes (en desarrollo)
 	'clients'           => 'module/placeholder/clients',
 	'clients/:any'      => 'module/placeholder/clients',
+
+	// Frontend routes (en desarrollo)
 	'tienda'            => 'module/placeholder/tienda',
 	'tienda/:any'       => 'module/placeholder/tienda',
 	'landing'           => 'module/placeholder/landing',

@@ -35,6 +35,12 @@
 					<?php endif; ?>
 					<strong><?php echo htmlspecialchars($result['migration'], ENT_QUOTES, 'UTF-8'); ?></strong>
 					- <?php echo htmlspecialchars($result['message'], ENT_QUOTES, 'UTF-8'); ?>
+					
+					<?php if (isset($result['details']) && !empty($result['details'])): ?>
+						<div class="small text-muted" style="margin-top: 5px;">
+							<em><?php echo htmlspecialchars($result['details'], ENT_QUOTES, 'UTF-8'); ?></em>
+						</div>
+					<?php endif; ?>
 				</div>
 			<?php endforeach; ?>
 		</div>
@@ -107,10 +113,21 @@
 	<form method="post" action="<?php echo Uri::create('install/auto_install'); ?>">
 		<input type="hidden" name="<?php echo Config::get('security.csrf_token_key'); ?>" value="<?php echo Security::fetch_token(); ?>">
 
+		<div class="alert alert-info">
+			<h4><span class="glyphicon glyphicon-info-sign"></span> Opciones de Instalación</h4>
+			<p><strong>Ejecutar migraciones:</strong> Crea todas las tablas y estructuras en la base de datos.</p>
+			<p><strong>Marcar como ejecutadas:</strong> Si las tablas ya existen (instalación manual previa), solo registra las migraciones sin modificar la base de datos.</p>
+		</div>
+
 		<div class="text-center mt-4">
-			<button type="submit" class="btn btn-installer btn-lg">
+			<button type="submit" name="action_type" value="execute" class="btn btn-installer btn-lg" style="margin: 5px;">
 				<span class="glyphicon glyphicon-play"></span>
 				Ejecutar Todas las Migraciones
+			</button>
+			
+			<button type="submit" name="action_type" value="mark_as_executed" class="btn btn-warning btn-lg" style="margin: 5px;">
+				<span class="glyphicon glyphicon-check"></span>
+				Marcar como Ejecutadas (Tablas Existentes)
 			</button>
 		</div>
 	</form>

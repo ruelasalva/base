@@ -1,0 +1,518 @@
+.form-group.has-danger > .select2-container .select2-selection--single {
+    border-color: #fb6340 !important;
+}
+
+.form-group.has-danger > .select2-container .select2-selection--multiple {
+    border-color: #fb6340 !important;
+}
+
+.form-group.has-danger > .select2-container .select2-selection__rendered {
+    color: #fb6340 !important;
+}
+
+.form-group.has-success > .select2-container .select2-selection--single {
+    border-color: #2dce89 !important;
+}
+
+.form-group.has-success > .select2-container .select2-selection--multiple {
+    border-color: #2dce89 !important;
+}
+
+.form-group.has-danger .dz-message {
+    border: 1px dashed #fb6340 !important;
+}
+
+.select2-selection__rendered {
+    font-size: .875rem !important;
+}
+
+.form-control.from-table {
+    display: table;
+}
+
+.select2.select2-container {
+    overflow-x: auto;
+}
+
+.fc-event .fc-time {
+    color: #fff;
+    width: 100%;
+}
+
+body.dragging, body.dragging * {
+  cursor: move !important;
+}
+
+.dragged {
+  position: absolute;
+  opacity: 0.5;
+  z-index: 2000;
+}
+
+.sorted-table tr {
+    cursor: pointer !important;
+}
+
+tr.placeholder {
+  position: relative;
+}
+
+tr.placeholder:before {
+  position: absolute;
+}
+
+.card-height {
+    min-height: 547px;
+}
+
+@media (max-width: 1200px)
+{
+    .card-height {
+        min-height: auto;
+    }
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    color: #000000;
+}
+
+.fit-img {
+    height: 186px;
+}
+
+.form-control.from-table.form-table-area {
+    display: block;
+    width: 100%;
+    height: 186px;
+    overflow-y: auto;
+}
+
+.ck-content {
+	min-height: 200px;
+}
+
+.form-group.has-danger .ck-content {
+	border-color: #fb6340 !important;
+}
+
+.form-group.has-success .ck-content {
+	border-color: #2dce89 !important;
+}
+.description-field {
+    resize: vertical;
+}
+
+.nav-pills .nav-link {
+    border-radius: 2rem;
+    font-weight: 500;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.07);
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show>.nav-link {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    opacity: 0.95;
+}
+
+/* Hace sticky la primera fila del thead (encabezados generales) */
+.permisos-table thead tr:nth-child(1) th {
+    position: sticky;
+    top: 0;
+    z-index: 11;
+    background: #f8f9fa;
+    /* color igual que thead-light */
+}
+
+/* Si usas más de una fila de encabezado sticky: */
+.permisos-table thead tr:nth-child(2) th,
+.permisos-table thead tr:nth-child(3) th {
+    position: sticky;
+    top: 38px;
+    /* Altura estimada de la fila anterior */
+    z-index: 10;
+    background: #f8f9fa;
+}
+
+.permisos-table thead tr:nth-child(3) th {
+    top: 76px;
+    /* Altura acumulada de dos filas */
+    z-index: 9;
+    background: #f8f9fa;
+}
+
+
+/* Aplica a ambos modals (puedes unificar con el de rango) */
+#modal-agregar-marca .modal-dialog,
+#modal-agregar-rango .modal-dialog {
+    max-width: 950px;
+    min-width: 330px;
+    width: 95vw;
+    height: 92vh;
+    margin: 15px auto;
+}
+
+#modal-agregar-marca .modal-content,
+#modal-agregar-rango .modal-content {
+    height: 89vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#modal-agregar-marca .modal-body,
+#modal-agregar-rango .modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-bottom: 10px !important;
+}
+
+#modal-agregar-marca .modal-footer,
+#modal-agregar-rango .modal-footer {
+    border-top: 1px solid #f0f0f0;
+    background: #f8fafd;
+}
+
+/* Ajustes responsivos extra (opcional) */
+@media (max-width: 900px) {
+
+    #modal-agregar-marca .modal-dialog,
+    #modal-agregar-rango .modal-dialog {
+        max-width: 98vw;
+        min-width: 90vw;
+        width: 100vw;
+    }
+}
+
+@media (max-width: 575px) {
+
+    #modal-agregar-marca .modal-content,
+    #modal-agregar-rango .modal-content {
+        height: 96vh !important;
+    }
+
+    #modal-agregar-marca .modal-dialog,
+    #modal-agregar-rango .modal-dialog {
+        max-width: 100vw;
+        min-width: 100vw;
+        width: 100vw;
+        margin: 1vw;
+    }
+}
+#modal-agregar-marca .modal-dialog {
+    max-width: 950px;
+    min-width: 330px;
+    width: 97vw;
+    height: 92vh;
+    margin: 10px auto;
+}
+
+#modal-agregar-marca .modal-content {
+    height: 89vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#modal-agregar-marca .modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-bottom: 10px !important;
+}
+
+#modal-agregar-marca .modal-footer {
+    border-top: 1px solid #f0f0f0;
+    background: #f8fafd;
+}
+
+@media (max-width: 900px) {
+    #modal-agregar-marca .modal-dialog {
+        max-width: 99vw;
+        min-width: 90vw;
+        width: 100vw;
+    }
+}
+
+@media (max-width: 575px) {
+    #modal-agregar-marca .modal-content {
+        height: 96vh !important;
+    }
+
+    #modal-agregar-marca .modal-dialog {
+        max-width: 100vw;
+        min-width: 100vw;
+        width: 100vw;
+        margin: 1vw;
+    }
+}
+
+/**/
+/* ==================== */
+/* 1. Tablas responsivas y compactas en móvil */
+@media (max-width: 600px) {
+
+    #cotizacion-app .table thead th,
+    #cotizacion-app .table tbody td {
+        font-size: 13px !important;
+        padding: 5px 4px !important;
+        vertical-align: middle !important;
+        white-space: nowrap;
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #cotizacion-app .table td img {
+        max-width: 40px !important;
+        max-height: 40px !important;
+    }
+
+    #cotizacion-app .table th,
+    #cotizacion-app .table td {
+        min-width: 45px;
+    }
+}
+
+/* 2. Inputs y selects más compactos en móvil */
+@media (max-width: 600px) {
+
+    #cotizacion-app input,
+    #cotizacion-app select {
+        font-size: 15px !important;
+        padding: 7px 8px !important;
+    }
+}
+
+/* 3. Totales y bloques destacados: separación y visibilidad en móvil */
+@media (max-width: 600px) {
+    #cotizacion-app .row.mb-4>div {
+        border-top: 1px solid #f0f0f0;
+        margin-top: 8px;
+        padding-top: 6px;
+        font-size: 16px;
+    }
+}
+
+/* 4. Botones: bloque y mejor separación en móvil */
+@media (max-width: 600px) {
+
+    #cotizacion-app .btn,
+    #cotizacion-app button {
+        width: 100% !important;
+        margin-bottom: 7px !important;
+    }
+
+    #cotizacion-app .btn-group,
+    #cotizacion-app .btn-group>.btn {
+        width: 100% !important;
+    }
+}
+
+/* 5. Encabezados y breadcrumb: mejor manejo de espacios */
+@media (max-width: 600px) {
+    #cotizacion-app h4 {
+        font-size: 20px !important;
+        margin-bottom: 1rem !important;
+    }
+}
+
+/* 6. Modal: máximo aprovechamiento de ancho */
+@media (max-width: 600px) {
+
+    .modal-dialog,
+    .modal-content {
+        width: 98vw !important;
+        max-width: 98vw !important;
+        margin: 1vw auto !important;
+        border-radius: 11px !important;
+    }
+
+    .modal-body {
+        padding: 13px 6px !important;
+    }
+
+    .modal-header,
+    .modal-footer {
+        padding: 9px 9px !important;
+    }
+}
+
+/* 7. Vue select (vue-select) 100% ancho en mobile */
+@media (max-width: 600px) {
+    #cotizacion-app .v-select {
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+}
+
+/* 8. El badge de código no se corta en móvil */
+#cotizacion-app .badge-info {
+    white-space: nowrap;
+}
+
+/* 9. Ajuste para scroll horizontal en tablas en móvil */
+@media (max-width: 600px) {
+    #cotizacion-app .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+#btn-sincronizar-cotizaciones {
+    right: 15px !important;
+    left: auto !important;
+    width: 90vw !important;
+    max-width: 320px;
+    min-width: 180px;
+    font-size: 16px;
+}
+
+@media (max-width: 600px) {
+    #btn-sincronizar-cotizaciones {
+        right: 6vw !important;
+        width: 88vw !important;
+    }
+}
+
+/* Ajustes para el modal de agregar rango */
+.img-thumbnail {
+    object-fit: cover;
+    background: #f7f7f7;
+}
+
+/* Ajustes para el modal de cookies */
+.cookies-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999999;
+}
+
+/* Modal */
+.cookies-modal {
+    max-width: 480px;
+    width: 95%;
+    background: #fff;
+    border-radius: .5rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+ /* Tarjetas de resumen animadas */
+ .resume-box {
+     border-radius: 10px;
+     padding: 14px 10px;
+     transition: all 0.25s ease;
+     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+ }
+
+ .resume-box:hover {
+     transform: translateY(-3px);
+     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+     background-color: #fff;
+ }
+
+ /* Botones que suben ligeramente al pasar el mouse */
+ .hover-rise {
+     transition: all 0.2s ease;
+ }
+
+ .hover-rise:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+ }
+
+ /* Íconos dentro del resumen */
+ .resume-box i {
+     display: block;
+     font-size: 1.4rem;
+     opacity: 0.85;
+ }
+
+/*<!-- ========================================================= -->
+<!-- CSS EMPRESARIAL PARA ATRIBUTOS ML -->
+<!-- ========================================================= -->*/
+
+
+         .ml-attr-block {
+             padding: 15px;
+             border-left: 4px solid transparent;
+             background: #fafafa;
+             border-radius: 6px;
+             margin-bottom: 18px;
+             transition: all 0.2s ease-in-out;
+         }
+    
+         .ml-attr-required {
+             border-left-color: #e74c3c !important;
+             background: #fff5f5;
+         }
+    
+         .ml-attr-catalog {
+             border-left-color: #f1c40f !important;
+             background: #fffae6;
+         }
+    
+         .ml-badge {
+             font-size: 11px;
+             font-weight: 700;
+             padding: 3px 7px;
+             border-radius: 4px;
+             margin-left: 6px;
+             text-transform: uppercase;
+             letter-spacing: .5px;
+         }
+    
+         .ml-badge-required {
+             background: #e74c3c;
+             color: #fff;
+         }
+    
+         .ml-badge-catalog {
+             background: #f1c40f;
+             color: #000;
+         }
+    
+         .ml-badge-variation {
+             background: #17a2b8;
+             color: #fff;
+         }
+    
+         .ml-required-asterisk::after {
+             content: " *";
+             color: #e74c3c;
+             font-weight: bold;
+             font-size: 16px;
+         }
+    
+         .ml-summary-badge {
+             font-size: 13px;
+             padding: 6px 10px;
+             border-radius: 5px;
+             margin-right: 10px;
+             font-weight: 700;
+             letter-spacing: .5px;
+         }
+    
+         .ml-summary-required {
+             background: #4a90e2;
+             color: #fff;
+         }
+    
+         .ml-summary-optional {
+             background: #e5e7eb;
+             color: #333;
+         }
+    
+         /* Atributo obligatorio vacío → borde rojo oscuro */
+         .ml-attr-missing {
+             border-left-color: #c0392b !important;
+             background: #ffecec;
+         }
+    
+         /* texto rojo */
+         .ml-attr-missing label {
+             color: #c0392b !important;
+         }

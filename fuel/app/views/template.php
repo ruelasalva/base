@@ -5,11 +5,58 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<?php
-	// Cargar configuración del sitio
+	// Cargar configuración del sitio desde base de datos
+	$site_config_db = Model_SiteConfig::get_config(1); // TODO: tenant_id dinámico
 	$site_config = Config::load('site', true);
-	$site_name = isset($site_config['site_name']) ? $site_config['site_name'] : 'ERP Multi-tenant';
+	$site_name = $site_config_db ? $site_config_db->site_name : (isset($site_config['site_name']) ? $site_config['site_name'] : 'ERP Multi-tenant');
 	?>
 	<title><?php echo isset($title) ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') : $site_name; ?></title>
+	
+	<!-- SEO Meta Tags -->
+	<?php if ($site_config_db): ?>
+		<?php if ($site_config_db->meta_description): ?>
+			<meta name="description" content="<?php echo htmlspecialchars($site_config_db->meta_description, ENT_QUOTES, 'UTF-8'); ?>">
+		<?php endif; ?>
+		<?php if ($site_config_db->meta_keywords): ?>
+			<meta name="keywords" content="<?php echo htmlspecialchars($site_config_db->meta_keywords, ENT_QUOTES, 'UTF-8'); ?>">
+		<?php endif; ?>
+		<?php if ($site_config_db->meta_author): ?>
+			<meta name="author" content="<?php echo htmlspecialchars($site_config_db->meta_author, ENT_QUOTES, 'UTF-8'); ?>">
+		<?php endif; ?>
+		<?php if ($site_config_db->theme_color): ?>
+			<meta name="theme-color" content="<?php echo $site_config_db->theme_color; ?>">
+		<?php endif; ?>
+		
+		<!-- Open Graph -->
+		<?php if ($site_config_db->og_image): ?>
+			<meta property="og:image" content="<?php echo $site_config_db->og_image; ?>">
+		<?php endif; ?>
+		<meta property="og:title" content="<?php echo isset($title) ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') : $site_name; ?>">
+		<?php if ($site_config_db->meta_description): ?>
+			<meta property="og:description" content="<?php echo htmlspecialchars($site_config_db->meta_description, ENT_QUOTES, 'UTF-8'); ?>">
+		<?php endif; ?>
+		
+		<!-- Favicons -->
+		<?php if ($site_config_db->favicon_16): ?>
+			<link rel="icon" type="image/png" sizes="16x16" href="<?php echo $site_config_db->favicon_16; ?>">
+		<?php endif; ?>
+		<?php if ($site_config_db->favicon_32): ?>
+			<link rel="icon" type="image/png" sizes="32x32" href="<?php echo $site_config_db->favicon_32; ?>">
+			<link rel="shortcut icon" href="<?php echo $site_config_db->favicon_32; ?>">
+		<?php endif; ?>
+		<?php if ($site_config_db->favicon_57): ?>
+			<link rel="apple-touch-icon-precomposed" href="<?php echo $site_config_db->favicon_57; ?>">
+		<?php endif; ?>
+		<?php if ($site_config_db->favicon_72): ?>
+			<link rel="apple-touch-icon-precomposed" sizes="72x72" href="<?php echo $site_config_db->favicon_72; ?>">
+		<?php endif; ?>
+		<?php if ($site_config_db->favicon_114): ?>
+			<link rel="apple-touch-icon-precomposed" sizes="114x114" href="<?php echo $site_config_db->favicon_114; ?>">
+		<?php endif; ?>
+		<?php if ($site_config_db->favicon_144): ?>
+			<link rel="apple-touch-icon-precomposed" sizes="144x144" href="<?php echo $site_config_db->favicon_144; ?>">
+		<?php endif; ?>
+	<?php endif; ?>
 	<?php echo Asset::css('bootstrap.css'); ?>
 	<?php echo Asset::css('bootstrap.css'); ?>
 	<?php echo Asset::css('custom.css'); ?>
@@ -85,8 +132,18 @@
 			color: #fff;
 		}
 	</style>
+	
+	<!-- Scripts de Tracking y Analytics -->
+	<?php if ($site_config_db): ?>
+		<?php echo $site_config_db->get_all_head_scripts(); ?>
+	<?php endif; ?>
 </head>
 <body>
+	<!-- Google Tag Manager (body) -->
+	<?php if ($site_config_db): ?>
+		<?php echo $site_config_db->get_all_body_scripts(); ?>
+	<?php endif; ?>
+	
 	<!-- Navegación Principal -->
 	<nav class="navbar navbar-erp">
 		<div class="container">
@@ -168,6 +225,67 @@
 			</div>
 		</footer>
 	</div>
+	
+	<!-- Banner de Cookies -->
+	<?php if ($site_config_db && $site_config_db->cookie_consent_enabled): ?>
+	<div id="cookie-consent-banner" class="cookie-banner" style="display: none;">
+		<div class="container">
+			<div class="row align-items-center">
+				<div class="col-md-8">
+					<p class="mb-0">
+						<i class="fas fa-cookie-bite me-2"></i>
+						<?php echo htmlspecialchars($site_config_db->cookie_message ?: 'Este sitio utiliza cookies para mejorar tu experiencia.', ENT_QUOTES, 'UTF-8'); ?>
+						<?php if ($site_config_db->privacy_policy_url): ?>
+							<a href="<?php echo $site_config_db->privacy_policy_url; ?>" class="cookie-link">Política de Privacidad</a>
+						<?php endif; ?>
+					</p>
+				</div>
+				<div class="col-md-4 text-end">
+					<button onclick="acceptCookies()" class="btn btn-sm btn-primary">Aceptar</button>
+					<button onclick="declineCookies()" class="btn btn-sm btn-secondary">Rechazar</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<style>
+		.cookie-banner {
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			background: rgba(0, 0, 0, 0.95);
+			color: white;
+			padding: 15px 0;
+			z-index: 9999;
+			box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+		}
+		.cookie-banner p {
+			color: white;
+		}
+		.cookie-link {
+			color: #4db8ff;
+			text-decoration: underline;
+			margin-left: 10px;
+		}
+	</style>
+	<script>
+		// Verificar si ya aceptó cookies
+		if (!localStorage.getItem('cookie_consent')) {
+			document.getElementById('cookie-consent-banner').style.display = 'block';
+		}
+		
+		function acceptCookies() {
+			localStorage.setItem('cookie_consent', 'accepted');
+			document.getElementById('cookie-consent-banner').style.display = 'none';
+		}
+		
+		function declineCookies() {
+			localStorage.setItem('cookie_consent', 'declined');
+			document.getElementById('cookie-consent-banner').style.display = 'none';
+		}
+	</script>
+	<?php endif; ?>
+	
 	<?php echo Asset::js('jquery.min.js'); ?>
 	<?php echo Asset::js('bootstrap.min.js'); ?>
 </body>

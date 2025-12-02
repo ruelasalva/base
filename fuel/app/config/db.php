@@ -33,7 +33,7 @@ return array(
 	'master' => array(
 		'type'        => 'pdo',
 		'connection'  => array(
-			'dsn'      => 'mysql:host=localhost;dbname=erp_master',
+			'dsn'      => 'mysql:host=localhost;dbname=base',
 			'username' => 'root',
 			'password' => '',
 		),
@@ -58,7 +58,7 @@ return array(
 	'default' => array(
 		'type'        => 'pdo',
 		'connection'  => array(
-			'dsn'      => 'mysql:host=localhost;dbname=erp_master',
+			'dsn'      => 'mysql:host=localhost;dbname=base',
 			'username' => 'root',
 			'password' => '',
 		),

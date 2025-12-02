@@ -55,7 +55,6 @@ return array(
 		'last_login'     => 'last_login',
 		'previous_login' => 'previous_login',
 		'login_hash'     => 'login_hash',
-		'user_id'        => 'user_id',
 		'created_at'     => 'created_at',
 		'updated_at'     => 'updated_at',
 	),

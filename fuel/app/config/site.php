@@ -8,15 +8,15 @@
 
 return array(
     
-    /**
-     * Información General del Sistema
-     */
-    'site_name'        => 'ERP Multi-Tenant',
-    'site_description' => 'Sistema de Gestión Empresarial Multi-Tenant',
-    'site_version'     => '1.0.0',
-    'site_author'      => 'Tu Empresa',
-    
-    /**
+	/**
+	 * Información General del Sistema
+	 */
+	'site_name'        => 'ERP Multi-Tenant',
+	'site_description' => 'Sistema Integral de Gestión Empresarial Multi-Tenant',
+	'site_version'     => '2.0.0',
+	'site_author'      => 'Tu Empresa',
+	
+	/**
      * Colores del Tema (Gradientes Hero Section)
      */
     'theme' => array(
@@ -27,17 +27,17 @@ return array(
         'gradient_angle'    => '135deg',
     ),
     
-    /**
-     * Textos del Hero Section
-     */
-    'hero' => array(
-        'title'       => 'ERP Multi-Tenant',
-        'subtitle'    => 'Sistema de Gestión Empresarial',
-        'description' => 'Gestión integral de múltiples empresas desde una única plataforma',
-        'button_text' => 'Comenzar',
-    ),
-    
-    /**
+	/**
+	 * Textos del Hero Section
+	 */
+	'hero' => array(
+		'title'       => 'ERP Multi-Tenant',
+		'subtitle'    => 'Sistema Integral de Gestión Empresarial',
+		'description' => 'Plataforma completa para gestión de múltiples empresas con módulos extendidos',
+		'button_text' => 'Comenzar',
+	),
+	
+	/**
      * Módulos del Sistema
      */
     'modules' => array(
@@ -135,11 +135,10 @@ return array(
     ),
     
     /**
-     * Footer
-     */
-    'footer' => array(
-        'text'      => '© 2024 ERP Multi-Tenant. Todos los derechos reservados.',
-        'powered_by' => 'Powered by FuelPHP',
-    ),
-    
+	 * Footer
+	 */
+	'footer' => array(
+		'text'      => '© 2024 ERP Multi-Tenant. Todos los derechos reservados.',
+		'powered_by' => 'Powered by FuelPHP',
+	),
 );

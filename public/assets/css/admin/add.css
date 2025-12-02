@@ -1,0 +1,357 @@
+#overbox3 {
+    position: fixed;
+    background-color: darkgray;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    z-index: 999999;
+    display: block;
+    border: 1px solid red;
+    text-align: center;
+}
+#infobox3 {
+    margin: auto;
+    position: relative;
+    top: 0px;
+    height: 58px;
+    width: 100%;
+    text-align:center;
+    background-color: #eeeeee;
+}
+#infobox3 p {
+    line-height:58px;
+    font-size:12px;
+    text-align:center;
+}
+#infobox3 p a {
+    margin-right:5px;
+    text-decoration: underline;
+}
+ul {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+}
+
+h2 {
+    text-align: center;
+    margin: 20px auto;
+    color: #fff;
+}
+
+.accordion-menu {
+    padding: 0px;
+    width: 100%;
+    background: #fff;
+    font-size: .8125rem;
+}
+.accordion-menu li.open .dropdownlink {
+    color: #d88d8d;
+    .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+}
+.accordion-menu li:last-child .dropdownlink {
+    border-bottom: 0;
+}
+.dropdownlink {
+    cursor: pointer;
+    display: block;
+    padding: 15px 15px 15px 45px;
+    font-size: 18px;
+    border-bottom: 1px solid #ccc;
+    color: #212121;
+    position: relative;
+    transition: all 0.4s ease-out;
+    i {
+        position: absolute;
+        top: 17px;
+        left: 16px;
+    }
+    .fa-chevron-down {
+        right: 12px;
+        left: auto;
+    }
+}
+
+.submenuItems {
+    display: none;
+    background: #f3f0f0;
+    li {
+        border-bottom: 1px solid #B6B6B6;
+    }
+}
+
+.submenuItems a {
+    display: block;
+    color: #727272;
+    padding: 6px 6px 6px 0px;
+    transition: all 0.4s ease-out;
+    &:hover {
+        background-color: #CDDC39;
+        color: #fff;
+    }
+}
+
+/* ===================================================== */
+/* === ADMINISTRADOR ==================================== */
+/* ===================================================== */
+
+.badge-wrapper.badge-admin {
+    position: absolute;
+    top: 2%;
+    left: -6%;
+    z-index: 10;
+    transform: rotate(-30deg);
+    width: 60%;
+    max-width: 150px;
+    text-align: center;
+}
+
+.badge-label {
+    display: inline-block;
+    width: 100%;
+    color: #fff;
+    font-size: clamp(10px, 2vw, 14px);
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.4em 0;
+    letter-spacing: 1px;
+    text-align: center;
+    border-radius: 0;
+}
+
+/* COLORES Y ANIMACIONES ADMIN */
+.badge-admin .badge-soon {
+    background: linear-gradient(45deg, #f7c948, #f1a10a);
+    color: #222;
+    animation: pulsate 6s infinite ease-in-out, glow 8s infinite alternate, blink 12s infinite;
+}
+
+.badge-admin .badge-new {
+    background: linear-gradient(45deg, #0069d9, #0056b3);
+    animation: pulsate 4s infinite ease-in-out, glow 6s infinite alternate, blink 8s infinite;
+}
+
+.badge-admin .badge-out {
+    background: linear-gradient(45deg, #343a40, #6c757d);
+    animation: pulsate 10s infinite ease-in-out, glow 12s infinite alternate, blink 14s infinite;
+}
+
+/* ANIMACIONES ADMIN */
+@keyframes pulsate {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3), 0 0 15px rgba(255, 255, 255, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.7), 0 0 40px rgba(255, 255, 255, 0.6);
+    }
+
+    100% {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3), 0 0 15px rgba(255, 255, 255, 0.4);
+    }
+}
+
+@keyframes blink {
+
+    0%,
+    15%,
+    100% {
+        opacity: 1;
+    }
+
+    8%,
+    90% {
+        opacity: 0.85;
+    }
+}
+
+/* Contenedor principal de la lista de videos */
+#youtube-list {
+    max-height: 400px;
+    /* Ajusta la altura máxima del cuadro */
+    overflow-y: auto;
+    /* Agrega scroll interno si hay más videos */
+    padding-right: 10px;
+}
+
+/* Ajustes a la lista para que se vea bien con scroll */
+#youtube-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#youtube-list li {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#youtube-list li:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#youtube-list img {
+    width: 100px;
+    height: auto;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+#youtube-list a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    font-size: 14px;
+    flex-grow: 1;
+}
+
+#youtube-list a:hover {
+    color: #d23f31;
+}
+
+/* Contenedor del header de YouTube */
+.youtube-header {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #000;
+}
+
+/* Imagen de portada del canal */
+.youtube-header img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    opacity: 0.8;
+}
+
+/* Contenedor de información del canal */
+.youtube-info {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    color: white;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Nombre del canal */
+#youtube-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+}
+
+/* Número de suscriptores */
+#youtube-subscribers {
+    font-size: 12px;
+    margin: 0;
+}
+
+.no-input {
+    height: 45px;
+}
+
+.product-button {
+    padding: 15px;
+}
+
+
+/* Estilos para la barra de navegación superior de socios */
+.navbar-socios-top .btn-quote {
+    background-color: #f5365c;
+    color: #fff;
+    border-radius: 1.5rem;
+    font-weight: bold;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    transition: background 0.3s;
+}
+
+.navbar-socios-top .btn-quote:hover {
+    background-color: #d72b4f;
+}
+
+.navbar-socios-top .btn-quote .badge {
+    font-size: 0.75rem;
+    padding: 0.3em 0.6em;
+    border-radius: 1rem;
+    background-color: #fff;
+    color: #f5365c;
+    font-weight: bold;
+}
+
+@media (max-width: 400px) {
+    .navbar-socios-top h1 {
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+
+    .navbar-socios-top .btn-quote span:not(.badge) {
+        display: none;
+        /* Oculta texto largo */
+    }
+
+    .navbar-socios-top .input-group .form-control {
+        min-width: 100px;
+    }
+}
+
+.btn-quote {
+    background-color: #f5365c;
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-quote:hover {
+    background-color: #d12a4c;
+    text-decoration: none;
+}
+
+.btn-quote i {
+    font-size: 1.3rem;
+    margin-right: 0.5rem;
+}
+
+.btn-quote .badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.6em;
+    border-radius: 1rem;
+    color: #f5365c;
+    background-color: #fff;
+    font-weight: bold;
+}

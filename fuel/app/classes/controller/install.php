@@ -413,6 +413,8 @@ class Controller_Install extends Controller
 			}
 			else
 			{
+				$action_type = Input::post('action_type', 'execute');
+				
 				// Obtener todas las migraciones pendientes
 				$pending_migrations = $this->get_pending_migrations();
 
@@ -424,26 +426,55 @@ class Controller_Install extends Controller
 				{
 					$all_success = true;
 
-					foreach ($pending_migrations as $migration)
+					if ($action_type === 'mark_as_executed')
 					{
-						$result = $this->execute_migration($migration['name']);
-						$data['results'][] = $result;
-
-						if ( ! $result['success'])
+						// Solo marcar como ejecutadas sin modificar la BD
+						foreach ($pending_migrations as $migration)
 						{
-							$all_success = false;
-						}
-					}
+							$result = $this->mark_migration_as_executed($migration['name']);
+							$data['results'][] = $result;
 
-					if ($all_success)
-					{
-						$this->mark_as_installed();
-						$data['success'] = 'Todas las migraciones ejecutadas correctamente.';
-						Session::set_flash('success', 'Migraciones ejecutadas correctamente.');
+							if ( ! $result['success'])
+							{
+								$all_success = false;
+							}
+						}
+
+						if ($all_success)
+						{
+							$this->mark_as_installed();
+							$data['success'] = 'Todas las migraciones marcadas como ejecutadas.';
+							Session::set_flash('success', 'Migraciones registradas correctamente.');
+						}
+						else
+						{
+							$data['error'] = 'Algunas migraciones no pudieron ser registradas.';
+						}
 					}
 					else
 					{
-						$data['error'] = 'Algunas migraciones fallaron. Revise los detalles.';
+						// Ejecutar normalmente
+						foreach ($pending_migrations as $migration)
+						{
+							$result = $this->execute_migration($migration['name']);
+							$data['results'][] = $result;
+
+							if ( ! $result['success'])
+							{
+								$all_success = false;
+							}
+						}
+
+						if ($all_success)
+						{
+							$this->mark_as_installed();
+							$data['success'] = 'Todas las migraciones ejecutadas correctamente.';
+							Session::set_flash('success', 'Migraciones ejecutadas correctamente.');
+						}
+						else
+						{
+							$data['error'] = 'Algunas migraciones fallaron. Revise los detalles.';
+						}
 					}
 				}
 			}
@@ -756,25 +787,196 @@ class Controller_Install extends Controller
 				)
 			);
 
-			// Leer y ejecutar el SQL
+			// Leer el SQL
 			$sql = file_get_contents($file_path);
 
-			// Ejecutar múltiples statements
-			$pdo->exec($sql);
+			// Dividir en statements individuales (por punto y coma seguido de salto de línea)
+			$statements = $this->split_sql_statements($sql);
+			
+			$executed_count = 0;
+			$skipped_count = 0;
+			$error_count = 0;
+			$last_error = null;
 
-			// Registrar la migración
-			$batch = $this->get_next_batch($pdo);
-			$stmt = $pdo->prepare("INSERT INTO migrations (migration, batch) VALUES (:migration, :batch)");
-			$stmt->execute(array(
-				':migration' => $migration_name,
-				':batch' => $batch,
-			));
+			// Ejecutar cada statement individualmente
+			foreach ($statements as $statement)
+			{
+				$statement = trim($statement);
+				
+				// Ignorar statements vacíos o solo comentarios
+				if (empty($statement) || substr($statement, 0, 2) === '--')
+				{
+					continue;
+				}
 
+				try
+				{
+					$pdo->exec($statement);
+					$executed_count++;
+				}
+				catch (\PDOException $e)
+				{
+					$error_msg = $e->getMessage();
+					
+					// Verificar si es un error de "tabla ya existe" o "clave duplicada"
+					if (
+						stripos($error_msg, 'already exists') !== false ||
+						stripos($error_msg, 'Duplicate entry') !== false ||
+						stripos($error_msg, 'Duplicate key name') !== false ||
+						$e->getCode() == '42S01' || // Table already exists
+						$e->getCode() == '23000'    // Duplicate key
+					)
+					{
+						// Es una advertencia, no un error crítico
+						$skipped_count++;
+						$last_error = 'Advertencia: ' . $error_msg;
+					}
+					else
+					{
+						// Es un error real
+						$error_count++;
+						$last_error = $error_msg;
+					}
+				}
+			}
+
+			// Registrar la migración si al menos se ejecutó algo
+			if ($executed_count > 0 || $skipped_count > 0)
+			{
+				$batch = $this->get_next_batch($pdo);
+				
+				// Verificar si ya está registrada
+				$stmt = $pdo->prepare("SELECT id FROM migrations WHERE migration = :migration");
+				$stmt->execute(array(':migration' => $migration_name));
+				
+				if ($stmt->rowCount() == 0)
+				{
+					$stmt = $pdo->prepare("INSERT INTO migrations (migration, batch) VALUES (:migration, :batch)");
+					$stmt->execute(array(
+						':migration' => $migration_name,
+						':batch' => $batch,
+					));
+				}
+
+				$message = "Ejecutada: $executed_count statements";
+				if ($skipped_count > 0)
+				{
+					$message .= ", omitidos: $skipped_count (tablas existentes)";
+				}
+				if ($error_count > 0)
+				{
+					$message .= ", errores: $error_count";
+				}
+
+				return array(
+					'migration' => $migration_name,
+					'success' => true,
+					'message' => $message,
+					'details' => $last_error,
+				);
+			}
+			else
+			{
+				return array(
+					'migration' => $migration_name,
+					'success' => false,
+					'message' => $last_error ?: 'No se ejecutaron statements',
+				);
+			}
+		}
+		catch (\PDOException $e)
+		{
 			return array(
 				'migration' => $migration_name,
-				'success' => true,
-				'message' => 'Ejecutada correctamente',
+				'success' => false,
+				'message' => $e->getMessage(),
 			);
+		}
+	}
+
+	/**
+	 * Divide el SQL en statements individuales
+	 *
+	 * @param   string  $sql  SQL completo
+	 * @return  array   Array de statements
+	 */
+	protected function split_sql_statements($sql)
+	{
+		// Eliminar comentarios de una línea
+		$sql = preg_replace('/^--.*$/m', '', $sql);
+		
+		// Eliminar comentarios multilínea
+		$sql = preg_replace('/\/\*.*?\*\//s', '', $sql);
+
+		// Dividir por DELIMITER (para stored procedures)
+		$delimiter = ';';
+		if (preg_match('/DELIMITER\s+(\S+)/i', $sql, $matches))
+		{
+			$delimiter = $matches[1];
+			$sql = preg_replace('/DELIMITER\s+\S+/i', '', $sql);
+		}
+
+		// Dividir por el delimitador
+		$statements = explode($delimiter, $sql);
+
+		// Limpiar y filtrar
+		$statements = array_map('trim', $statements);
+		$statements = array_filter($statements, function($stmt) {
+			return !empty($stmt) && substr($stmt, 0, 2) !== '--';
+		});
+
+		return $statements;
+	}
+
+	/**
+	 * Marca una migración como ejecutada sin modificar la base de datos
+	 *
+	 * @param   string  $migration_name  Nombre del archivo de migración
+	 * @return  array   Resultado
+	 */
+	protected function mark_migration_as_executed($migration_name)
+	{
+		try
+		{
+			$db_config = Config::get('db.default');
+
+			$pdo = new \PDO(
+				$db_config['connection']['dsn'],
+				$db_config['connection']['username'],
+				$db_config['connection']['password'],
+				array(
+					\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+				)
+			);
+
+			$batch = $this->get_next_batch($pdo);
+			
+			// Verificar si ya está registrada
+			$stmt = $pdo->prepare("SELECT id FROM migrations WHERE migration = :migration");
+			$stmt->execute(array(':migration' => $migration_name));
+			
+			if ($stmt->rowCount() == 0)
+			{
+				$stmt = $pdo->prepare("INSERT INTO migrations (migration, batch) VALUES (:migration, :batch)");
+				$stmt->execute(array(
+					':migration' => $migration_name,
+					':batch' => $batch,
+				));
+
+				return array(
+					'migration' => $migration_name,
+					'success' => true,
+					'message' => 'Marcada como ejecutada (tablas ya existían)',
+				);
+			}
+			else
+			{
+				return array(
+					'migration' => $migration_name,
+					'success' => true,
+					'message' => 'Ya estaba registrada',
+				);
+			}
 		}
 		catch (\PDOException $e)
 		{

@@ -5,15 +5,18 @@
     # Block access to fuel and other sensitive directories
     RewriteRule ^(fuel|docs|vendor) - [F,L]
 
-    # Redirect to public folder
-    RewriteCond %{REQUEST_URI} !^/base/public/
+    # Allow direct access to public folder
+    RewriteCond %{REQUEST_URI} ^/base/public/
+    RewriteRule ^(.*)$ - [L]
+
+    # Redirect everything else to public folder
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)$ public/$1 [L]
 
     # Redirect root to public
     RewriteCond %{REQUEST_URI} ^/base/?$
-    RewriteRule ^(.*)$ public/ [L]
+    RewriteRule ^(.*)$ public/index.php [L]
 </IfModule>
 
 # Disable directory listing
