@@ -129,7 +129,7 @@
 
 	<div class="row">
 		<div class="col-md-6">
-			<a href="<?php echo Uri::create('install/ejecutar'); ?>" class="btn btn-installer-outline">
+			<a href="<?php echo Uri::create('install/auto_install'); ?>" class="btn btn-installer-outline">
 				<span class="glyphicon glyphicon-arrow-left"></span>
 				Volver
 			</a>
