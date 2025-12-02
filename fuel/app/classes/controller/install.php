@@ -42,9 +42,29 @@ class Controller_Install extends Controller
 	{
 		parent::before();
 
-		// Definir rutas
-		$this->migrations_path = APPPATH . 'migrations' . DIRECTORY_SEPARATOR;
-		$this->lock_file = APPPATH . 'config' . DIRECTORY_SEPARATOR . '.installed';
+		// Cargar configuración del instalador
+		Config::load('install', 'install');
+
+		// Verificar si el instalador está habilitado
+		if ( ! Config::get('install.enabled', true))
+		{
+			throw new HttpNotFoundException();
+		}
+
+		// Verificar restricción por IP
+		$allowed_ips = Config::get('install.allowed_ips', array());
+		if ( ! empty($allowed_ips))
+		{
+			$client_ip = Input::real_ip();
+			if ( ! in_array($client_ip, $allowed_ips))
+			{
+				throw new HttpNoAccessException();
+			}
+		}
+
+		// Definir rutas desde configuración
+		$this->migrations_path = Config::get('install.migrations_path', APPPATH . 'migrations' . DIRECTORY_SEPARATOR);
+		$this->lock_file = Config::get('install.lock_file', APPPATH . 'config' . DIRECTORY_SEPARATOR . '.installed');
 
 		// Cargar template
 		$this->template = View::forge($this->template_name);
@@ -563,7 +583,30 @@ class Controller_Install extends Controller
 	 */
 	protected function execute_migration($migration_name)
 	{
+		// Validar nombre del archivo (solo permitir ciertos caracteres)
+		if ( ! preg_match('/^[0-9]{3}_[a-zA-Z0-9_]+\.sql$/', $migration_name))
+		{
+			return array(
+				'migration' => $migration_name,
+				'success' => false,
+				'message' => 'Nombre de archivo de migración inválido',
+			);
+		}
+
 		$file_path = $this->migrations_path . $migration_name;
+
+		// Verificar que el archivo está dentro del directorio de migraciones (prevenir path traversal)
+		$real_migrations_path = realpath($this->migrations_path);
+		$real_file_path = realpath($file_path);
+
+		if ($real_file_path === false || strpos($real_file_path, $real_migrations_path) !== 0)
+		{
+			return array(
+				'migration' => $migration_name,
+				'success' => false,
+				'message' => 'Archivo de migración no válido o fuera del directorio permitido',
+			);
+		}
 
 		if ( ! file_exists($file_path))
 		{
@@ -709,8 +752,17 @@ return array(
 				)
 			);
 
-			// Generar hash de contraseña
-			$salt = Config::get('simpleauth.salt', 'ERP_MULTI_TENANT_SALT');
+			// Obtener salt de la configuración (debe estar configurado)
+			$salt = Config::get('simpleauth.salt');
+
+			if (empty($salt))
+			{
+				// Generar un salt seguro si no está configurado
+				$salt = bin2hex(random_bytes(32));
+				\Log::warning('Install: No salt configured, using generated value. Configure simpleauth.salt for consistency.');
+			}
+
+			// Generar hash de contraseña usando PBKDF2
 			$password_hash = base64_encode(hash_pbkdf2('sha256', hash('sha256', $password), $salt, 10000, 32, true));
 
 			// Verificar si el usuario ya existe
@@ -722,16 +774,24 @@ return array(
 				throw new \Exception('El usuario o email ya existe');
 			}
 
-			// Insertar usuario administrador (group_id = 100 para super admin)
+			// Obtener configuración de grupo administrador
+			$admin_group_id = Config::get('install.admin.group_id', 100);
+			$admin_first_name = Config::get('install.admin.first_name', 'Administrador');
+			$admin_last_name = Config::get('install.admin.last_name', 'Sistema');
+
+			// Insertar usuario administrador
 			$stmt = $pdo->prepare("
 				INSERT INTO users (username, password, group_id, email, first_name, last_name, is_active, is_verified, created_at)
-				VALUES (:username, :password, 100, :email, 'Administrador', 'Sistema', 1, 1, NOW())
+				VALUES (:username, :password, :group_id, :email, :first_name, :last_name, 1, 1, NOW())
 			");
 
 			$stmt->execute(array(
 				':username' => $username,
 				':password' => $password_hash,
+				':group_id' => $admin_group_id,
 				':email' => $email,
+				':first_name' => $admin_first_name,
+				':last_name' => $admin_last_name,
 			));
 
 			return true;

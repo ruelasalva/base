@@ -5,6 +5,11 @@
  * Este archivo contiene la configuración del instalador de base de datos.
  * Permite personalizar el comportamiento del instalador.
  *
+ * ADVERTENCIA DE SEGURIDAD:
+ * - Deshabilite el instalador en producción después de la instalación inicial
+ * - Configure 'require_auth' => true para actualizaciones en producción
+ * - Restrinja el acceso por IP si es necesario
+ *
  * @package    app
  * @author     ERP Development Team
  */
@@ -15,8 +20,8 @@ return array(
 	 *  Habilitar/Deshabilitar el instalador
 	 * -------------------------------------------------------------------------
 	 *
-	 *  Establecer en false para deshabilitar el acceso al instalador.
-	 *  Recomendado en producción después de la instalación inicial.
+	 *  IMPORTANTE: Establecer en false después de la instalación inicial
+	 *  en entornos de producción por razones de seguridad.
 	 *
 	 */
 	'enabled' => true,
@@ -26,8 +31,9 @@ return array(
 	 *  Requerir autenticación para el instalador
 	 * -------------------------------------------------------------------------
 	 *
+	 *  RECOMENDADO: Habilitar en producción para actualizaciones.
 	 *  Si está habilitado, solo usuarios autenticados con permisos de admin
-	 *  pueden acceder al instalador (útil para actualizaciones).
+	 *  pueden acceder al instalador.
 	 *
 	 */
 	'require_auth' => false,
@@ -39,6 +45,7 @@ return array(
 	 *
 	 *  Lista de IPs que pueden acceder al instalador.
 	 *  Dejar vacío para permitir cualquier IP.
+	 *  RECOMENDADO: Restringir en producción.
 	 *
 	 */
 	'allowed_ips' => array(
@@ -65,6 +72,17 @@ return array(
 	 *
 	 */
 	'lock_file' => APPPATH . 'config' . DIRECTORY_SEPARATOR . '.installed',
+
+	/**
+	 * -------------------------------------------------------------------------
+	 *  Configuración del usuario administrador
+	 * -------------------------------------------------------------------------
+	 */
+	'admin' => array(
+		'group_id' => 100,           // ID del grupo super admin
+		'first_name' => 'Administrador',
+		'last_name' => 'Sistema',
+	),
 
 	/**
 	 * -------------------------------------------------------------------------
