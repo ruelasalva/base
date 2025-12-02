@@ -539,6 +539,15 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		'language' => array(),
+		'language' => array(
+			'common',    // Traducciones comunes
+			'admin',     // Traducciones del módulo admin
+			'partners',  // Traducciones del módulo partners
+			'providers', // Traducciones del módulo providers
+			'sellers',   // Traducciones del módulo sellers
+			'clients',   // Traducciones del módulo clients
+			'store',     // Traducciones del módulo store
+			'landing',   // Traducciones del módulo landing
+		),
 	),
 );

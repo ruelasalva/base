@@ -18,38 +18,52 @@ if ( ! defined('ADMIN_KEY'))
 	define('ADMIN_KEY', 'admin');
 }
 
+// Prevent loading the bootstrap multiple times
+if (defined('ADMIN_MODULE_LOADED'))
+{
+	return;
+}
+
+define('ADMIN_MODULE_LOADED', true);
+
 /**
  * Check if this module is active for the current tenant
  */
-function admin_is_active()
+if ( ! function_exists('admin_is_active'))
 {
-	if ( ! defined('TENANT_ACTIVE_MODULES'))
+	function admin_is_active()
 	{
-		return false;
+		if ( ! defined('TENANT_ACTIVE_MODULES'))
+		{
+			return false;
+		}
+
+		$serialized = TENANT_ACTIVE_MODULES;
+
+		if (empty($serialized) || ! is_string($serialized))
+		{
+			return false;
+		}
+
+		$active_modules = unserialize($serialized, array('allowed_classes' => false));
+
+		if ($active_modules === false || ! is_array($active_modules))
+		{
+			return false;
+		}
+
+		return in_array(ADMIN_KEY, $active_modules, true);
 	}
-
-	$serialized = TENANT_ACTIVE_MODULES;
-
-	if (empty($serialized) || ! is_string($serialized))
-	{
-		return false;
-	}
-
-	$active_modules = unserialize($serialized, array('allowed_classes' => false));
-
-	if ($active_modules === false || ! is_array($active_modules))
-	{
-		return false;
-	}
-
-	return in_array(ADMIN_KEY, $active_modules, true);
 }
 
 /**
  * Initialize the module only if active for current tenant
  */
-if (admin_is_active())
+if (admin_is_active() || \Fuel::$env === \Fuel::DEVELOPMENT)
 {
+	// Add module path to package paths
+	\Package::load('admin', TENANT_PKGPATH.'admin'.DIRECTORY_SEPARATOR);
+	
 	// Register module classes with autoloader
 	\Autoloader::add_classes(array(
 		'Admin\\Controller_Dashboard'  => __DIR__.'/classes/controller/dashboard.php',
@@ -63,9 +77,12 @@ if (admin_is_active())
 	));
 
 	// Add namespace for the module
-	\Autoloader::add_namespace('Admin', __DIR__.'/classes/');
+	\Autoloader::add_namespace('Admin', __DIR__.'/classes/', true);
+	
+	// Add views path
+	\Finder::instance()->add_path(__DIR__.'/views/', -1);
 
-	// Register module routes
+	// Register module routes - Usar formato correcto sin "controller_"
 	\Router::add(array(
 		'admin'                 => 'admin/dashboard/index',
 		'admin/dashboard'       => 'admin/dashboard/index',
@@ -75,9 +92,9 @@ if (admin_is_active())
 		'admin/settings/(:any)' => 'admin/settings/$1',
 		'admin/reports'         => 'admin/reports/index',
 		'admin/reports/(:any)'  => 'admin/reports/$1',
-	));
+	), null, true); // true = prepend (higher priority)
 
-	\Log::info('Admin Module: Module loaded and activated for tenant');
+	\Log::info('Admin Module: Module loaded successfully');
 }
 else
 {

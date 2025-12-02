@@ -54,6 +54,23 @@ class Tenant_Resolver
 	 */
 	public static function init()
 	{
+		// En modo DEVELOPMENT, cargar todos los módulos sin verificar BD
+		if (\Fuel::$env === \Fuel::DEVELOPMENT)
+		{
+			// Cargar todos los módulos disponibles en development
+			$all_modules = array('admin', 'partners', 'sellers', 'store', 'clients', 'providers', 'landing');
+			static::$active_modules = $all_modules;
+			
+			// Define constant con todos los módulos
+			if ( ! defined('TENANT_ACTIVE_MODULES'))
+			{
+				define('TENANT_ACTIVE_MODULES', serialize(static::$active_modules));
+			}
+			
+			\Log::warning('Tenant Resolver: DEVELOPMENT mode - All modules loaded automatically');
+			return;
+		}
+		
 		// Get HTTP_HOST from server variables
 		$http_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
 

@@ -81,6 +81,20 @@ if ( ! defined('TENANT_PKGPATH'))
 	}
 }
 
+// Add tenant packages path to Config BEFORE loading bootstraps
+if (TENANT_PKGPATH !== false && is_dir(TENANT_PKGPATH))
+{
+	// Get current package paths
+	$package_paths = \Config::get('package_paths', array());
+	
+	// Add tenant packages path if not already added
+	if ( ! in_array(TENANT_PKGPATH, $package_paths))
+	{
+		$package_paths[] = TENANT_PKGPATH;
+		\Config::set('package_paths', $package_paths);
+	}
+}
+
 // Load tenant packages if directory exists
 if (TENANT_PKGPATH !== false && is_dir(TENANT_PKGPATH))
 {
@@ -97,6 +111,9 @@ if (TENANT_PKGPATH !== false && is_dir(TENANT_PKGPATH))
 			if (file_exists($bootstrap_file))
 			{
 				require_once $bootstrap_file;
+				
+				// Log package loading
+				\Log::info('Tenant Package Loaded: ' . basename($package_path));
 			}
 		}
 	}
