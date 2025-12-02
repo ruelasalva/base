@@ -1,30 +1,27 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
+ * Configuración de Base de Datos del Tenant
  *
- * @package    Fuel
- * @version    1.8.2
- * @author     Fuel Development Team
- * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
- * @link       https://fuelphp.com
- */
-
-/**
- * -----------------------------------------------------------------------------
- *  Database settings for development environment
- * -----------------------------------------------------------------------------
+ * Generado automáticamente por el instalador
+ * Fecha: 2025-12-02 07:33:12
  *
- *  These settings get merged with the global settings.
- *
+ * NOTA: Este archivo sobrescribe la configuración por defecto.
  */
 
 return array(
 	'default' => array(
-		'connection' => array(
-			'dsn'      => 'mysql:host=localhost;dbname=fuel_dev',
+		'type'        => 'pdo',
+		'connection'  => array(
+			'dsn'      => 'mysql:host=localhost;dbname=base',
 			'username' => 'root',
 			'password' => '',
 		),
+		'identifier'  => '`',
+		'table_prefix' => '',
+		'charset'     => 'utf8mb4',
+		'collation'   => false,
+		'enable_cache' => true,
+		'profiling'   => false,
+		'readonly'    => false,
 	),
 );
