@@ -27,7 +27,7 @@ return array(
 	 *
 	 */
 
-	// 'base_url' => null,
+	'base_url' => null,
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -43,7 +43,7 @@ return array(
 	 *
 	 */
 
-	// 'url_suffix' => '',
+	'url_suffix' => '',
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -54,9 +54,9 @@ return array(
 	 *
 	 */
 
-	// 'index_file' => false,
+	'index_file' => false,
 
-	// 'profiling' => false,
+	'profiling' => false,
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -64,7 +64,7 @@ return array(
 	 * -------------------------------------------------------------------------
 	 */
 
-	// 'cache_dir' => APPPATH.'cache/',
+	'cache_dir' => APPPATH.'cache/',
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -77,9 +77,9 @@ return array(
 	 *
 	 */
 
-	// 'caching' => false,
+	'caching' => false,
 
-	// 'cache_lifetime' => 3600,
+	'cache_lifetime' => 3600,
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -88,9 +88,9 @@ return array(
 	 * -------------------------------------------------------------------------
 	 */
 
-	// 'ob_callback' => null,
+	'ob_callback' => null,
 
-	// 'errors' => array(
+	'errors' => array(
 		/**
 		 * ---------------------------------------------------------------------
 		 *  Which errors should we show, but continue execution? You can add
@@ -103,7 +103,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'continue_on' => array(),
+		'continue_on' => array(),
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -113,7 +113,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'throttle' => 10,
+		'throttle' => 10,
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -121,7 +121,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'notices' => true,
+		'notices' => true,
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -129,8 +129,8 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'render_prior' => false,
-	// ),
+		'render_prior' => false,
+	),
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -142,19 +142,19 @@ return array(
 	 *  The default language.
 	 */
 
-	// 'language' => 'en',
+	'language' => 'es',
 
 	/**
 	 *  Fallback language when file isn't available for default language.
 	 */
 
-	// 'language_fallback' => 'en',
+	'language_fallback' => 'en',
 
 	/**
 	 *  PHP set_locale() setting. Use null to not set.
 	 */
 
-	// 'locale' => 'en_US',
+	'locale' => 'es_MX.UTF-8',
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -162,7 +162,7 @@ return array(
 	 * -------------------------------------------------------------------------
 	 */
 
-	// 'encoding' => 'UTF-8',
+	'encoding' => 'UTF-8',
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -174,13 +174,13 @@ return array(
 	 *  The server offset in seconds from GMT timestamp when time() is used.
 	 */
 
-	// 'server_gmt_offset' => 0,
+	'server_gmt_offset' => 0,
 
 	/**
 	 *  Change the server's default timezone. This is optional.
 	 */
 
-	// 'default_timezone' => null,
+	'default_timezone' => 'America/Mexico_City',
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -189,18 +189,18 @@ return array(
 	 *
 	 *  Can be set to any of the following:
 	 *
-	 *      Fuel::L_NONE
-	 *      Fuel::L_ERROR
-	 *      Fuel::L_WARNING
-	 *      Fuel::L_DEBUG
-	 *      Fuel::L_INFO
-	 *      Fuel::L_ALL
+	 *      Fuel::L_NONE    - Desactiva todos los logs
+	 *      Fuel::L_ERROR   - Solo errores críticos
+	 *      Fuel::L_WARNING - Errores y advertencias
+	 *      Fuel::L_DEBUG   - Errores, advertencias y debug
+	 *      Fuel::L_INFO    - Errores, advertencias, debug e info
+	 *      Fuel::L_ALL     - Todos los logs (completo)
 	 *
 	 */
 
-	// 'log_threshold'   => Fuel::L_WARNING,
-	// 'log_path'        => APPPATH.'logs/',
-	// 'log_date_format' => 'Y-m-d H:i:s',
+	'log_threshold'   => Fuel::L_ALL,        // Captura todos los logs
+	'log_path'        => APPPATH.'logs/',    // Carpeta donde se guardan los logs
+	'log_date_format' => 'Y-m-d H:i:s',      // Formato de fecha en los logs
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -211,16 +211,16 @@ return array(
 	'security' => array(
 		/**
 		 * ---------------------------------------------------------------------
-		 *  CSRF settings
+		 *  CSRF settings (IMPORTANTE para sistema multi-tenant)
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'csrf_autoload'            => false,
-		// 'csrf_autoload_methods'    => array('post', 'put', 'delete'),
-		// 'csrf_bad_request_on_fail' => false,
-		// 'csrf_auto_token'          => false,
-		// 'csrf_token_key'           => 'fuel_csrf_token',
-		// 'csrf_expiration'          => 0,
+		'csrf_autoload'            => true,
+		'csrf_autoload_methods'    => array('post', 'put', 'delete'),
+		'csrf_bad_request_on_fail' => true,
+		'csrf_auto_token'          => true,
+		'csrf_token_key'           => 'fuel_csrf_token',
+		'csrf_expiration'          => 7200, // 2 horas
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -228,7 +228,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'token_salt' => 'put your salt value here to make the token more secure',
+		'token_salt' => 'multitenant_erp_secure_salt_2025_' . md5(__FILE__),
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -242,7 +242,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'allow_x_headers' => false,
+		'allow_x_headers' => true, // Importante para reverse proxy/load balancer
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -313,18 +313,18 @@ return array(
 
 	/**
 	 * -------------------------------------------------------------------------
-	 *  Cookie settings
+	 *  Cookie settings (IMPORTANTE para multi-tenant)
 	 * -------------------------------------------------------------------------
 	 */
 
-	// 'cookie' => array(
+	'cookie' => array(
 		/**
 		 * ---------------------------------------------------------------------
 		 *  Number of seconds before the cookie expires
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'expiration' => 0,
+		'expiration' => 0,
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -332,7 +332,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'path' => '/',
+		'path' => '/',
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -340,7 +340,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'domain' => null,
+		'domain' => null,
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -348,7 +348,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'secure' => false,
+		'secure' => false, // Cambiar a true en producción con HTTPS
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -356,8 +356,8 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'http_only' => false,
-	// ),
+		'http_only' => true, // Seguridad contra XSS
+	),
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -407,7 +407,7 @@ return array(
 
 	/**
 	 * -------------------------------------------------------------------------
-	 *  Module paths
+	 *  Module paths (IMPORTANTE para multi-tenant)
 	 * -------------------------------------------------------------------------
 	 *
 	 *  To enable you to split up your application into modules which can be
@@ -420,9 +420,10 @@ return array(
 	 *
 	 */
 
-	// 'module_paths' => array(
-	// 	// APPPATH.'modules'.DS
-	// ),
+	'module_paths' => array(
+		APPPATH.'modules'.DS,
+		// Los módulos tenant se cargarán dinámicamente según el tenant
+	),
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -447,11 +448,11 @@ return array(
 
 	/**
 	 * -------------------------------------------------------------------------
-	 *  Always load
+	 *  Always load (CRÍTICO para multi-tenant ERP)
 	 * -------------------------------------------------------------------------
 	 */
 
-	// 'always_load' => array(
+	'always_load' => array(
 		/**
 		 * ---------------------------------------------------------------------
 		 *  These packages are loaded on Fuel's startup.
@@ -469,9 +470,12 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'packages' => array(
-		// 	// 'orm',
-		// ),
+		'packages' => array(
+			'orm',      // ORM para base de datos
+			'auth',     // Autenticación de usuarios
+			'email',    // Envío de emails
+			'parser',   // Parser de templates
+		),
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -484,7 +488,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'modules' => array(),
+		'modules' => array(),
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -492,7 +496,7 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'classes' => array(),
+		'classes' => array(),
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -512,7 +516,10 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'config' => array(),
+		'config' => array(
+			'db',        // Configuración de base de datos
+			'session',   // Configuración de sesiones
+		),
 
 		/**
 		 * ---------------------------------------------------------------------
@@ -532,6 +539,6 @@ return array(
 		 * ---------------------------------------------------------------------
 		 */
 
-		// 'language' => array(),
-	// ),
+		'language' => array(),
+	),
 );

@@ -3,7 +3,7 @@
  * Configuración de Base de Datos del Tenant
  *
  * Generado automáticamente por el instalador
- * Fecha: 2025-12-02 07:33:12
+ * Fecha: 2025-12-02 07:56:51
  *
  * NOTA: Este archivo sobrescribe la configuración por defecto.
  */
