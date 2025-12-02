@@ -105,4 +105,5 @@ return array(
 	'landing'           => 'module/placeholder/landing',
 	'landing/:any'      => 'module/placeholder/landing',
 	'contacto'          => 'module/placeholder/contacto',
+	'contacto/:any'     => 'module/placeholder/contacto',
 );
