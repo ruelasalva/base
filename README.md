@@ -111,11 +111,47 @@ fuel/
 
 ## Instalación
 
+### Opción 1: Usando el Instalador Web (Recomendado)
+
+1. Clonar el repositorio
+2. Ejecutar `composer install`
+3. Crear una base de datos vacía en MySQL
+4. Acceder a `/install` en el navegador
+5. Seguir el asistente de instalación:
+   - Configurar conexión a base de datos
+   - Ejecutar migraciones
+   - Crear usuario administrador
+
+### Opción 2: Instalación Manual
+
 1. Clonar el repositorio
 2. Ejecutar `composer install`
 3. Configurar la base de datos en `fuel/app/config/db.php`
-4. Crear la base de datos master y la tabla de tenants
-5. Crear los tenants necesarios
+4. Ejecutar las migraciones SQL en `fuel/app/migrations/`
+5. Crear el usuario administrador manualmente
+
+## Instalador de Base de Datos
+
+El sistema incluye un instalador web accesible en `/install` que permite:
+
+- **Configurar la conexión** a la base de datos MySQL
+- **Ejecutar migraciones** para crear/actualizar tablas
+- **Crear el usuario administrador** inicial
+- **Verificar el estado** del sistema
+
+### Añadir Nuevas Migraciones
+
+Para extender el proyecto con nuevas tablas:
+
+1. Crear un archivo SQL en `fuel/app/migrations/` con el formato:
+   ```
+   NNN_nombre_descriptivo.sql
+   ```
+   Ejemplo: `002_productos.sql`, `003_categorias.sql`
+
+2. Acceder a `/install` y ejecutar las migraciones pendientes
+
+Ver `fuel/app/migrations/README.md` para más detalles.
 
 ## Configuración de Tenant
 
