@@ -144,10 +144,14 @@ class Controller_Module_Placeholder extends Controller_Base
 	}
 
 	/**
-	 * Router personalizado para capturar cualquier sub-ruta
+	 * FuelPHP framework hook for handling dynamic routing.
 	 *
-	 * @param string $method Método/subruta
-	 * @param array $params Parámetros adicionales
+	 * This method overrides FuelPHP's default routing mechanism. It is automatically
+	 * called by the framework when a requested action does not exist as a method
+	 * in this controller. This allows for custom or dynamic routing logic.
+	 *
+	 * @param string $method Método/subruta solicitado por la URL
+	 * @param array $params Parámetros adicionales de la ruta
 	 * @return Response
 	 */
 	public function router($method, $params)
