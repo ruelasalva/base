@@ -31,6 +31,23 @@ return array(
 
 	/**
 	 * -------------------------------------------------------------------------
+	 *  Installer routes
+	 * -------------------------------------------------------------------------
+	 *
+	 *  El instalador permite configurar la base de datos y ejecutar migraciones
+	 *  cuando el código se despliega en un nuevo dominio.
+	 *
+	 */
+
+	'install'              => 'install/index',
+	'install/configurar'   => 'install/configurar',
+	'install/ejecutar'     => 'install/ejecutar',
+	'install/crear_admin'  => 'install/crear_admin',
+	'install/completado'   => 'install/completado',
+	'install/verificar_db' => 'install/verificar_db',
+
+	/**
+	 * -------------------------------------------------------------------------
 	 *  Authentication routes
 	 * -------------------------------------------------------------------------
 	 */
