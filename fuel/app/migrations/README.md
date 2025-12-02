@@ -32,22 +32,33 @@ Donde:
 
 ```sql
 -- ============================================================================
--- Migración: 002_productos
+-- Migración: 002_products
 -- Descripción: Crea las tablas para el módulo de productos
 -- Fecha: 2024-01-15
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS `productos` (
+CREATE TABLE IF NOT EXISTS `products` (
     `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `nombre` VARCHAR(255) NOT NULL,
-    `descripcion` TEXT,
-    `precio` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    `stock` INT(11) NOT NULL DEFAULT 0,
+    `sku` VARCHAR(50) NOT NULL COMMENT 'Stock Keeping Unit',
+    `name` VARCHAR(255) NOT NULL,
+    `description` TEXT,
+    `price` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `stock_quantity` INT(11) NOT NULL DEFAULT 0,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_sku` (`sku`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
+
+**IMPORTANTE:** Se usa nomenclatura en inglés para las tablas como estándar internacional:
+- `products` (no productos)
+- `categories` (no categorias)
+- `providers` (no proveedores)
+- `customers` (no clientes)
+- `orders` (no pedidos)
+- `product_attributes` (para atributos adicionales)
+- `order_items` (para detalles de pedidos)
 
 3. **Acceder al instalador** en `/install` para ejecutar la migración
 
@@ -58,6 +69,7 @@ CREATE TABLE IF NOT EXISTS `productos` (
 - Usar `CREATE TABLE IF NOT EXISTS` para evitar errores si la tabla ya existe
 - Incluir comentarios descriptivos en cada migración
 - Usar `utf8mb4` como charset predeterminado
+- Usar nombres de tablas en inglés como estándar internacional
 - Definir índices apropiados para campos de búsqueda frecuente
 - Usar `DATETIME` con `DEFAULT CURRENT_TIMESTAMP` para campos de fecha
 - Incluir campos `created_at` y `updated_at` en todas las tablas

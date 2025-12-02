@@ -9,6 +9,7 @@ function get_step_class($step_number)
 		'index' => 1,
 		'configurar' => 2,
 		'ejecutar' => 3,
+		'auto_install' => 3,
 		'crear_admin' => 4,
 		'completado' => 5,
 	);
