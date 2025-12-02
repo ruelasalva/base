@@ -1,0 +1,34 @@
+{
+  "name": "base",
+  "version": "1.0.0",
+  "description": "* Version: 1.8.2 * [Website](https://fuelphp.com/) * [Release Documentation](https://fuelphp.com/docs) * [Release API browser](https://fuelphp.com/api) * [Development branch Documentation](https://fuelphp.com/dev-docs) * [Development branch API browser](https://fuelphp.com/dev-api) * [Support Forum](https://forums.fuelphp.com) for comments, discussion and community support",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ruelasalva/base.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ruelasalva/base/issues"
+  },
+  "homepage": "https://github.com/ruelasalva/base#readme",
+  "dependencies": {
+    "@vitejs/plugin-vue": "^6.0.2",
+    "axios": "^1.7.0",
+    "bootstrap": "^5.3.0",
+    "chart.js": "^4.4.0",
+    "datatables.net": "^2.3.5",
+    "datatables.net-dt": "^2.3.5",
+    "jquery": "^3.7.1",
+    "select2": "^4.1.0-rc.0",
+    "sweetalert2": "^11.14.0",
+    "vite": "^7.2.6",
+    "vue": "^3.5.25"
+  }
+}
