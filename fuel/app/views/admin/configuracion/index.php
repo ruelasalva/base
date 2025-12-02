@@ -17,7 +17,7 @@
 
 <!-- Form -->
 <form method="POST" action="<?php echo Uri::create('admin/configuracion/save'); ?>" id="configForm">
-    <?php echo \Security::csrf(); ?>
+    <?php echo Form::csrf(); ?>
 
     <!-- Tabs Navigation -->
     <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">

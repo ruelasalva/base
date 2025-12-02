@@ -299,7 +299,7 @@ class Controller_Admin extends Controller_Baseadmin
 	/**
 	 * INDEX
 	 *
-	 * CARGA LA VISTA DEL DASHBOARD
+	 * CARGA LA VISTA DEL DASHBOARD CON WIDGETS
 	 *
 	 * @access  public
 	 * @return  void
@@ -312,6 +312,7 @@ class Controller_Admin extends Controller_Baseadmin
 		$data['tenant_id'] = Session::get('tenant_id', 1);
 		$data['username'] = Auth::get('username');
 		$data['email'] = Auth::get('email');
+		$user_id = Auth::get('id');
 		
 		# PERMISOS DEL USUARIO
 		$data['is_super_admin'] = Helper_Permission::is_super_admin();
@@ -322,13 +323,21 @@ class Controller_Admin extends Controller_Baseadmin
 		$months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 		$data['date'] = $days[date('w')] . ' ' . date('d') . ' de ' . $months[date('n')-1] . ' del ' . date('Y');
 		
-		# ESTADÍSTICAS BÁSICAS (TODO: implementar cuando tengamos los módulos)
-		$data['stats'] = [
-			'users' => 0,
-			'products' => 0,
-			'sales' => 0,
-			'customers' => 0,
-		];
+		# OBTENER CONFIGURACIÓN DE WIDGETS DEL USUARIO
+		Helper_Dashboard::ensure_loaded();
+		$data['widgets_config'] = Helper_Dashboard::get_user_widgets($user_id, $data['tenant_id']);
+		$data['available_widgets'] = Helper_Dashboard::get_available_widgets($user_id, $data['tenant_id']);
+		
+		# OBTENER DATOS DE CADA WIDGET CONFIGURADO
+		$data['widgets_data'] = [];
+		if (isset($data['widgets_config']['widgets']) && is_array($data['widgets_config']['widgets'])) {
+			foreach ($data['widgets_config']['widgets'] as $widget_key) {
+				$method = 'widget_' . $widget_key;
+				if (method_exists('Helper_Dashboard', $method)) {
+					$data['widgets_data'][$widget_key] = Helper_Dashboard::$method($data['tenant_id']);
+				}
+			}
+		}
 
 		# RENDERIZAR VISTA
 		$data['content'] = View::forge('admin/index', $data);
@@ -336,6 +345,62 @@ class Controller_Admin extends Controller_Baseadmin
 		// Obtener template según preferencias del usuario
 		$template_file = Helper_Template::get_template_file();
 		return View::forge($template_file, $data);
+	}
+
+	/**
+	 * SAVE WIDGET CONFIG
+	 *
+	 * GUARDA LA CONFIGURACIÓN DE WIDGETS DEL USUARIO (AJAX)
+	 *
+	 * @access  public
+	 * @return  JSON
+	 */
+	public function action_save_widget_config()
+	{
+		// Solo aceptar POST
+		if (Input::method() !== 'POST') {
+			return Response::forge(json_encode([
+				'success' => false,
+				'message' => 'Método no permitido'
+			]), 405, ['Content-Type' => 'application/json']);
+		}
+		
+		try {
+			// Obtener datos del usuario
+			$user_id = Auth::get('id');
+			$tenant_id = Session::get('tenant_id', 1);
+			
+			// Leer JSON del body
+			$json = file_get_contents('php://input');
+			$data = json_decode($json, true);
+			
+			if (!isset($data['widgets']) || !is_array($data['widgets'])) {
+				return Response::forge(json_encode([
+					'success' => false,
+					'message' => 'Datos inválidos'
+				]), 400, ['Content-Type' => 'application/json']);
+			}
+			
+			// Guardar configuración
+			Helper_Dashboard::ensure_loaded();
+			$config = [
+				'widgets' => $data['widgets'],
+				'refresh_interval' => isset($data['refresh_interval']) ? (int)$data['refresh_interval'] : 300
+			];
+			
+			$result = Helper_Dashboard::save_user_widgets($user_id, $tenant_id, $config);
+			
+			return Response::forge(json_encode([
+				'success' => $result,
+				'message' => $result ? 'Configuración guardada correctamente' : 'Error al guardar la configuración'
+			]), 200, ['Content-Type' => 'application/json']);
+			
+		} catch (Exception $e) {
+			return Response::forge(json_encode([
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			]), 500, ['Content-Type' => 'application/json']);
+		}
 	}
 
 	/**
