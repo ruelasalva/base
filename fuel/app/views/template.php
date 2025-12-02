@@ -4,8 +4,15 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title><?php echo isset($title) ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') : 'ERP Multi-tenant'; ?></title>
+	<?php
+	// Cargar configuración del sitio
+	$site_config = Config::load('site', true);
+	$site_name = isset($site_config['site_name']) ? $site_config['site_name'] : 'ERP Multi-tenant';
+	?>
+	<title><?php echo isset($title) ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') : $site_name; ?></title>
 	<?php echo Asset::css('bootstrap.css'); ?>
+	<?php echo Asset::css('bootstrap.css'); ?>
+	<?php echo Asset::css('custom.css'); ?>
 	<style>
 		body {
 			padding-top: 20px;
@@ -14,8 +21,14 @@
 		.navbar {
 			margin-bottom: 20px;
 		}
+		<?php
+		// Aplicar colores del tema desde configuración
+		$gradient_start = isset($site_config['theme']['gradient_start']) ? $site_config['theme']['gradient_start'] : '#667eea';
+		$gradient_end = isset($site_config['theme']['gradient_end']) ? $site_config['theme']['gradient_end'] : '#764ba2';
+		$gradient_angle = isset($site_config['theme']['gradient_angle']) ? $site_config['theme']['gradient_angle'] : '135deg';
+		?>
 		.header-title {
-			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			background: linear-gradient(<?php echo $gradient_angle; ?>, <?php echo $gradient_start; ?> 0%, <?php echo $gradient_end; ?> 100%);
 			color: white;
 			padding: 30px 0;
 			margin-bottom: 30px;
@@ -32,15 +45,15 @@
 			border-top: 1px solid #e5e5e5;
 		}
 		.btn-primary {
-			background-color: #667eea;
-			border-color: #667eea;
+			background-color: <?php echo $gradient_start; ?>;
+			border-color: <?php echo $gradient_start; ?>;
 		}
 		.btn-primary:hover {
-			background-color: #764ba2;
-			border-color: #764ba2;
+			background-color: <?php echo $gradient_end; ?>;
+			border-color: <?php echo $gradient_end; ?>;
 		}
 		.navbar-erp {
-			background-color: #667eea;
+			background-color: <?php echo $gradient_start; ?>;
 			border-color: #5a6fd6;
 		}
 		.navbar-erp .navbar-brand,
@@ -55,7 +68,7 @@
 		.navbar-erp .navbar-nav > .active > a,
 		.navbar-erp .navbar-nav > .active > a:hover,
 		.navbar-erp .navbar-nav > .active > a:focus {
-			background-color: #764ba2;
+			background-color: <?php echo $gradient_end; ?>;
 			color: #fff;
 		}
 		.navbar-erp .navbar-toggle {
@@ -68,7 +81,7 @@
 			color: #333;
 		}
 		.dropdown-menu > li > a:hover {
-			background-color: #667eea;
+			background-color: <?php echo $gradient_start; ?>;
 			color: #fff;
 		}
 	</style>
@@ -84,7 +97,7 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" href="/">ERP Multi-tenant</a>
+				<a class="navbar-brand" href="/"><?php echo $site_name; ?></a>
 			</div>
 			<div id="navbar" class="navbar-collapse collapse">
 				<ul class="nav navbar-nav">
@@ -96,11 +109,11 @@
 							Backends <span class="caret"></span>
 						</a>
 						<ul class="dropdown-menu">
-							<li><a href="<?php echo Uri::base(); ?>admin">Admin</a></li>
-							<li><a href="<?php echo Uri::base(); ?>providers">Providers</a></li>
-							<li><a href="<?php echo Uri::base(); ?>partners">Partners</a></li>
-							<li><a href="<?php echo Uri::base(); ?>sellers">Sellers</a></li>
-							<li><a href="<?php echo Uri::base(); ?>clients">Clients</a></li>
+							<li><a href="<?php echo Uri::base(); ?>admin">Administración</a></li>
+							<li><a href="<?php echo Uri::base(); ?>providers">Proveedores</a></li>
+							<li><a href="<?php echo Uri::base(); ?>partners">Socios</a></li>
+							<li><a href="<?php echo Uri::base(); ?>sellers">Vendedores</a></li>
+							<li><a href="<?php echo Uri::base(); ?>clients">Clientes</a></li>
 						</ul>
 					</li>
 				</ul>
@@ -142,8 +155,12 @@
 		<footer class="footer">
 			<div class="row">
 				<div class="col-md-6">
-					<p>&copy; <?php echo date('Y'); ?> ERP Multi-tenant. Todos los derechos reservados.</p>
-					<p><small>Versión: <?php echo Fuel::VERSION; ?></small></p>
+					<?php
+					$footer_text = isset($site_config['footer']['text']) ? $site_config['footer']['text'] : '&copy; ' . date('Y') . ' ERP Multi-tenant. Todos los derechos reservados.';
+					$powered_by = isset($site_config['footer']['powered_by']) ? $site_config['footer']['powered_by'] : 'Powered by FuelPHP';
+					?>
+					<p><?php echo $footer_text; ?></p>
+					<p><small><?php echo $powered_by; ?> <?php echo Fuel::VERSION; ?></small></p>
 				</div>
 				<div class="col-md-6 text-right">
 					<p class="text-muted">Página renderizada en {exec_time}s usando {mem_usage}mb de memoria.</p>

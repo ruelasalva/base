@@ -1,210 +1,154 @@
-<div class="row">
-	<div class="col-md-12">
-		<div class="jumbotron">
-			<h2>¡Bienvenido al ERP Multi-tenant!</h2>
-			<p>Sistema ERP completo con backends para administración, proveedores, partners, vendedores y clientes, además de tienda online y landing page.</p>
-			<p>
-				<a class="btn btn-primary btn-lg" href="<?php echo Uri::base(); ?>tienda" role="button">
-					<span class="glyphicon glyphicon-shopping-cart"></span> Ir a la Tienda
-				</a>
-				<a class="btn btn-default btn-lg" href="<?php echo Uri::base(); ?>landing" role="button">
-					<span class="glyphicon glyphicon-globe"></span> Ver Landing Page
-				</a>
-			</p>
-		</div>
+<?php
+/**
+ * Vista Principal del ERP Multi-Tenant
+ * Utiliza configuraciones desde fuel/app/config/site.php
+ * Los estilos CSS están en public/assets/css/custom.css
+ */
+
+// Cargar configuración del sitio
+$site_config = Config::load('site', true);
+?>
+
+<!-- Hero Section -->
+<div class="hero-section text-center">
+	<div class="container">
+		<h1><?php echo isset($site_config['hero']['title']) ? $site_config['hero']['title'] : 'ERP Multi-Tenant'; ?></h1>
+		<p class="lead"><?php echo isset($site_config['hero']['description']) ? $site_config['hero']['description'] : 'Sistema de Gestión Empresarial'; ?></p>
+		<p>
+			<a class="btn btn-light btn-lg" href="<?php echo Uri::base(); ?>store" role="button" style="margin: 5px;">
+				<span class="glyphicon glyphicon-shopping-cart"></span> Ir a la Tienda
+			</a>
+			<a class="btn btn-outline btn-lg" href="<?php echo Uri::base(); ?>landing" role="button" style="margin: 5px; background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+				<span class="glyphicon glyphicon-globe"></span> Ver Landing Page
+			</a>
+		</p>
 	</div>
 </div>
+
+<!-- Alert de Instalación -->
+<?php if (isset($site_config['installation']['required']) && $site_config['installation']['required']): ?>
+<div class="install-alert">
+	<h4>
+		<span class="glyphicon glyphicon-warning-sign"></span> 
+		<?php echo isset($site_config['installation']['alert_message']) ? $site_config['installation']['alert_message'] : '¡Atención! El sistema requiere instalación inicial'; ?>
+	</h4>
+	<p><?php echo isset($site_config['installation']['alert_details']) ? $site_config['installation']['alert_details'] : 'Necesitas configurar la base de datos y los módulos antes de comenzar.'; ?></p>
+	<a href="<?php echo Uri::base(); ?>install" class="btn btn-warning btn-lg">
+		<span class="glyphicon glyphicon-cog"></span> 
+		<?php echo isset($site_config['installation']['button_text']) ? $site_config['installation']['button_text'] : 'Instalar Ahora'; ?>
+	</a>
+</div>
+<?php endif; ?>
 
 <!-- Módulos del ERP -->
 <div class="row">
 	<div class="col-md-12">
-		<h3><span class="glyphicon glyphicon-th-large"></span> Módulos del ERP</h3>
-		<hr>
+		<h3 class="section-title">
+			<span class="glyphicon glyphicon-th-large"></span> Módulos del ERP
+		</h3>
 	</div>
 </div>
 
 <div class="row">
-	<!-- Backend Admin -->
+	<?php
+	// Cargar módulos desde configuración
+	$modules = isset($site_config['modules']) ? $site_config['modules'] : array();
+	
+	foreach ($modules as $module_key => $module):
+		if (!isset($module['enabled']) || !$module['enabled']) continue;
+		
+		$name = isset($module['name']) ? $module['name'] : ucfirst($module_key);
+		$description = isset($module['description']) ? $module['description'] : '';
+		$icon = isset($module['icon']) ? $module['icon'] : 'glyphicon-th';
+		$color = isset($module['color']) ? $module['color'] : 'default';
+		
+		// Color personalizado para Socios
+		$custom_style = '';
+		$custom_footer_style = '';
+		if ($module_key === 'partners') {
+			$custom_style = 'style="border-color: #9b59b6;"';
+			$custom_footer_style = 'style="background: #9b59b6; color: white; border-color: #8e44ad;"';
+		}
+	?>
 	<div class="col-lg-2 col-md-4 col-sm-6">
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-cog"></span> Admin</h3>
+		<div class="panel panel-<?php echo $color; ?> module-card" <?php echo $custom_style; ?>>
+			<div class="panel-heading" <?php echo ($module_key === 'partners') ? 'style="background: #9b59b6; color: white; border-color: #9b59b6;"' : ''; ?>>
+				<h3 class="panel-title">
+					<span class="glyphicon <?php echo $icon; ?>"></span> <?php echo $name; ?>
+				</h3>
 			</div>
 			<div class="panel-body">
-				<p>Panel de administración del sistema.</p>
-				<ul class="list-unstyled small">
-					<li><span class="glyphicon glyphicon-ok"></span> Usuarios</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Configuración</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Reportes</li>
-				</ul>
+				<p><?php echo $description; ?></p>
 			</div>
 			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>admin" class="btn btn-primary btn-block">Acceder</a>
+				<a href="<?php echo Uri::base() . $module_key; ?>" class="btn btn-<?php echo $color; ?> btn-block" <?php echo $custom_footer_style; ?>>
+					Acceder
+				</a>
 			</div>
 		</div>
 	</div>
-
-	<!-- Backend Providers -->
-	<div class="col-lg-2 col-md-4 col-sm-6">
-		<div class="panel panel-success">
-			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-briefcase"></span> Providers</h3>
-			</div>
-			<div class="panel-body">
-				<p>Portal para proveedores.</p>
-				<ul class="list-unstyled small">
-					<li><span class="glyphicon glyphicon-ok"></span> Productos</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Inventario</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Órdenes</li>
-				</ul>
-			</div>
-			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>providers" class="btn btn-success btn-block">Acceder</a>
-			</div>
-		</div>
-	</div>
-
-	<!-- Backend Partners -->
-	<div class="col-lg-2 col-md-4 col-sm-6">
-		<div class="panel panel-default" style="border-color: #9b59b6;">
-			<div class="panel-heading" style="background: #9b59b6; color: white; border-color: #9b59b6;">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-link"></span> Partners</h3>
-			</div>
-			<div class="panel-body">
-				<p>Portal para socios comerciales.</p>
-				<ul class="list-unstyled small">
-					<li><span class="glyphicon glyphicon-ok"></span> Alianzas</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Contratos</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Comisiones</li>
-				</ul>
-			</div>
-			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>partners" class="btn btn-block" style="background: #9b59b6; color: white; border-color: #8e44ad;">Acceder</a>
-			</div>
-		</div>
-	</div>
-
-	<!-- Backend Sellers -->
-	<div class="col-lg-2 col-md-4 col-sm-6">
-		<div class="panel panel-info">
-			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-usd"></span> Sellers</h3>
-			</div>
-			<div class="panel-body">
-				<p>Panel para vendedores.</p>
-				<ul class="list-unstyled small">
-					<li><span class="glyphicon glyphicon-ok"></span> Ventas</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Clientes</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Comisiones</li>
-				</ul>
-			</div>
-			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>sellers" class="btn btn-info btn-block">Acceder</a>
-			</div>
-		</div>
-	</div>
-
-	<!-- Backend Clients -->
-	<div class="col-lg-2 col-md-4 col-sm-6">
-		<div class="panel panel-warning">
-			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-user"></span> Clients</h3>
-			</div>
-			<div class="panel-body">
-				<p>Portal para clientes.</p>
-				<ul class="list-unstyled small">
-					<li><span class="glyphicon glyphicon-ok"></span> Pedidos</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Perfil</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Soporte</li>
-				</ul>
-			</div>
-			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>clients" class="btn btn-warning btn-block">Acceder</a>
-			</div>
-		</div>
-	</div>
+	<?php endforeach; ?>
 </div>
 
-<!-- Frontend -->
+<!-- Frontend Público -->
 <div class="row" style="margin-top: 20px;">
 	<div class="col-md-12">
-		<h3><span class="glyphicon glyphicon-globe"></span> Frontend Público</h3>
-		<hr>
+		<h3 class="section-title">
+			<span class="glyphicon glyphicon-globe"></span> Frontend Público
+		</h3>
 	</div>
 </div>
 
 <div class="row">
-	<!-- Tienda -->
+	<?php
+	$frontend = isset($site_config['frontend']) ? $site_config['frontend'] : array();
+	foreach ($frontend as $key => $item):
+		if (!isset($item['enabled']) || !$item['enabled']) continue;
+	?>
 	<div class="col-md-6">
-		<div class="panel panel-default">
+		<div class="panel panel-default module-card">
 			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-shopping-cart"></span> Tienda Online</h3>
+				<h3 class="panel-title">
+					<span class="glyphicon <?php echo isset($item['icon']) ? $item['icon'] : 'glyphicon-th'; ?>"></span> 
+					<?php echo isset($item['name']) ? $item['name'] : ucfirst($key); ?>
+				</h3>
 			</div>
 			<div class="panel-body">
-				<p>Tienda online completa con catálogo de productos, carrito de compras y proceso de checkout.</p>
-				<ul class="list-unstyled">
-					<li><span class="glyphicon glyphicon-ok"></span> Catálogo de Productos</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Carrito de Compras</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Proceso de Checkout</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Búsqueda de Productos</li>
-				</ul>
+				<p><?php echo isset($item['description']) ? $item['description'] : ''; ?></p>
 			</div>
 			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>tienda" class="btn btn-primary btn-block">
-					<span class="glyphicon glyphicon-shopping-cart"></span> Ir a la Tienda
+				<a href="<?php echo Uri::base() . $key; ?>" class="btn btn-primary btn-block">
+					<span class="glyphicon <?php echo isset($item['icon']) ? $item['icon'] : 'glyphicon-th'; ?>"></span> 
+					Ver <?php echo isset($item['name']) ? $item['name'] : ucfirst($key); ?>
 				</a>
 			</div>
 		</div>
 	</div>
-
-	<!-- Landing Page -->
-	<div class="col-md-6">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-home"></span> Landing Page</h3>
-			</div>
-			<div class="panel-body">
-				<p>Página de aterrizaje con información institucional, contacto y páginas de contenido.</p>
-				<ul class="list-unstyled">
-					<li><span class="glyphicon glyphicon-ok"></span> Página Principal</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Acerca de Nosotros</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Formulario de Contacto</li>
-					<li><span class="glyphicon glyphicon-ok"></span> Páginas Dinámicas</li>
-				</ul>
-			</div>
-			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>landing" class="btn btn-default btn-block">
-					<span class="glyphicon glyphicon-globe"></span> Ver Landing Page
-				</a>
-			</div>
-		</div>
-	</div>
+	<?php endforeach; ?>
 </div>
 
 <!-- Arquitectura Multi-tenant -->
-<div class="row" style="margin-top: 20px;">
+<div class="row" style="margin-top: 40px;">
 	<div class="col-md-12">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-cloud"></span> Arquitectura Multi-tenant</h3>
-			</div>
-			<div class="panel-body">
-				<div class="row">
-					<div class="col-md-4">
-						<h4><span class="glyphicon glyphicon-hdd"></span> Base de Datos</h4>
-						<p>Cada tenant tiene su propia base de datos, configurada dinámicamente según el dominio (HTTP_HOST).</p>
-					</div>
-					<div class="col-md-4">
-						<h4><span class="glyphicon glyphicon-th"></span> Módulos</h4>
-						<p>Los módulos se cargan condicionalmente según los módulos activos para cada tenant.</p>
-					</div>
-					<div class="col-md-4">
-						<h4><span class="glyphicon glyphicon-refresh"></span> Actualizable</h4>
-						<p>La base del sistema puede actualizarse de forma remota sin afectar los tenants.</p>
-					</div>
-				</div>
-			</div>
-		</div>
+		<h3 class="section-title">
+			<span class="glyphicon glyphicon-cloud"></span> Arquitectura Multi-tenant
+		</h3>
 	</div>
 </div>
 
+<div class="row">
+	<?php
+	$architecture = isset($site_config['architecture']) ? $site_config['architecture'] : array();
+	foreach ($architecture as $key => $item):
+	?>
+	<div class="col-md-4">
+		<div class="panel panel-default module-card">
+			<div class="panel-body text-center">
+				<span class="glyphicon <?php echo isset($item['icon']) ? $item['icon'] : 'glyphicon-th'; ?>"></span>
+				<h4><?php echo isset($item['title']) ? $item['title'] : strtoupper($key); ?></h4>
+				<p><?php echo isset($item['description']) ? $item['description'] : ''; ?></p>
+			</div>
+		</div>
+	</div>
+	<?php endforeach; ?>
+</div>

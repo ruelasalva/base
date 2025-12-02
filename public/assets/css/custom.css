@@ -1,0 +1,162 @@
+/**
+ * Custom CSS para el ERP Multi-Tenant
+ * Archivo de estilos personalizados separado del HTML
+ */
+
+/* Hero Section - Sección principal con gradiente */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 60px 0;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.hero-section h1 {
+    font-size: 3em;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.hero-section p.lead {
+    font-size: 1.3em;
+    margin-bottom: 30px;
+}
+
+/* Alert de Instalación */
+.install-alert {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border: none;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.install-alert strong {
+    font-size: 1.2em;
+}
+
+.install-alert .btn-warning {
+    background-color: #fff;
+    color: #f5576c;
+    border: none;
+    font-weight: bold;
+}
+
+.install-alert .btn-warning:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Títulos de Sección */
+.section-title {
+    color: #764ba2;
+    font-weight: bold;
+    margin-top: 40px;
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #667eea;
+}
+
+/* Tarjetas de Módulos */
+.module-card {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.module-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.module-card .panel-heading {
+    border-radius: 8px 8px 0 0;
+}
+
+.module-card h4 {
+    font-weight: bold;
+}
+
+/* Iconos grandes en la sección de arquitectura */
+.module-card .glyphicon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    display: block;
+}
+
+/* Panel de Administración */
+.panel-success .module-card:hover {
+    border-color: #5cb85c;
+}
+
+/* Panel de Proveedores */
+.panel-info .module-card:hover {
+    border-color: #5bc0de;
+}
+
+/* Panel de Socios */
+.panel-warning .module-card:hover {
+    border-color: #f0ad4e;
+}
+
+/* Panel de Vendedores */
+.panel-primary .module-card:hover {
+    border-color: #428bca;
+}
+
+/* Panel de Clientes */
+.panel-default .module-card:hover {
+    border-color: #999;
+}
+
+/* Panel de Herramientas */
+.panel-danger .module-card:hover {
+    border-color: #d9534f;
+}
+
+/* Botones con efectos */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Mejoras responsive */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2em;
+    }
+    
+    .hero-section p.lead {
+        font-size: 1.1em;
+    }
+    
+    .module-card .glyphicon {
+        font-size: 36px;
+    }
+}
+
+/* Animaciones suaves para carga de página */
+.container {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
