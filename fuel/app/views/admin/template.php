@@ -36,15 +36,13 @@
 	<!-- URL-LOCATION -->
 	<span id="url-location" data-url="<?php echo Uri::create('admin/ajax/'); ?>" data-id="<?php echo Auth::get('id'); ?>" data-token="<?php echo md5(Auth::get('login_hash')); ?>"></span>
 	<span id="url-current" data-url="<?php echo Uri::current(); ?>"></span>
-
-	<?php echo Asset::js('admin/jquery/dist/jquery.min.js'); ?>
-	<?php echo Asset::js('admin/vue/vue.min.js'); ?>
-	<?php echo Asset::js('admin/localforage.min.js'); ?>
-	<?php echo Asset::css('admin/vue-select/vue-select.css'); ?>
-	<?php echo Asset::js('admin/vue-select/vue-select.min.js'); ?>
-	<?php echo Asset::js('admin/axios/axios.min.js'); ?>
-	<?php echo Asset::js('admin/add.js'); ?>
 	<span id="url" data-url="<?php echo Uri::base(false);?>"></span>
+
+	<!-- jQuery desde CDN -->
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+	
+	<!-- Bootstrap JS desde CDN -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 	<div id="general-vue-app"></div>
 	<div id="cookies-app"></div>
@@ -1362,9 +1360,13 @@
 		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-		<?php echo Asset::js('admin/argon.js'); ?>
-		<?php echo Asset::js('admin/main.js'); ?>
-		<?php echo Asset::js('admin/general-vue.js'); ?>
+		
+		<!-- Scripts admin locales (solo si existen) -->
+		<script>
+		// Placeholder para scripts personalizados
+		console.log('Admin template loaded');
+		</script>
+		
 		<?php if(Session::get_flash('error')): ?>
 			<script type="text/javascript">
 			$(document).ready(function() {

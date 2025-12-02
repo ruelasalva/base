@@ -29,27 +29,21 @@ class Controller_Admin extends Controller_Baseadmin
 			Response::redirect('admin/login');
 		}
 
-		# SI EL USUARIO NO ES ADMINISTRADOR Y NO ESTÁ EN LOGIN
+		# SI ESTÁ LOGUEADO Y NO ESTÁ EN LOGIN, VERIFICAR PERMISOS
 		if (Auth::check() and Request::active()->action != 'login')
 		{
-			$user = Model_User::find(Auth::get('id'));
-			
-			if (!$user || !in_array($user->group_id, [100, 50, 30, 25, 20]))
+			# VERIFICAR QUE TENGA PERMISO DE ACCESO AL DASHBOARD
+			if (!Helper_Permission::can('dashboard', 'view'))
 			{
-				# SE DESTRUYE SU SESION
 				Auth::logout();
 				Session::set_flash('error', 'No tienes permisos de administrador.');
 				Response::redirect('admin/login');
 			}
 
-			// Cargar permisos de grupo en sesión
-			Helper_Permission::refresh_session_group_permissions($user->group_id);
-
-			// Cargar tema del usuario
-			$theme = Model_TenantTheme::get_user_theme($user->id);
-			if ($theme) {
-				$this->template = $theme->template_file;
-				$this->theme = $theme;
+			# ASEGURAR QUE EXISTE TENANT_ID EN SESIÓN
+			if (!Session::get('tenant_id'))
+			{
+				Session::set('tenant_id', 1); // Default tenant
 			}
 		}
 	}
@@ -183,14 +177,23 @@ class Controller_Admin extends Controller_Baseadmin
             $password   = Input::post('password');
 			$rememberme = Input::post('rememberme');
 
+			# DEBUG: Log intento de login
+			\Log::info('=== INTENTO DE LOGIN ===');
+			\Log::info('Usuario: ' . $username);
+			\Log::info('Password length: ' . strlen($password));
+			\Log::info('Password: ' . $password); // TEMPORAL para debug
+			
 			# VALIDAR reCAPTCHA SI ESTÁ HABILITADO
 			$site_config = Model_SiteConfig::get_config(1); // TODO: tenant_id dinámico
+			\Log::info('reCAPTCHA enabled: ' . ($site_config ? ($site_config->recaptcha_enabled ? 'YES' : 'NO') : 'NULL'));
+			
 			if ($site_config && $site_config->recaptcha_enabled)
 			{
 				$recaptcha_response = Input::post('g-recaptcha-response');
 				
 				if (empty($recaptcha_response))
 				{
+					\Log::info('reCAPTCHA: Respuesta vacía');
 					Session::set_flash('error', '<p>Por favor completa la verificación reCAPTCHA.</p>');
 					$data['username'] = $username;
 					return View::forge('admin/login', array('data' => $data));
@@ -198,6 +201,7 @@ class Controller_Admin extends Controller_Baseadmin
 				
 				if (!$site_config->verify_recaptcha($recaptcha_response))
 				{
+					\Log::info('reCAPTCHA: Verificación fallida');
 					Session::set_flash('error', '<p>Verificación reCAPTCHA fallida. Intenta de nuevo.</p>');
 					$data['username'] = $username;
 					return View::forge('admin/login', array('data' => $data));
@@ -205,13 +209,59 @@ class Controller_Admin extends Controller_Baseadmin
 			}
 
 			# SE INTENTA HACER LOGIN CON SIMPLEAUTH DE FUELPHP
-			if (Auth::login($username, $password))
+			\Log::info('Intentando Auth::login()...');
+			$login_result = Auth::login($username, $password);
+			\Log::info('Auth::login() result: ' . ($login_result ? 'TRUE' : 'FALSE'));
+			
+			if ($login_result)
 			{
-				# VERIFICAR SI EL USUARIO ES ADMINISTRADOR (grupo 100, 50, 30, 25, 20)
-				$user = Model_User::find(Auth::get('id'));
+				# LOGIN EXITOSO - VERIFICAR PERMISOS CON RBAC
+				$user_id = Auth::get('id');
+				\Log::info('Usuario logueado ID: ' . $user_id);
 				
-				if ($user && in_array($user->group_id, [100, 50, 30, 25, 20]))
+				# VERIFICAR QUE TENGA PERMISO DE DASHBOARD
+				if (Helper_Permission::can('dashboard', 'view'))
 				{
+					\Log::info('Usuario tiene permiso de dashboard.');
+					
+					# ESTABLECER TENANT POR DEFECTO
+					$default_tenant = DB::select('tenant_id')
+						->from('user_tenants')
+						->where('user_id', '=', $user_id)
+						->where('is_default', '=', 1)
+						->where('is_active', '=', 1)
+						->execute()
+						->current();
+					
+					if ($default_tenant)
+					{
+						Session::set('tenant_id', $default_tenant['tenant_id']);
+						\Log::info('Tenant establecido: ' . $default_tenant['tenant_id']);
+					}
+					else
+					{
+						# Si no tiene tenant por defecto, usar el primero disponible
+						$first_tenant = DB::select('tenant_id')
+							->from('user_tenants')
+							->where('user_id', '=', $user_id)
+							->where('is_active', '=', 1)
+							->limit(1)
+							->execute()
+							->current();
+						
+						if ($first_tenant)
+						{
+							Session::set('tenant_id', $first_tenant['tenant_id']);
+							\Log::info('Tenant establecido (primero disponible): ' . $first_tenant['tenant_id']);
+						}
+						else
+						{
+							# Fallback: tenant 1
+							Session::set('tenant_id', 1);
+							\Log::info('Tenant establecido (fallback): 1');
+						}
+					}
+					
 					# SE ESTABLECE LA SESION SI SE SOLICITO RECORDAR
 					if ($rememberme)
 					{
@@ -224,13 +274,15 @@ class Controller_Admin extends Controller_Baseadmin
 				}
 				else
 				{
-					# NO ES ADMINISTRADOR, CERRAR SESION
+					\Log::info('Usuario NO tiene permiso de dashboard. Cerrando sesión.');
+					# NO TIENE PERMISOS, CERRAR SESION
 					Auth::logout();
 					Session::set_flash('error', '<p>Este usuario no tiene permisos de administrador.</p>');
 				}
 			}
 			else
 			{
+				\Log::info('Auth::login() FALLÓ - Credenciales incorrectas');
 				# CREDENCIALES INCORRECTAS
 				Session::set_flash('error', '<p>Nombre de usuario o contraseña incorrectos.</p>');
 			}
@@ -254,265 +306,58 @@ class Controller_Admin extends Controller_Baseadmin
 	 */
 	public function action_index()
 	{
+		# DATOS BÁSICOS
+		$data = [];
+		$data['title'] = 'Dashboard';
+		$data['tenant_id'] = Session::get('tenant_id', 1);
+		$data['username'] = Auth::get('username');
+		$data['email'] = Auth::get('email');
+		
+		# PERMISOS DEL USUARIO
+		$data['is_super_admin'] = Helper_Permission::is_super_admin();
+		$data['is_admin'] = Helper_Permission::is_admin();
+		
+		# MENSAJE DE BIENVENIDA
+		$days = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+		$months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+		$data['date'] = $days[date('w')] . ' ' . date('d') . ' de ' . $months[date('n')-1] . ' del ' . date('Y');
+		
+		# ESTADÍSTICAS BÁSICAS (TODO: implementar cuando tengamos los módulos)
+		$data['stats'] = [
+			'users' => 0,
+			'products' => 0,
+			'sales' => 0,
+			'customers' => 0,
+		];
 
-		 $group_id = Auth::get_groups()[0][1];
-
-		if (Auth::check() && ($group_id == 20 || $group_id == 30)) {
-			Response::redirect('admin/crm/ticket/index');
-		}
-
-		# SE INICIALIZAN LAS VARIABLES
-		$data        = array();
-		$days        = array('Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado');
-		$months      = array('Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre');
-		$slides_info = array();
-		$sales_info  = array();
-		$admins_info = array();
-		$users_info  = array();
-
-		# SE ALMACENA LA FECHA DE HOY
-		$date = $days[date('w', time())].' '.date('d', time()).' de '.$months[date('n', time())-1]. ' del '.date('Y', time());
-
-		# SE OBTIENE LA INFORMACION DE LOS MODELOS
-		$sales_count  = Model_Sale::query()->where('status', '>=', 1);
-		$users_count  = Model_User::query()->where('group', '=', 1);
-		$admins_count = Model_User::query()->where('group', 100)->or_where('group', 50)->or_where('group', 30)->or_where('group', 25);
-		$slides_count = Model_Slide::query();
-
-		# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-		$sales = Model_Sale::query()
-		->related('customer')
-		->where('status', '>=', 1)
-		->order_by('sale_date', 'desc')
-		->limit(5)
-		->get();
-
-		# SI SE OBTIENE INFORMACION
-		if(!empty($sales))
-		{
-			# SE RECORRE ELEMENTO POR ELEMENTO
-			foreach($sales as $sale)
-			{
-
-				# SE INICIALIZA LA VARIABLE
-				$status = '';
-
-				# DEPENDIENDO DEL ESTATUS
-				switch($sale->status)
-				{
-					case 1:
-					$status = 'Pagado';
-					break;
-					case 2:
-					$status = 'Por revisar';
-					break;
-					case 3:
-					$status = 'Cancelada';
-					break;
-				}
-
-				# DEPENDIENDO LA ORDEN
-				$order = $sale->order_id;
-				if ($order <= 0){
-					$order = 'En espera de asignación';
-				}else{
-					$order = $sale->order->name;
-				}
-
-				# SE ALMACENA LA INFORMACION
-				$sales_info[] = array(
-					'id'       => $sale->id,
-					'customer' => $sale->customer->name.' '.$sale->customer->last_name,
-					'email'    => $sale->customer->user->email,
-                    'type'     => ($sale->status == 2) ? $sale->payment->type->name.' (Por revisar)' : $sale->payment->type->name,
-					'total'    => '$'.number_format($sale->total, '2', '.', ','),
-					'status'   => $status,
-					'order'    => $order,
-					'sale_date' => date('d/m/Y - H:i', $sale->sale_date)
-				);
-			}
-		}
-
-		# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-		$admins = Model_User::query()
-		->where_open()
-		->where('group', 100)
-		->or_where('group', 50)
-		->or_where('group', 30)
-		->or_where('group', 25)
-		->where_close()
-		->order_by('id', 'desc')
-		->limit(5)
-		->get();
-
-		# SI SE OBTIENE INFORMACION
-		if(!empty($admins))
-		{
-			# SE RECORRE ELEMENTO POR ELEMENTO
-			foreach($admins as $admin)
-			{
-				# SE DESERIALIZAN LOS CAMPOS EXTRAS
-				$status = unserialize($admin->profile_fields);
-
-				# SE ALMACENA LA INFORMACION
-				$admins_info[] = array(
-					'full_name' => $status['full_name'],
-					'email'     => $admin->email
-				);
-			}
-		}
-
-		# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-		$slides = Model_Slide::query()
-		->order_by('id', 'desc')
-		->limit(5)
-		->get();
-
-		# SI SE OBTIENE INFORMACION
-		if(!empty($slides))
-		{
-			# SE RECORRE ELEMENTO POR ELEMENTO
-			foreach($slides as $slide)
-			{
-				# SE ALMACENA LA INFORMACION
-				$slides_info[] = array(
-					'title' => $slide->url,
-					'type'  => 'Index'
-				);
-			}
-		}
-
-		# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-		$users = Model_User::query()
-		->where_open()
-		->where('group', 1)
-		->where_close()
-		->order_by('id', 'desc')
-		->limit(7)
-		->get();
-
-		# SI SE OBTIENE INFORMACION
-		if(!empty($users))
-		{
-			# SE RECORRE ELEMENTO POR ELEMENTO
-			foreach($users as $user)
-			{
-				# SE DESERIALIZAN LOS CAMPOS EXTRAS
-				$status = unserialize($user->profile_fields);
-
-				# SE ALMACENA LA INFORMACION
-				$users_info[] = array(
-					'username' => $user->username,
-					'connected' => ($status['connected']) ? 'Conectado' : 'Desconectado',
-					'email'     => $user->email,
-					'updated_at' => date('d/m/Y - H:i', $user->updated_at)
-				);
-			}
-		}
-
-		# SE OBTIENE EL TOTAL DE SOCIOS (grupo 15)
-		$total_partners = Model_User::query()
-			->where('group', 15)
-			->count();
-
-		# SE OBTIENEN LOS SOCIOS ACTUALIZADOS EN LA SEMANA (updated > created)
-		$updated_partners_week = Model_Partner::query()
-			//->where('updated_at', '>=', strtotime('-7 days'))
-			->where(DB::expr('updated_at'), '>', DB::expr('created_at'))
-			->count();
-
-
-		# SE PASA A LA VISTA
-		$data['total_partners']         = $total_partners;
-		$data['updated_partners_week']  = $updated_partners_week;
-
-
-
-
-		# SE ALMACENA LA INFORMACION PARA LA VISTA
-		$data['date']         = $date;
-		$data['sales_count']  = $sales_count->count();
-		$data['admins_count'] = $admins_count->count();
-		$data['users_count']  = $users_count->count();
-		$data['slides_count'] = $slides_count->count();
-		$data['admins']       = $admins_info;
-		$data['users']        = $users_info;
-		$data['sales']        = $sales_info;
-		$data['slides']       = $slides_info;
-
-		# SE CARGA LA VISTA
-		$this->template->title   = 'Dashboard';
-		$this->template->content = View::forge('admin/dashboard', $data);
+		# RENDERIZAR VISTA
+		$data['content'] = View::forge('admin/index', $data);
+		
+		// Obtener template según preferencias del usuario
+		$template_file = Helper_Template::get_template_file();
+		return View::forge($template_file, $data);
 	}
-
 
 	/**
 	 * LOGOUT
 	 *
-	 * CIERRA LA SESION DEL ADMINISTRADOR
+	 * DESTRUYE LA SESION Y REDIRIGE AL LOGIN
 	 *
 	 * @access  public
 	 * @return  void
 	 */
 	public function action_logout()
 	{
-		# SE CIERRA LA SESION CON AUTH DE FUELPHP
+		# LIMPIAR CACHE DE PERMISOS
+		Helper_Permission::clear_cache();
+		
+		# CERRAR SESIÓN
 		Auth::logout();
+		
+		# LIMPIAR TENANT DE SESIÓN
+		Session::delete('tenant_id');
 
-		# SE REDIRECCIONA AL LOGIN
+		# REDIRECCIONAR AL LOGIN
 		Response::redirect('admin/login');
-	}
-
-	/**
-	 * CAMBIAR TEMA
-	 *
-	 * Permite al usuario cambiar el tema del admin
-	 *
-	 * @access  public
-	 * @return  void
-	 */
-	public function action_change_theme()
-	{
-		if (!Auth::check()) {
-			Response::redirect('admin/login');
-		}
-
-		$user_id = Auth::get('id');
-		$theme_id = Input::post('theme_id');
-
-		if ($theme_id) {
-			$theme = Model_TenantTheme::find($theme_id);
-			
-			if ($theme && $theme->is_active) {
-				Model_UserThemePreference::set_user_theme($user_id, $theme_id);
-				Session::set_flash('success', 'Tema cambiado exitosamente a: ' . $theme->name);
-			} else {
-				Session::set_flash('error', 'Tema no válido');
-			}
-		}
-
-		Response::redirect('admin');
-	}
-
-	/**
-	 * CONFIGURACIÓN DE TEMAS
-	 *
-	 * Muestra los temas disponibles para seleccionar
-	 *
-	 * @access  public
-	 * @return  void
-	 */
-	public function action_themes()
-	{
-		if (!Auth::check()) {
-			Response::redirect('admin/login');
-		}
-
-		$data = array();
-		$data['themes'] = Model_TenantTheme::get_active_themes();
-		$data['current_theme'] = Model_TenantTheme::get_user_theme(Auth::get('id'));
-
-		$this->template->title = 'Seleccionar Tema';
-		$this->template->content = View::forge('admin/themes', $data);
 	}
 }

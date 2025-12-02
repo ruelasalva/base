@@ -77,6 +77,11 @@
 											<span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
 										</div>
 										<?php echo Form::password('password', '', array('id' => 'password', 'class' => 'form-control', 'placeholder' => 'Contraseña')); ?>
+										<div class="input-group-append">
+											<span class="input-group-text" style="cursor: pointer;" onclick="togglePassword()">
+												<i class="fas fa-eye" id="toggleIcon"></i>
+											</span>
+										</div>
 									</div>
 								</div>
 								<div class="custom-control custom-control-alternative custom-checkbox">
@@ -135,6 +140,22 @@
 	<?php endif; ?>
 
 	<script type="text/javascript">
+		// Toggle password visibility
+		function togglePassword() {
+			const passwordField = document.getElementById('password');
+			const toggleIcon = document.getElementById('toggleIcon');
+			
+			if (passwordField.type === 'password') {
+				passwordField.type = 'text';
+				toggleIcon.classList.remove('fa-eye');
+				toggleIcon.classList.add('fa-eye-slash');
+			} else {
+				passwordField.type = 'password';
+				toggleIcon.classList.remove('fa-eye-slash');
+				toggleIcon.classList.add('fa-eye');
+			}
+		}
+		
 		$(document).ready(function() {
 			<?php if($data['username'] != ''): ?>
 				$('#password').focus();

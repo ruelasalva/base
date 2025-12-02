@@ -1,255 +1,213 @@
 <?php
 
 /**
- * Controller_Admin_Configuracion
+ * CONTROLLER ADMIN CONFIGURACION
  * 
- * Controlador para gestionar la configuración del sitio multi-tenant.
- * Incluye: General, SEO, Tracking Scripts, Cookies y Privacidad.
- *
+ * Configuración completa del sitio
+ * - SEO (meta tags, OG, Twitter Cards)
+ * - Analytics (GA4, GTM, FB Pixel)
+ * - SMTP (email)
+ * - Social Media
+ * - Logo y Favicon
+ * - reCAPTCHA
+ * 
  * @package  app
  * @extends  Controller_Admin
  */
 class Controller_Admin_Configuracion extends Controller_Admin
 {
 	/**
-	 * BEFORE
-	 */
-	public function before()
-	{
-		parent::before();
-
-		// Verificar autenticación
-		if (!Auth::check()) {
-			Session::set_flash('error', 'Debes iniciar sesión.');
-			Response::redirect('admin/login');
-		}
-	}
-
-	/**
-	 * INDEX - Vista principal de configuración con tabs
+	 * INDEX - CONFIGURACIÓN GENERAL
 	 */
 	public function action_index()
 	{
-		// Verificar permiso
-		if (!Helper_Permission::can('config_site', 'view')) {
-			Session::set_flash('error', 'No tienes permiso para ver la configuración del sitio.');
+		// Verificar permisos
+		if (!Helper_Permission::can('config', 'view'))
+		{
+			Session::set_flash('error', 'No tienes permisos para ver configuración');
 			Response::redirect('admin');
 		}
 
+		$tenant_id = Session::get('tenant_id', 1);
+
 		// Obtener configuración actual
-		$config = Model_SiteConfig::get_config(1); // TODO: tenant_id dinámico
+		$config = DB::select()->from('tenant_site_config')
+			->where('tenant_id', $tenant_id)
+			->execute()
+			->current();
 
-		$data = array(
+		// Si no existe, crear una entrada por defecto
+		if (!$config)
+		{
+			DB::insert('tenant_site_config')
+				->set([
+					'tenant_id' => $tenant_id,
+					'site_name' => 'Mi Sitio',
+					'seo_enabled' => 0,
+					'ga_enabled' => 0,
+					'gtm_enabled' => 0,
+					'fb_pixel_enabled' => 0,
+					'recaptcha_enabled' => 0,
+					'smtp_enabled' => 0
+				])
+				->execute();
+
+			$config = DB::select()->from('tenant_site_config')
+				->where('tenant_id', $tenant_id)
+				->execute()
+				->current();
+		}
+
+		$data = [
+			'title' => 'Configuración del Sitio',
+			'username' => Auth::get('username'),
+			'email' => Auth::get('email'),
+			'tenant_id' => $tenant_id,
+			'is_super_admin' => Helper_Permission::is_super_admin(),
+			'is_admin' => Helper_Permission::is_admin(),
 			'config' => $config,
-			'active_tab' => Input::get('tab', 'general'),
-		);
+			'can_edit' => Helper_Permission::can('config', 'edit')
+		];
 
-		$this->template->title   = 'Configuración del Sitio';
-		$this->template->content = View::forge('admin/configuracion/index', $data);
+		$data['content'] = View::forge('admin/configuracion/index', $data);
+		$template_file = Helper_Template::get_template_file();
+		return View::forge($template_file, $data);
 	}
 
 	/**
-	 * ACTUALIZAR - Procesar formulario de actualización
+	 * SAVE - GUARDAR CONFIGURACIÓN
 	 */
-	public function action_actualizar()
+	public function action_save()
 	{
-		// Verificar permiso
-		if (!Helper_Permission::can('config_site', 'edit')) {
-			Session::set_flash('error', 'No tienes permiso para editar la configuración del sitio.');
+		// Verificar permisos
+		if (!Helper_Permission::can('config', 'edit'))
+		{
+			Session::set_flash('error', 'No tienes permisos para editar configuración');
 			Response::redirect('admin/configuracion');
 		}
 
-		if (Input::method() !== 'POST') {
-			Response::redirect('admin/configuracion');
+		$tenant_id = Session::get('tenant_id', 1);
+
+		try
+		{
+			// Preparar datos
+			$data = [
+				// General
+				'site_name' => Input::post('site_name'),
+				'site_logo' => Input::post('site_logo'),
+				'site_favicon' => Input::post('site_favicon'),
+
+				// SEO
+				'seo_enabled' => Input::post('seo_enabled', 0),
+				'seo_title' => Input::post('seo_title'),
+				'seo_description' => Input::post('seo_description'),
+				'seo_keywords' => Input::post('seo_keywords'),
+				'seo_og_image' => Input::post('seo_og_image'),
+
+				// Analytics
+				'ga_enabled' => Input::post('ga_enabled', 0),
+				'ga_tracking_id' => Input::post('ga_tracking_id'),
+				'gtm_enabled' => Input::post('gtm_enabled', 0),
+				'gtm_container_id' => Input::post('gtm_container_id'),
+				'fb_pixel_enabled' => Input::post('fb_pixel_enabled', 0),
+				'fb_pixel_id' => Input::post('fb_pixel_id'),
+
+				// reCAPTCHA
+				'recaptcha_enabled' => Input::post('recaptcha_enabled', 0),
+				'recaptcha_site_key' => Input::post('recaptcha_site_key'),
+				'recaptcha_secret_key' => Input::post('recaptcha_secret_key'),
+
+				// SMTP
+				'smtp_enabled' => Input::post('smtp_enabled', 0),
+				'smtp_host' => Input::post('smtp_host'),
+				'smtp_port' => Input::post('smtp_port', 587),
+				'smtp_user' => Input::post('smtp_user'),
+				'smtp_password' => Input::post('smtp_password'),
+				'smtp_encryption' => Input::post('smtp_encryption', 'tls'),
+				'smtp_from_email' => Input::post('smtp_from_email'),
+				'smtp_from_name' => Input::post('smtp_from_name'),
+
+				// Social Media
+				'social_facebook' => Input::post('social_facebook'),
+				'social_twitter' => Input::post('social_twitter'),
+				'social_instagram' => Input::post('social_instagram'),
+				'social_linkedin' => Input::post('social_linkedin')
+			];
+
+			// Actualizar
+			DB::update('tenant_site_config')
+				->set($data)
+				->where('tenant_id', $tenant_id)
+				->execute();
+
+			Session::set_flash('success', 'Configuración guardada correctamente');
+		}
+		catch (Exception $e)
+		{
+			\Log::error('Error guardando configuración: ' . $e->getMessage());
+			Session::set_flash('error', 'Error al guardar la configuración');
 		}
 
-		$tab = Input::post('active_tab', 'general');
-
-		try {
-			// Preparar datos según el tab activo
-			$data = array();
-
-			switch ($tab) {
-				case 'general':
-					$data = array(
-						'site_name'       => Input::post('site_name'),
-						'site_tagline'    => Input::post('site_tagline'),
-						'contact_email'   => Input::post('contact_email'),
-						'contact_phone'   => Input::post('contact_phone'),
-						'address'         => Input::post('address'),
-						'logo_url'        => Input::post('logo_url'),
-						'logo_alt_url'    => Input::post('logo_alt_url'),
-					);
-					break;
-
-				case 'seo':
-					$data = array(
-						'meta_description' => Input::post('meta_description'),
-						'meta_keywords'    => Input::post('meta_keywords'),
-						'meta_author'      => Input::post('meta_author'),
-						'og_image'         => Input::post('og_image'),
-						'theme_color'      => Input::post('theme_color'),
-					);
-					break;
-
-				case 'tracking':
-					$data = array(
-						// Google Analytics
-						'ga_enabled'      => Input::post('ga_enabled') ? 1 : 0,
-						'ga_tracking_id'  => Input::post('ga_tracking_id'),
-						'ga_script'       => Input::post('ga_script'),
-						// Google Tag Manager
-						'gtm_enabled'     => Input::post('gtm_enabled') ? 1 : 0,
-						'gtm_container_id'=> Input::post('gtm_container_id'),
-						// Facebook Pixel
-						'fb_pixel_enabled'=> Input::post('fb_pixel_enabled') ? 1 : 0,
-						'fb_pixel_id'     => Input::post('fb_pixel_id'),
-						// reCAPTCHA
-						'recaptcha_enabled'     => Input::post('recaptcha_enabled') ? 1 : 0,
-						'recaptcha_site_key'    => Input::post('recaptcha_site_key'),
-						'recaptcha_secret_key'  => Input::post('recaptcha_secret_key'),
-						'recaptcha_version'     => Input::post('recaptcha_version', 'v2'),
-					);
-					break;
-
-				case 'cookies':
-					$data = array(
-						'cookie_consent_enabled' => Input::post('cookie_consent_enabled') ? 1 : 0,
-						'cookie_message'         => Input::post('cookie_message'),
-						'privacy_policy_url'     => Input::post('privacy_policy_url'),
-						'terms_conditions_url'   => Input::post('terms_conditions_url'),
-					);
-					break;
-
-				case 'favicons':
-					$data = array(
-						'favicon_16'  => Input::post('favicon_16'),
-						'favicon_32'  => Input::post('favicon_32'),
-						'favicon_57'  => Input::post('favicon_57'),
-						'favicon_72'  => Input::post('favicon_72'),
-						'favicon_114' => Input::post('favicon_114'),
-						'favicon_144' => Input::post('favicon_144'),
-					);
-					break;
-
-				case 'scripts':
-					$data = array(
-						'custom_head_scripts' => Input::post('custom_head_scripts'),
-						'custom_body_scripts' => Input::post('custom_body_scripts'),
-					);
-					break;
-			}
-
-			// Actualizar configuración
-			if (Model_SiteConfig::update_config(1, $data)) { // TODO: tenant_id dinámico
-				Session::set_flash('success', 'Configuración actualizada correctamente.');
-			} else {
-				Session::set_flash('error', 'Error al actualizar la configuración.');
-			}
-
-		} catch (Exception $e) {
-			Log::error('Error al actualizar configuración: ' . $e->getMessage());
-			Session::set_flash('error', 'Error al guardar la configuración: ' . $e->getMessage());
-		}
-
-		Response::redirect('admin/configuracion?tab=' . $tab);
+		Response::redirect('admin/configuracion');
 	}
 
 	/**
-	 * UPLOAD - Subir archivo (logo, favicon, etc.)
+	 * TEMPLATES - SELECTOR DE TEMPLATES
 	 */
-	public function action_upload()
+	public function action_templates()
 	{
-		// Verificar permiso
-		if (!Helper_Permission::can('config_site', 'edit')) {
-			return $this->response(array(
-				'success' => false,
-				'message' => 'No tienes permiso para subir archivos.'
-			));
-		}
+		$tenant_id = Session::get('tenant_id', 1);
+		$user_id = Auth::get('id');
 
-		if (Input::method() !== 'POST') {
-			return $this->response(array(
-				'success' => false,
-				'message' => 'Método no permitido.'
-			));
-		}
+		// Obtener template actual
+		$current_template = Helper_Template::get_current_template();
+		$available_templates = Helper_Template::get_available_templates();
 
-		try {
-			// Configurar Upload
-			Upload::process(array(
-				'path'          => DOCROOT . 'assets/img/config/',
-				'create_path'   => true,
-				'ext_whitelist' => array('img', 'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg'),
-				'max_size'      => 5 * 1024 * 1024, // 5MB
-				'normalize'     => true,
-				'auto_rename'   => false,
-				'overwrite'     => true,
-			));
+		$data = [
+			'title' => 'Seleccionar Template',
+			'username' => Auth::get('username'),
+			'email' => Auth::get('email'),
+			'tenant_id' => $tenant_id,
+			'is_super_admin' => Helper_Permission::is_super_admin(),
+			'is_admin' => Helper_Permission::is_admin(),
+			'current_template' => $current_template,
+			'templates' => $available_templates
+		];
 
-			if (Upload::is_valid()) {
-				Upload::save();
-				$file = Upload::get_files(0);
-
-				$url = Uri::base(false) . 'assets/img/config/' . $file['saved_as'];
-
-				return $this->response(array(
-					'success'  => true,
-					'message'  => 'Archivo subido correctamente.',
-					'url'      => $url,
-					'filename' => $file['saved_as'],
-				));
-			} else {
-				$errors = Upload::get_errors();
-				return $this->response(array(
-					'success' => false,
-					'message' => 'Error al subir archivo: ' . implode(', ', $errors[0]['errors'])
-				));
-			}
-
-		} catch (Exception $e) {
-			Log::error('Error al subir archivo: ' . $e->getMessage());
-			return $this->response(array(
-				'success' => false,
-				'message' => 'Error al subir archivo: ' . $e->getMessage()
-			));
-		}
+		$data['content'] = View::forge('admin/configuracion/templates', $data);
+		$template_file = Helper_Template::get_template_file();
+		return View::forge($template_file, $data);
 	}
 
 	/**
-	 * TEST_RECAPTCHA - Probar validación de reCAPTCHA
+	 * SET_TEMPLATE - CAMBIAR TEMPLATE VÍA AJAX
 	 */
-	public function action_test_recaptcha()
+	public function action_set_template()
 	{
-		if (Input::method() !== 'POST') {
-			Response::redirect('admin/configuracion?tab=tracking');
+		if (!Input::is_ajax())
+		{
+			Response::redirect('admin/configuracion/templates');
 		}
 
-		$response = Input::post('g-recaptcha-response') ?: Input::post('recaptcha_token');
+		$template_name = Input::post('template');
+		$user_id = Auth::get('id');
+		$tenant_id = Session::get('tenant_id', 1);
 
-		if (empty($response)) {
-			Session::set_flash('error', 'No se recibió respuesta de reCAPTCHA.');
-			Response::redirect('admin/configuracion?tab=tracking');
+		$result = Helper_Template::set_template($user_id, $tenant_id, $template_name);
+
+		if ($result)
+		{
+			return Response::forge(json_encode([
+				'success' => true,
+				'message' => 'Template cambiado correctamente'
+			]), 200, ['Content-Type' => 'application/json']);
 		}
-
-		$config = Model_SiteConfig::get_config(1);
-
-		if ($config->verify_recaptcha($response)) {
-			Session::set_flash('success', '✅ reCAPTCHA verificado correctamente.');
-		} else {
-			Session::set_flash('error', '❌ Error al verificar reCAPTCHA. Verifica las claves.');
+		else
+		{
+			return Response::forge(json_encode([
+				'success' => false,
+				'message' => 'Error al cambiar template'
+			]), 400, ['Content-Type' => 'application/json']);
 		}
-
-		Response::redirect('admin/configuracion?tab=tracking');
-	}
-
-	/**
-	 * Respuesta JSON
-	 */
-	private function response($data)
-	{
-		return Response::forge(json_encode($data), 200, array(
-			'Content-Type' => 'application/json'
-		));
 	}
 }
