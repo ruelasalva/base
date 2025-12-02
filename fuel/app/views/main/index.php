@@ -4,13 +4,25 @@
 			<h2>¡Bienvenido al ERP Multi-tenant!</h2>
 			<p>Sistema ERP completo con backends para administración, proveedores, partners, vendedores y clientes, además de tienda online y landing page.</p>
 			<p>
-				<a class="btn btn-primary btn-lg" href="<?php echo Uri::base(); ?>tienda" role="button">
+				<a class="btn btn-primary btn-lg" href="<?php echo Uri::create('tienda'); ?>" role="button">
 					<span class="glyphicon glyphicon-shopping-cart"></span> Ir a la Tienda
 				</a>
-				<a class="btn btn-default btn-lg" href="<?php echo Uri::base(); ?>landing" role="button">
+				<a class="btn btn-default btn-lg" href="<?php echo Uri::create('landing'); ?>" role="button">
 					<span class="glyphicon glyphicon-globe"></span> Ver Landing Page
 				</a>
 			</p>
+		</div>
+	</div>
+</div>
+
+<!-- Mensaje informativo sobre el estado del sistema -->
+<div class="row">
+	<div class="col-md-12">
+		<div class="alert alert-info">
+			<span class="glyphicon glyphicon-info-sign"></span>
+			<strong>Nota:</strong> Esta es la instalación base del ERP Multi-tenant. 
+			Los módulos mostrados abajo son placeholders. Para activarlos, configure su sistema a través del 
+			<a href="<?php echo Uri::create('install'); ?>">instalador</a>.
 		</div>
 	</div>
 </div>
@@ -39,7 +51,7 @@
 				</ul>
 			</div>
 			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>admin" class="btn btn-primary btn-block">Acceder</a>
+				<a href="<?php echo Uri::create('admin'); ?>" class="btn btn-primary btn-block">Acceder</a>
 			</div>
 		</div>
 	</div>
@@ -59,7 +71,7 @@
 				</ul>
 			</div>
 			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>providers" class="btn btn-success btn-block">Acceder</a>
+				<a href="<?php echo Uri::create('providers'); ?>" class="btn btn-success btn-block">Acceder</a>
 			</div>
 		</div>
 	</div>
@@ -79,7 +91,7 @@
 				</ul>
 			</div>
 			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>partners" class="btn btn-block" style="background: #9b59b6; color: white; border-color: #8e44ad;">Acceder</a>
+				<a href="<?php echo Uri::create('partners'); ?>" class="btn btn-block" style="background: #9b59b6; color: white; border-color: #8e44ad;">Acceder</a>
 			</div>
 		</div>
 	</div>
@@ -99,7 +111,7 @@
 				</ul>
 			</div>
 			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>sellers" class="btn btn-info btn-block">Acceder</a>
+				<a href="<?php echo Uri::create('sellers'); ?>" class="btn btn-info btn-block">Acceder</a>
 			</div>
 		</div>
 	</div>
@@ -119,7 +131,7 @@
 				</ul>
 			</div>
 			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>clients" class="btn btn-warning btn-block">Acceder</a>
+				<a href="<?php echo Uri::create('clients'); ?>" class="btn btn-warning btn-block">Acceder</a>
 			</div>
 		</div>
 	</div>
@@ -150,7 +162,7 @@
 				</ul>
 			</div>
 			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>tienda" class="btn btn-primary btn-block">
+				<a href="<?php echo Uri::create('tienda'); ?>" class="btn btn-primary btn-block">
 					<span class="glyphicon glyphicon-shopping-cart"></span> Ir a la Tienda
 				</a>
 			</div>
@@ -173,7 +185,7 @@
 				</ul>
 			</div>
 			<div class="panel-footer">
-				<a href="<?php echo Uri::base(); ?>landing" class="btn btn-default btn-block">
+				<a href="<?php echo Uri::create('landing'); ?>" class="btn btn-default btn-block">
 					<span class="glyphicon glyphicon-globe"></span> Ver Landing Page
 				</a>
 			</div>

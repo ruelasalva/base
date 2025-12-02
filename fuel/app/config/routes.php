@@ -71,6 +71,43 @@ return array(
 
 	/**
 	 * -------------------------------------------------------------------------
+	 *  Module routes (placeholder until modules are created)
+	 * -------------------------------------------------------------------------
+	 */
+
+	// Admin module placeholder
+	'admin'               => 'module/placeholder/admin',
+	'admin/(:any)'        => 'module/placeholder/admin/$1',
+
+	// Providers module placeholder
+	'providers'           => 'module/placeholder/providers',
+	'providers/(:any)'    => 'module/placeholder/providers/$1',
+
+	// Partners module placeholder
+	'partners'            => 'module/placeholder/partners',
+	'partners/(:any)'     => 'module/placeholder/partners/$1',
+
+	// Sellers module placeholder
+	'sellers'             => 'module/placeholder/sellers',
+	'sellers/(:any)'      => 'module/placeholder/sellers/$1',
+
+	// Clients module placeholder
+	'clients'             => 'module/placeholder/clients',
+	'clients/(:any)'      => 'module/placeholder/clients/$1',
+
+	// Tienda (Store) module placeholder
+	'tienda'              => 'module/placeholder/tienda',
+	'tienda/(:any)'       => 'module/placeholder/tienda/$1',
+
+	// Landing page placeholder
+	'landing'             => 'module/placeholder/landing',
+	'landing/(:any)'      => 'module/placeholder/landing/$1',
+
+	// Contacto placeholder
+	'contacto'            => 'module/placeholder/contacto',
+
+	/**
+	 * -------------------------------------------------------------------------
 	 *  Example for Presenter
 	 * -------------------------------------------------------------------------
 	 *

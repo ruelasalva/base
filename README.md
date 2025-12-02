@@ -96,7 +96,9 @@ fuel/
 │   ├── config/
 │   │   ├── config.php      # Configuración general
 │   │   ├── config_tenant.php  # Configuración multi-tenant
-│   │   └── db.php          # Configuración de base de datos
+│   │   ├── db.php          # Configuración de base de datos
+│   │   └── update.php      # Configuración de actualizaciones
+│   ├── migrations/         # Archivos SQL de migración
 │   └── views/              # Vistas principales
 ├── packages/               # Paquetes de FuelPHP
 └── packages_tenant/        # Módulos del ERP
@@ -111,22 +113,48 @@ fuel/
 
 ## Instalación
 
-### Opción 1: Usando el Instalador Web (Recomendado)
+### Requisitos del Sistema
+
+- PHP >= 7.2 (recomendado PHP 8.x)
+- MySQL >= 5.7 o MariaDB >= 10.2
+- Extensiones PHP: pdo, pdo_mysql, json, mbstring, openssl, curl, gd
+- Composer
+- Node.js y npm (opcional, para assets frontend)
+
+### Opción 1: Usando el Script de Instalación (Recomendado)
+
+El script `setup.sh` automatiza la instalación completa:
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/ruelasalva/base.git mi-erp
+cd mi-erp
+
+# 2. Ejecutar el script de instalación
+chmod +x setup.sh
+./setup.sh
+
+# 3. Configurar el servidor web para apuntar a la carpeta 'public'
+
+# 4. Acceder a /install en el navegador y seguir el asistente
+```
+
+### Opción 2: Usando el Instalador Web
 
 1. Clonar el repositorio
 2. Ejecutar `composer install`
-3. Crear una base de datos vacía en MySQL
+3. Crear una base de datos vacía en MySQL (opcional, el instalador puede crearla)
 4. Acceder a `/install` en el navegador
 5. Seguir el asistente de instalación:
    - Configurar conexión a base de datos
    - Ejecutar migraciones
    - Crear usuario administrador
 
-### Opción 2: Instalación Manual
+### Opción 3: Instalación Manual
 
 1. Clonar el repositorio
 2. Ejecutar `composer install`
-3. Configurar la base de datos en `fuel/app/config/db.php`
+3. Configurar la base de datos en `fuel/app/config/db.php` o crear `fuel/app/config/development/db.php`
 4. Ejecutar las migraciones SQL en `fuel/app/migrations/`
 5. Crear el usuario administrador manualmente
 
@@ -135,6 +163,7 @@ fuel/
 El sistema incluye un instalador web accesible en `/install` que permite:
 
 - **Configurar la conexión** a la base de datos MySQL
+- **Crear la base de datos** automáticamente si no existe
 - **Ejecutar migraciones** para crear/actualizar tablas
 - **Crear el usuario administrador** inicial
 - **Verificar el estado** del sistema
@@ -147,11 +176,36 @@ Para extender el proyecto con nuevas tablas:
    ```
    NNN_nombre_descriptivo.sql
    ```
-   Ejemplo: `002_productos.sql`, `003_categorias.sql`
+   Ejemplo: `003_productos.sql`, `004_categorias.sql`
 
 2. Acceder a `/install` y ejecutar las migraciones pendientes
 
 Ver `fuel/app/migrations/README.md` para más detalles.
+
+## Actualizaciones
+
+El sistema está configurado para recibir actualizaciones del repositorio principal.
+
+### Configuración de Actualizaciones
+
+Ver `fuel/app/config/update.php` para opciones de:
+- Repositorio upstream
+- Modo de actualización (manual/automático)
+- Archivos excluidos de actualizaciones
+- Backup antes de actualizar
+
+### Actualizar desde el Repositorio Principal
+
+```bash
+# Añadir el repositorio upstream (una sola vez)
+git remote add upstream https://github.com/ruelasalva/base.git
+
+# Obtener cambios del upstream
+git fetch upstream
+
+# Fusionar cambios (revisar conflictos si existen)
+git merge upstream/main
+```
 
 ## Configuración de Tenant
 
