@@ -55,7 +55,7 @@ class Controller_Module_Placeholder extends Controller_Base
 		'sellers' => array(
 			'name' => 'Panel de Vendedores',
 			'icon' => 'usd',
-			'color' => '#3498db',
+			'color' => '#1abc9c',
 			'description' => 'Panel para vendedores. Gestione ventas, clientes y comisiones.',
 			'features' => array(
 				'Gestión de ventas',
