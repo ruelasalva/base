@@ -111,12 +111,24 @@ fuel/
 
 ## Instalación
 
-### Opción 1: Usando el Instalador Web (Recomendado)
+### Opción 1: Usando el Script de Setup (Recomendado)
 
-1. Clonar el repositorio
-2. Ejecutar `composer install`
+1. Clonar el repositorio:
+   ```bash
+   git clone https://github.com/ruelasalva/base.git
+   cd base
+   ```
+
+2. Ejecutar el script de setup:
+   ```bash
+   chmod +x setup.sh
+   ./setup.sh
+   ```
+
 3. Crear una base de datos vacía en MySQL
+
 4. Acceder a `/install` en el navegador
+
 5. Seguir el asistente de instalación:
    - Configurar conexión a base de datos
    - Ejecutar migraciones
@@ -129,6 +141,58 @@ fuel/
 3. Configurar la base de datos en `fuel/app/config/db.php`
 4. Ejecutar las migraciones SQL en `fuel/app/migrations/`
 5. Crear el usuario administrador manualmente
+
+## Sincronización con Upstream
+
+Para mantener tu fork actualizado con el repositorio principal:
+
+### Configuración Inicial (solo una vez)
+
+```bash
+# Agregar el repositorio upstream como remote
+git remote add upstream https://github.com/ruelasalva/base.git
+```
+
+### Sincronizar Cambios
+
+```bash
+# Obtener los últimos cambios del upstream
+git fetch upstream
+
+# Cambiar a tu rama main local
+git checkout main
+
+# Fusionar los cambios del upstream
+git merge upstream/main
+
+# Subir los cambios a tu fork
+git push origin main
+```
+
+### Archivos Excluidos de la Sincronización
+
+Los siguientes archivos/directorios están excluidos de la sincronización para preservar configuraciones locales:
+
+- `fuel/app/config/development/` - Configuración de desarrollo
+- `fuel/app/config/production/` - Configuración de producción
+- `fuel/packages_tenant/` - Paquetes personalizados del tenant
+
+Ver `fuel/app/config/update.php` para la lista completa de exclusiones.
+
+## Estado de los Módulos
+
+| Módulo | Ruta | Estado |
+|--------|------|--------|
+| Admin | `/admin` | 🔧 En desarrollo |
+| Providers | `/providers` | 🔧 En desarrollo |
+| Partners | `/partners` | 🔧 En desarrollo |
+| Sellers | `/sellers` | 🔧 En desarrollo |
+| Clients | `/clients` | 🔧 En desarrollo |
+| Tienda | `/tienda` | 🔧 En desarrollo |
+| Landing | `/landing` | 🔧 En desarrollo |
+| Contacto | `/contacto` | 🔧 En desarrollo |
+
+> **Nota:** Los módulos en desarrollo muestran una página placeholder amigable en lugar de un error 404.
 
 ## Instalador de Base de Datos
 

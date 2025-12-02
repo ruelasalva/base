@@ -79,4 +79,30 @@ return array(
 	 */
 
 	'hello(/:name)?' => array('welcome/hello', 'name' => 'hello'),
+
+	/**
+	 * -------------------------------------------------------------------------
+	 *  Module Placeholder Routes
+	 * -------------------------------------------------------------------------
+	 *
+	 *  Routes for modules that are still in development.
+	 *  These show a user-friendly placeholder page instead of 404 errors.
+	 *
+	 */
+
+	'admin'             => 'module/placeholder/admin',
+	'admin/:any'        => 'module/placeholder/admin',
+	'providers'         => 'module/placeholder/providers',
+	'providers/:any'    => 'module/placeholder/providers',
+	'partners'          => 'module/placeholder/partners',
+	'partners/:any'     => 'module/placeholder/partners',
+	'sellers'           => 'module/placeholder/sellers',
+	'sellers/:any'      => 'module/placeholder/sellers',
+	'clients'           => 'module/placeholder/clients',
+	'clients/:any'      => 'module/placeholder/clients',
+	'tienda'            => 'module/placeholder/tienda',
+	'tienda/:any'       => 'module/placeholder/tienda',
+	'landing'           => 'module/placeholder/landing',
+	'landing/:any'      => 'module/placeholder/landing',
+	'contacto'          => 'module/placeholder/contacto',
 );
