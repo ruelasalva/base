@@ -10,55 +10,54 @@
  * @link       https://fuelphp.com
  */
 
+/**
+ * -----------------------------------------------------------------------------
+ *  Auth Package Configuration
+ * -----------------------------------------------------------------------------
+ *
+ *  Configuration for the Auth package using SimpleAuth driver.
+ *
+ */
+
 return array(
+
 	/**
 	 * -------------------------------------------------------------------------
-	 *  Default route
+	 *  Driver to use
 	 * -------------------------------------------------------------------------
 	 *
-	 */
-
-	'_root_' => 'main/index',
-
-	/**
-	 * -------------------------------------------------------------------------
-	 *  Page not found
-	 * -------------------------------------------------------------------------
+	 *  Available drivers: Simpleauth, Ormauth
+	 *  For multi-tenant ERP we use Simpleauth
 	 *
 	 */
-
-	'_404_' => 'welcome/404',
-
-	/**
-	 * -------------------------------------------------------------------------
-	 *  Authentication routes
-	 * -------------------------------------------------------------------------
-	 */
-
-	'auth/login'        => 'auth/login',
-	'auth/logout'       => 'auth/logout',
-	'auth/register'     => 'auth/register',
-	'auth/forgot'       => 'auth/forgot',
-	'auth/reset/:token' => 'auth/reset/$1',
+	'driver' => 'Simpleauth',
 
 	/**
 	 * -------------------------------------------------------------------------
-	 *  Error routes
-	 * -------------------------------------------------------------------------
-	 */
-
-	'error/403' => 'error/403',
-	'error/404' => 'error/404',
-	'error/500' => 'error/500',
-
-	/**
-	 * -------------------------------------------------------------------------
-	 *  Example for Presenter
+	 *  Verify multiple logins
 	 * -------------------------------------------------------------------------
 	 *
-	 *  A route for showing page using Presenter
+	 *  Set to true if you want to verify multiple logins with the same
+	 *  username/email at the same time.
 	 *
 	 */
+	'verify_multiple_logins' => false,
 
-	'hello(/:name)?' => array('welcome/hello', 'name' => 'hello'),
+	/**
+	 * -------------------------------------------------------------------------
+	 *  Salt for password hashing
+	 * -------------------------------------------------------------------------
+	 *
+	 *  IMPORTANT: Change this to a random string unique to your application!
+	 *
+	 */
+	'salt' => 'ERP_MULTI_TENANT_SALT_CHANGE_ME_IN_PRODUCTION',
+
+	/**
+	 * -------------------------------------------------------------------------
+	 *  Number of iterations for password hashing
+	 * -------------------------------------------------------------------------
+	 */
+	'iterations' => 10000,
+
 );
