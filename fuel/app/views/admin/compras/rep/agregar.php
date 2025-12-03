@@ -49,7 +49,7 @@
                             <!-- CARD AZUL -->
                             <div class="alert mb-4" style="background:#28dbf3;color:#fff;padding:16px 20px;border-radius:8px;">
                                 <b>Factura relacionada:</b> <?= $bill->uuid; ?><br>
-                                <b>Proveedor:</b> <?= $bill->provider->name; ?><br>
+                                <b>Proveedor:</b> <?= $bill->provider->company_name; ?><br>
                                 <b>Monto:</b> $<?= number_format($bill->total, 2); ?><br>
                                 <b>Estatus:</b> <?= ($bill->status == 1 ? "Pagada" : "Pendiente"); ?>
                             </div>

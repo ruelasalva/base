@@ -13,6 +13,11 @@
 // Bootstrap the framework - THIS LINE NEEDS TO BE FIRST!
 require COREPATH.'bootstrap.php';
 
+// Configurar encoding UTF-8 para todos los módulos
+mb_internal_encoding('UTF-8');
+mb_http_output('UTF-8');
+mb_regex_encoding('UTF-8');
+
 // Add framework overload classes here
 \Autoloader::add_classes(array(
 	// Example: 'View' => APPPATH.'classes/myview.php',

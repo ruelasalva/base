@@ -147,7 +147,7 @@ class Controller_Admin_Compras extends Controller_Admin
     // TOP 5 PROVEEDORES DEL MES
     // ======================
     $top_proveedores = DB::select(
-            'providers.name',
+            'providers.company_name',
             [DB::expr('COUNT(providers_bills.id)'), 'facturas'],
             [DB::expr('SUM(providers_bills.total)'), 'total']
         )
@@ -156,7 +156,7 @@ class Controller_Admin_Compras extends Controller_Admin
         ->where('providers_bills.deleted', '=', 0)
         ->where('providers_bills.created_at', '>=', $inicio)
         ->where('providers_bills.created_at', '<=', $fin)
-        ->group_by('providers.name')
+        ->group_by('providers.company_name')
         ->order_by(DB::expr('SUM(providers_bills.total)'), 'desc')
         ->limit(5)
         ->execute()

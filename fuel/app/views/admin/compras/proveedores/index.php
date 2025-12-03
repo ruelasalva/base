@@ -79,7 +79,7 @@
                 <?php foreach ($providers as $prov): ?>
                   <tr>
                     <td class="font-weight-bold">
-                      <?php echo Html::anchor('admin/compras/proveedores/info/'.$prov['id'], $prov['name']); ?>
+                      <?php echo Html::anchor('admin/compras/proveedores/info/'.$prov['id'], $prov['company_name']); ?>
                     </td>
                     <td><?php echo $prov['rfc']; ?></td>
                     <td class="text-center">

@@ -6,7 +6,7 @@
                 <div class="col-lg-8 col-7">
                     <h4 class="text-white mb-0 font-weight-bold">
                         Editar Contrarecibo: <?php echo $contrarecibo->receipt_number; ?> 
-                        <span class="text-white-50 small font-weight-normal">(Proveedor: <?php echo $contrarecibo->provider->name; ?>)</span>
+                        <span class="text-white-50 small font-weight-normal">(Proveedor: <?php echo $contrarecibo->provider->company_name; ?>)</span>
                     </h4>
                     <nav aria-label="breadcrumb" class="d-none d-md-inline-block mt-1">
                         <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
@@ -62,7 +62,7 @@
                                 <div class="col-lg-6">
                                     <div class="form-group">
                                         <?php echo Form::label('Proveedor', 'provider_name'); ?>
-                                        <?php echo Form::input('provider_name', $contrarecibo->provider->name, array('class' => 'form-control', 'disabled' => 'disabled')); ?>
+                                        <?php echo Form::input('provider_name', $contrarecibo->provider->company_name, array('class' => 'form-control', 'disabled' => 'disabled')); ?>
                                     </div>
                                 </div>
                             </div>

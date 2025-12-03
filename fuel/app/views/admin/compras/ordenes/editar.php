@@ -214,7 +214,7 @@
                         <script>
                             window.order_id = <?= (int)$order->id; ?>;
                             window.proveedor_id = <?= (int)$order->provider_id; ?>;
-                            window.proveedor_nombre = <?= json_encode($order->provider->name); ?>;
+                            window.proveedor_nombre = <?= json_encode($order->provider->company_name); ?>;
                             window.proveedor_rfc = <?= json_encode($order->provider->rfc); ?>;
                         </script>
                     </div>

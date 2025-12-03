@@ -4,18 +4,31 @@ class Model_Provider extends \Orm\Model
 {
 	protected static $_properties = array(
 		'id',
-		'name',
-		'code_sap',
-		'rfc',
-		'user_id',
-		'employee_id',
-		'require_purchase',
-		'payment_terms_id',
-		'csf',
-		'origin',
-		'provider_type',
+		'code',
+		'company_name',
+		'contact_name',
+		'email',
+		'phone',
+		'phone_secondary',
+		'address',
+		'city',
+		'state',
+		'postal_code',
+		'country',
+		'tax_id',
+		'website',
+		'notes',
+		'payment_terms',
+		'credit_limit',
+		'is_active',
 		'created_at',
-		'updated_at'
+		'updated_at',
+		'deleted_at',
+		'is_suspended',
+		'suspended_reason',
+		'suspended_at',
+		'activated_at',
+		'activated_by'
 	);
 
 	protected static $_observers = array(
@@ -34,9 +47,9 @@ class Model_Provider extends \Orm\Model
 	public static function get_for_input()
 {
     $arr = [];
-    $proveedores = static::query()->order_by('name', 'asc')->get();
+    $proveedores = static::query()->order_by('company_name', 'asc')->get();
     foreach ($proveedores as $p) {
-        $arr[$p->id] = $p->name . ' (' . $p->rfc . ')';
+        $arr[$p->id] = $p->company_name . ' (' . $p->tax_id . ')';
     }
     return $arr;
 }
@@ -44,22 +57,8 @@ class Model_Provider extends \Orm\Model
 
 	protected static $_primary_key = array('id');
 
-	protected static $_belongs_to = array(
-		'user' => array(
-			'key_from'       => 'user_id',
-			'model_to'       => 'Model_User',
-			'key_to'         => 'id',
-			'cascade_save'   => false,
-			'cascade_delete' => false,
-		),
-		'employee' => array(
-			'key_from'       => 'employee_id',
-			'model_to'       => 'Model_Employee',
-			'key_to'         => 'id',
-			'cascade_save'   => false,
-			'cascade_delete' => false,
-		)
-	);
+	// Relaciones eliminadas: user_id y employee_id no existen en la tabla actual
+	protected static $_belongs_to = array();
 
 	protected static $_has_one = array(
 	

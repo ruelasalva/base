@@ -23,6 +23,9 @@ class Controller_Admin extends Controller_Baseadmin
 		# REQUERIDA PARA EL TEMPLATING
 		parent::before();
 
+		# Configurar encoding UTF-8 para todas las respuestas
+		header('Content-Type: text/html; charset=utf-8');
+
 		# SI NO ESTÁ LOGUEADO Y NO ESTÁ EN LA ACCIÓN DE LOGIN, REDIRIGIR A LOGIN
 		if (!Auth::check() and Request::active()->action != 'login')
 		{

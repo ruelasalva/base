@@ -271,7 +271,7 @@
                         <?php foreach($ultimas_ordenes as $orden): ?>
                             <li class="list-group-item">
                                 <?php echo Html::anchor('admin/compras/ordenes/info/'.$orden->id, $orden->code_order); ?> -
-                                <?php echo $orden->provider ? $orden->provider->name : 'N/D'; ?>
+                                <?php echo $orden->provider ? $orden->provider->company_name : 'N/D'; ?>
                             </li>
                         <?php endforeach; ?>
                         <?php if (empty($ultimas_ordenes)): ?>
@@ -290,7 +290,7 @@
                         <?php foreach($ultimas_facturas as $factura): ?>
                             <li class="list-group-item">
                                 <?php echo Html::anchor('admin/compras/facturas/info/'.$factura->id, $factura->id); ?> -
-                                <?php echo $factura->provider ? $factura->provider->name : 'N/D'; ?>
+                                <?php echo $factura->provider ? $factura->provider->company_name : 'N/D'; ?>
                             </li>
                         <?php endforeach; ?>
                         <?php if (empty($ultimas_facturas)): ?>
@@ -442,7 +442,7 @@
             <tbody>
               <?php foreach ($top_proveedores as $prov): ?>
               <tr>
-                <td><strong><?php echo $prov['name'] ?: 'N/D'; ?></strong></td>
+                <td><strong><?php echo $prov['company_name'] ?: 'N/D'; ?></strong></td>
                 <td class="text-center"><?php echo $prov['facturas']; ?></td>
                 <td class="text-right">$<?php echo number_format($prov['total'], 2); ?></td>
               </tr>

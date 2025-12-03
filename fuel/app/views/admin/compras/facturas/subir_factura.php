@@ -48,7 +48,7 @@
                   </div>
                   <div class="col-md-4 mb-3">
                     <?php echo Form::label('Proveedor', 'provider_id', ['class' => 'form-control-label']); ?>
-                    <input type="text" class="form-control" value="<?php echo $order->provider->name; ?>" readonly>
+                    <input type="text" class="form-control" value="<?php echo $order->provider->company_name; ?>" readonly>
                     <?php echo Form::hidden('provider_id', $order->provider->id); ?>
                   </div>
                   <div class="col-md-4 mb-3">

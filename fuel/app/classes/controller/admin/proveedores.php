@@ -45,10 +45,8 @@ class Controller_Admin_Proveedores extends Controller_Admin
 		$providers_info = array();
 		$per_page    	= 100;
 
-		# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-		$providers = Model_User::query()
-		->related('provider') # RELACION CON LA TABLA PROVEEDORES
-		->where('group', 10); # ES EL NUMERO DE GRUPO PROVEEDORES
+		# SE BUSCA LA INFORMACION DIRECTAMENTE DE LA TABLA PROVIDERS
+		$query = DB::select('*')->from('providers')->where('deleted_at', null);
 
 		# SI HAY UNA BUSQUEDA
 		if ($search != '')
@@ -58,14 +56,23 @@ class Controller_Admin_Proveedores extends Controller_Admin
 			$search = str_replace(' ', '%', $search);
 
 			# SE AGREGA LA CLAUSULA DE BUSQUEDA
-			$providers = $providers->where(DB::expr("CONCAT(`t0`.`username`, ' ', `t0`.`email`,' ',`t1`.`code_sap` )"), 'like', '%'.$search.'%');
+			$query->where_open()
+				->where('company_name', 'like', '%'.$search.'%')
+				->or_where('email', 'like', '%'.$search.'%')
+				->or_where('code', 'like', '%'.$search.'%')
+				->or_where('tax_id', 'like', '%'.$search.'%')
+				->where_close();
 		}
+
+		# CONTAR TOTAL
+		$count_query = clone $query;
+		$total_items = $count_query->select(DB::expr('COUNT(*) as count'))->execute()->get('count');
 
 		# SE ESTABLECE LA CONFIGURACION DE LA PAGINACION
 		$config = array(
 			'name'           => 'admin',
 			'pagination_url' => Uri::current(),
-			'total_items'    => $providers->count(),
+			'total_items'    => $total_items,
 			'per_page'       => $per_page,
 			'uri_segment'    => 'pagina',
 			'show_first'     => true,
@@ -75,11 +82,12 @@ class Controller_Admin_Proveedores extends Controller_Admin
 		# SE CREA LA INSTANCIA DE LA PAGINACION
 		$pagination = Pagination::forge('admins', $config);
 
-		# SE EJECUTA EL QUERY
-		$providers = $providers->order_by('id', 'desc')
-			->rows_limit($pagination->per_page)
-			->rows_offset($pagination->offset)
-			->get();
+		# SE EJECUTA EL QUERY CON PAGINACION
+		$providers = $query->order_by('id', 'desc')
+			->limit($pagination->per_page)
+			->offset($pagination->offset)
+			->execute()
+			->as_array();
 
 		# SI SE OBTIENE INFORMACION
 		if (!empty($providers))
@@ -87,34 +95,21 @@ class Controller_Admin_Proveedores extends Controller_Admin
 			# SE RECORRE ELEMENTO POR ELEMENTO
 			foreach ($providers as $provider)
 			{
-				# SE DESERIALIZAN LOS CAMPOS EXTRAS
-				$status = unserialize($provider->profile_fields);
-
-				# SE ESTABLECE EL NOMBRE DEL GRUPO
-				switch ($provider->group)
-				{
-					case 10:  $group = 'Proveedor'; break;
-					case 20:  $group = 'Empleado'; break;
-					case 25:  $group = 'Vendedor'; break;
-					case 50:  $group = 'Moderador'; break;
-					case 100: $group = 'Administrador'; break;
-					default:  $group = 'Desconocido'; break;
-				}
-
-				# TRAER EL NOMBRE DEL PROVEEDOR SI TIENE
-				$provider_name = isset($provider->provider) ? $provider->provider->name : 'No asignado';
+				# DETERMINAR ESTADO
+				$status = $provider['is_suspended'] ? 'Suspendido' : 'Activo';
+				$banned = $provider['is_suspended'] ? 'Sí' : 'No';
 
 				# SE ALMACENA LA INFORMACION
 				$providers_info[] = array(
-					'id'        => $provider->id,
-					'username'  => $provider->username,
-					'name'      => $provider_name, 
-					'email'     => $provider->email,
-					'rfc'     	=> $provider->provider->rfc,
-					'code_sap' => (!empty($provider->provider) && !empty($provider->provider->code_sap)) ? $provider->provider->code_sap : 'No asignado',
-					'group'     => $group,
-					'connected' => ($status['connected']) ? 'Conectado' : 'Desconectado',
-					'banned'    => ($status['banned']) ? 'Sí' : 'No'
+					'id'        => $provider['id'],
+					'username'  => $provider['code'] ? $provider['code'] : 'N/A',
+					'name'      => $provider['company_name'], 
+					'email'     => $provider['email'] ? $provider['email'] : 'Sin email',
+					'rfc'     	=> $provider['tax_id'] ? $provider['tax_id'] : 'Sin RFC',
+					'code_sap'  => $provider['code'] ? $provider['code'] : 'No asignado',
+					'group'     => 'Proveedor',
+					'connected' => $status,
+					'banned'    => $banned
 				);
 			}
 		}
@@ -504,7 +499,7 @@ class Controller_Admin_Proveedores extends Controller_Admin
 		if(!empty($admin))
 		{
 			# SI EL USUARIO NO ES ADMINISTRADOR
-			if($admin->group != 100 && $admin->group != 50 && $admin->group != 25 && $admin->group != 20 && $admin->group != 10)
+			if($admin->group_id != 100 && $admin->group_id != 50 && $admin->group_id != 25 && $admin->group_id != 20 && $admin->group_id != 10)
 			{
 				# SE REDIRECCIONA AL USUARIO
 				Response::redirect('admin/proveedores');
@@ -516,7 +511,7 @@ class Controller_Admin_Proveedores extends Controller_Admin
 			# SE ALMACENA LA INFORMACION PARA LA VISTA
 			$data['username']  			= $admin->username;
 			$data['email']     			= $admin->email;
-			$data['group']     			= $admin->group;
+			$data['group']     			= $admin->group_id;
 			$data['name'] 	   			= $admin->provider->name;
 			$data['rfc'] 	   			= $admin->provider->rfc;
 			$data['code_sap']  			= $admin->provider->code_sap;
@@ -663,5 +658,303 @@ class Controller_Admin_Proveedores extends Controller_Admin
 		# SE CARGA LA VISTA
 		$this->template->title   = 'Editar administrador';
 		$this->template->content = View::forge('admin/proveedores/editar', $data);
+	}
+	
+	/**
+	 * DASHBOARD
+	 * Métricas clave del módulo de proveedores
+	 */
+	public function action_dashboard()
+	{
+		$data = [];
+		
+		// Proveedores pendientes de validación
+		$data['pending_validation'] = DB::select(DB::expr('COUNT(*) as count'))
+			->from('providers')
+			->where('is_suspended', 1)
+			->where('deleted_at', null)
+			->execute()
+			->get('count');
+		
+		// Facturas pendientes
+		$data['bills_pending'] = DB::select(DB::expr('COUNT(*) as count'), DB::expr('COALESCE(SUM(total), 0) as total'))
+			->from('providers_bills')
+			->where('status', 1)
+			->where('deleted', 0)
+			->execute()
+			->current();
+		
+		// Facturas aceptadas del mes
+		$start_of_month = mktime(0, 0, 0, date('m'), 1, date('Y'));
+		$data['bills_accepted'] = DB::select(DB::expr('COUNT(*) as count'), DB::expr('COALESCE(SUM(total), 0) as total'))
+			->from('providers_bills')
+			->where('status', 2)
+			->where('deleted', 0)
+			->where('validated_at', '>=', $start_of_month)
+			->execute()
+			->current();
+		
+		// Facturas rechazadas del mes
+		$data['bills_rejected'] = DB::select(DB::expr('COUNT(*) as count'))
+			->from('providers_bills')
+			->where('status', 3)
+			->where('deleted', 0)
+			->where('validated_at', '>=', $start_of_month)
+			->execute()
+			->get('count');
+		
+		// Contrarecibos pendientes
+		$data['receipts_pending'] = DB::select(DB::expr('COUNT(*) as count'), DB::expr('COALESCE(SUM(total), 0) as total'))
+			->from('providers_receipts')
+			->where('deleted', 0)
+			->where('status', 1)
+			->where('payment_date_actual', null)
+			->execute()
+			->current();
+		
+		// Contrarecibos vencidos
+		$data['receipts_overdue'] = DB::select(DB::expr('COUNT(*) as count'), DB::expr('COALESCE(SUM(total), 0) as total'))
+			->from('providers_receipts')
+			->where('deleted', 0)
+			->where('status', 1)
+			->where('programmed_payment_date', '<', time())
+			->where('payment_date_actual', null)
+			->execute()
+			->current();
+		
+		// Top 5 proveedores por monto (corregido: usar company_name)
+		$data['top_providers'] = DB::select(
+				'p.id',
+				'p.company_name',
+				DB::expr('COUNT(b.id) as bill_count'),
+				DB::expr('COALESCE(SUM(b.total), 0) as total_amount')
+			)
+			->from(array('providers', 'p'))
+			->join(array('providers_bills', 'b'), 'INNER')
+			->on('p.id', '=', 'b.provider_id')
+			->where('b.deleted', 0)
+			->where('b.created_at', '>=', $start_of_month)
+			->group_by('p.id', 'p.company_name')
+			->order_by('total_amount', 'DESC')
+			->limit(5)
+			->execute()
+			->as_array();
+		
+		// Actividad reciente
+		$data['recent_activity'] = DB::select('l.*', array('p.company_name', 'provider_name'))
+			->from(array('providers_action_logs', 'l'))
+			->join(array('providers', 'p'), 'LEFT')
+			->on('l.provider_id', '=', 'p.id')
+			->order_by('l.created_at', 'DESC')
+			->limit(10)
+			->execute()
+			->as_array();
+		
+		$this->template->title = 'Dashboard - Proveedores';
+		$this->template->content = View::forge('admin/proveedores/dashboard', $data);
+	}
+	
+	/**
+	 * CONFIGURACION
+	 * Parámetros de facturación y pago
+	 */
+	public function action_config()
+	{
+		$data = [];
+		
+		// Obtener configuración actual
+		$data['config'] = DB::select()
+			->from('providers_billing_config')
+			->where('tenant_id', 1)
+			->execute()
+			->current();
+		
+		// Si es POST, guardar
+		if (Input::method() === 'POST') {
+			try {
+				$holidays_input = Input::post('holidays', '');
+				$holidays_array = array_filter(array_map('trim', explode("\n", $holidays_input)));
+				
+				$config_data = array(
+					'invoice_receive_days' => implode(',', Input::post('invoice_receive_days', array())),
+					'invoice_receive_limit_time' => Input::post('invoice_receive_limit_time', '14:00:00'),
+					'payment_terms_days' => (int)Input::post('payment_terms_days', 30),
+					'payment_days' => implode(',', Input::post('payment_days', array())),
+					'holidays' => json_encode($holidays_array),
+					'auto_generate_receipt' => (int)Input::post('auto_generate_receipt', 0),
+					'require_purchase_order' => (int)Input::post('require_purchase_order', 0),
+					'max_amount_without_po' => (float)Input::post('max_amount_without_po', 5000),
+					'updated_at' => DB::expr('NOW()')
+				);
+				
+				if ($data['config']) {
+					DB::update('providers_billing_config')
+						->set($config_data)
+						->where('tenant_id', 1)
+						->execute();
+				} else {
+					$config_data['tenant_id'] = 1;
+					$config_data['created_at'] = DB::expr('NOW()');
+					DB::insert('providers_billing_config')
+						->set($config_data)
+						->execute();
+				}
+				
+				Session::set_flash('success', 'Configuración actualizada correctamente');
+				Response::redirect('admin/proveedores/config');
+				
+			} catch (Exception $e) {
+				Log::error('Error guardando configuración: ' . $e->getMessage());
+				Session::set_flash('error', 'Error al guardar configuración');
+			}
+		}
+		
+		// Decodificar holidays
+		if ($data['config'] && !empty($data['config']['holidays'])) {
+			$data['config']['holidays_text'] = implode("\n", json_decode($data['config']['holidays'], true));
+		} else {
+			$data['config']['holidays_text'] = '';
+		}
+		
+		$this->template->title = 'Configuración - Facturación y Pago';
+		$this->template->content = View::forge('admin/proveedores/config', $data);
+	}
+	
+	/**
+	 * SUSPENDER (AJAX)
+	 */
+	public function action_suspend($id = null)
+	{
+		if (Input::method() !== 'POST') {
+			echo json_encode(array('error' => 'Método no permitido'));
+			exit;
+		}
+		
+		$reason = Input::post('reason');
+		
+		if (empty($reason)) {
+			echo json_encode(array('error' => 'Debe especificar una razón'));
+			exit;
+		}
+		
+		try {
+			$admin_id = Auth::get('id');
+			
+			DB::update('providers')
+				->set(array(
+					'is_suspended' => 1,
+					'suspended_reason' => $reason,
+					'suspended_at' => DB::expr('NOW()'),
+					'updated_at' => DB::expr('NOW()')
+				))
+				->where('id', $id)
+				->execute();
+			
+			Helper_ProviderLog::log_provider_suspension($id, $reason, $admin_id);
+			
+			echo json_encode(array(
+				'success' => true,
+				'message' => 'Cuenta suspendida correctamente'
+			));
+			
+		} catch (Exception $e) {
+			Log::error('Error suspendiendo proveedor: ' . $e->getMessage());
+			echo json_encode(array('error' => 'Error al suspender cuenta'));
+		}
+		
+		exit;
+	}
+	
+	/**
+	 * ACTIVAR (AJAX)
+	 */
+	public function action_activate($id = null)
+	{
+		if (Input::method() !== 'POST') {
+			echo json_encode(array('error' => 'Método no permitido'));
+			exit;
+		}
+		
+		try {
+			$admin_id = Auth::get('id');
+			
+			DB::update('providers')
+				->set(array(
+					'is_suspended' => 0,
+					'suspended_reason' => null,
+					'activated_at' => DB::expr('NOW()'),
+					'activated_by' => $admin_id,
+					'updated_at' => DB::expr('NOW()')
+				))
+				->where('id', $id)
+				->execute();
+			
+			Helper_ProviderLog::log_provider_activation($id, $admin_id);
+			
+			echo json_encode(array(
+				'success' => true,
+				'message' => 'Cuenta activada correctamente'
+			));
+			
+		} catch (Exception $e) {
+			Log::error('Error activando proveedor: ' . $e->getMessage());
+			echo json_encode(array('error' => 'Error al activar cuenta'));
+		}
+		
+		exit;
+	}
+	
+	/**
+	 * RESETEAR CONTRASEÑA (AJAX)
+	 */
+	public function action_reset_password($id = null)
+	{
+		if (Input::method() !== 'POST') {
+			echo json_encode(array('error' => 'Método no permitido'));
+			exit;
+		}
+		
+		try {
+			$provider = DB::select('email', 'company_name')
+				->from('providers')
+				->where('id', $id)
+				->execute()
+				->current();
+			
+			if (!$provider || empty($provider['email'])) {
+				echo json_encode(array('error' => 'Proveedor no encontrado o sin email'));
+				exit;
+			}
+			
+			// Generar token
+			$token = bin2hex(random_bytes(32));
+			$expires_at = date('Y-m-d H:i:s', strtotime('+24 hours'));
+			
+			DB::insert('providers_email_confirmations')
+				->set(array(
+					'provider_id' => $id,
+					'email' => $provider['email'],
+					'token' => $token,
+					'expires_at' => $expires_at,
+					'ip_address' => Input::real_ip(),
+					'created_at' => DB::expr('NOW()')
+				))
+				->execute();
+			
+			Helper_ProviderLog::log_password_reset_request($id, $provider['email']);
+			
+			// TODO: Enviar email
+			
+			echo json_encode(array(
+				'success' => true,
+				'message' => 'Se ha enviado un email con instrucciones'
+			));
+			
+		} catch (Exception $e) {
+			Log::error('Error generando token: ' . $e->getMessage());
+			echo json_encode(array('error' => 'Error al generar token'));
+		}
+		
+		exit;
 	}
 }

@@ -17,7 +17,7 @@
 class Controller_Admin_Configuracion extends Controller_Admin
 {
 	/**
-	 * INDEX - CONFIGURACIÓN GENERAL
+	 * INDEX - DASHBOARD DE CONFIGURACIÓN
 	 */
 	public function action_index()
 	{
@@ -29,43 +29,45 @@ class Controller_Admin_Configuracion extends Controller_Admin
 		}
 
 		$tenant_id = Session::get('tenant_id', 1);
+		$active_tab = Input::get('tab', 'general');
 
-		// Obtener configuración actual
-		$config = DB::select()->from('tenant_site_config')
+		// Obtener todas las configuraciones del tenant
+		$settings = DB::select('*')
+			->from('system_settings')
 			->where('tenant_id', $tenant_id)
+			->order_by('category', 'ASC')
+			->order_by('setting_key', 'ASC')
 			->execute()
-			->current();
+			->as_array();
 
-		// Si no existe, crear una entrada por defecto
-		if (!$config)
+		// Organizar por categoría
+		$settings_by_category = [];
+		foreach ($settings as $setting)
 		{
-			DB::insert('tenant_site_config')
-				->set([
-					'tenant_id' => $tenant_id,
-					'site_name' => 'Mi Sitio',
-					'seo_enabled' => 0,
-					'ga_enabled' => 0,
-					'gtm_enabled' => 0,
-					'fb_pixel_enabled' => 0,
-					'recaptcha_enabled' => 0,
-					'smtp_enabled' => 0
-				])
-				->execute();
-
-			$config = DB::select()->from('tenant_site_config')
-				->where('tenant_id', $tenant_id)
-				->execute()
-				->current();
+			$settings_by_category[$setting['category']][$setting['setting_key']] = $setting;
 		}
 
+		// Obtener estadísticas
+		$stats = [
+			'total' => count($settings),
+			'categories' => count($settings_by_category),
+			'last_updated' => DB::select(DB::expr('MAX(updated_at) as last'))
+				->from('system_settings')
+				->where('tenant_id', $tenant_id)
+				->execute()
+				->get('last')
+		];
+
 		$data = [
-			'title' => 'Configuración del Sitio',
+			'title' => 'Configuración del Sistema',
 			'username' => Auth::get('username'),
 			'email' => Auth::get('email'),
 			'tenant_id' => $tenant_id,
 			'is_super_admin' => Helper_Permission::is_super_admin(),
 			'is_admin' => Helper_Permission::is_admin(),
-			'config' => $config,
+			'settings_by_category' => $settings_by_category,
+			'active_tab' => $active_tab,
+			'stats' => $stats,
 			'can_edit' => Helper_Permission::can('config', 'edit')
 		];
 
@@ -75,7 +77,356 @@ class Controller_Admin_Configuracion extends Controller_Admin
 	}
 
 	/**
-	 * SAVE - GUARDAR CONFIGURACIÓN
+	 * GENERAL - CONFIGURACIÓN GENERAL
+	 */
+	public function action_general()
+	{
+		if (!Helper_Permission::can('config', 'edit'))
+		{
+			Session::set_flash('error', 'No tienes permisos para editar configuración');
+			Response::redirect('admin/configuracion');
+		}
+
+		$tenant_id = Session::get('tenant_id', 1);
+
+		if (Input::method() == 'POST')
+		{
+			try
+			{
+				$settings = [
+					['key' => 'app_name', 'value' => Input::post('app_name'), 'type' => 'string'],
+					['key' => 'app_description', 'value' => Input::post('app_description'), 'type' => 'string'],
+					['key' => 'app_url', 'value' => Input::post('app_url'), 'type' => 'string'],
+					['key' => 'timezone', 'value' => Input::post('timezone'), 'type' => 'string'],
+					['key' => 'date_format', 'value' => Input::post('date_format'), 'type' => 'string'],
+					['key' => 'time_format', 'value' => Input::post('time_format'), 'type' => 'string'],
+					['key' => 'language', 'value' => Input::post('language'), 'type' => 'string'],
+					['key' => 'items_per_page', 'value' => Input::post('items_per_page'), 'type' => 'integer'],
+					['key' => 'maintenance_mode', 'value' => Input::post('maintenance_mode', 0), 'type' => 'boolean'],
+				];
+
+				foreach ($settings as $setting)
+				{
+					$this->save_setting('general', $setting['key'], $setting['value'], $setting['type']);
+				}
+
+				Session::set_flash('success', 'Configuración general guardada exitosamente.');
+				Response::redirect('admin/configuracion?tab=general');
+			}
+			catch (Exception $e)
+			{
+				Session::set_flash('error', 'Error al guardar: ' . $e->getMessage());
+			}
+		}
+
+		$current_settings = $this->get_settings_by_category('general');
+
+		$data = [
+			'title' => 'Configuración General',
+			'username' => Auth::get('username'),
+			'email' => Auth::get('email'),
+			'settings' => $current_settings
+		];
+
+		$data['content'] = View::forge('admin/configuracion/general', $data);
+		$template_file = Helper_Template::get_template_file();
+		return View::forge($template_file, $data);
+	}
+
+	/**
+	 * EMAIL - CONFIGURACIÓN DE EMAIL
+	 */
+	public function action_email()
+	{
+		if (!Helper_Permission::can('config', 'edit'))
+		{
+			Session::set_flash('error', 'No tienes permisos para editar configuración');
+			Response::redirect('admin/configuracion');
+		}
+
+		$tenant_id = Session::get('tenant_id', 1);
+
+		if (Input::method() == 'POST')
+		{
+			try
+			{
+				$settings = [
+					['key' => 'email_from_address', 'value' => Input::post('email_from_address'), 'type' => 'string'],
+					['key' => 'email_from_name', 'value' => Input::post('email_from_name'), 'type' => 'string'],
+					['key' => 'smtp_host', 'value' => Input::post('smtp_host'), 'type' => 'string'],
+					['key' => 'smtp_port', 'value' => Input::post('smtp_port'), 'type' => 'integer'],
+					['key' => 'smtp_username', 'value' => Input::post('smtp_username'), 'type' => 'string'],
+					['key' => 'smtp_password', 'value' => Input::post('smtp_password'), 'type' => 'string'],
+					['key' => 'smtp_encryption', 'value' => Input::post('smtp_encryption'), 'type' => 'string'],
+					['key' => 'email_enabled', 'value' => Input::post('email_enabled', 0), 'type' => 'boolean'],
+				];
+
+				foreach ($settings as $setting)
+				{
+					$this->save_setting('email', $setting['key'], $setting['value'], $setting['type']);
+				}
+
+				Session::set_flash('success', 'Configuración de email guardada exitosamente.');
+				Response::redirect('admin/configuracion?tab=email');
+			}
+			catch (Exception $e)
+			{
+				Session::set_flash('error', 'Error al guardar: ' . $e->getMessage());
+			}
+		}
+
+		$current_settings = $this->get_settings_by_category('email');
+
+		$data = [
+			'title' => 'Configuración de Email',
+			'username' => Auth::get('username'),
+			'email' => Auth::get('email'),
+			'settings' => $current_settings
+		];
+
+		$data['content'] = View::forge('admin/configuracion/email', $data);
+		$template_file = Helper_Template::get_template_file();
+		return View::forge($template_file, $data);
+	}
+
+	/**
+	 * FACTURACIÓN - CONFIGURACIÓN DE FACTURACIÓN
+	 */
+	public function action_facturacion()
+	{
+		if (!Helper_Permission::can('config', 'edit'))
+		{
+			Session::set_flash('error', 'No tienes permisos para editar configuración');
+			Response::redirect('admin/configuracion');
+		}
+
+		$tenant_id = Session::get('tenant_id', 1);
+
+		if (Input::method() == 'POST')
+		{
+			try
+			{
+				$settings = [
+					['key' => 'billing_days_to_upload', 'value' => Input::post('billing_days_to_upload'), 'type' => 'integer'],
+					['key' => 'billing_upload_deadline', 'value' => Input::post('billing_upload_deadline'), 'type' => 'string'],
+					['key' => 'billing_payment_terms', 'value' => Input::post('billing_payment_terms'), 'type' => 'integer'],
+					['key' => 'billing_payment_days', 'value' => Input::post('billing_payment_days'), 'type' => 'string'],
+					['key' => 'billing_holidays', 'value' => Input::post('billing_holidays'), 'type' => 'json'],
+					['key' => 'billing_auto_receipt', 'value' => Input::post('billing_auto_receipt', 0), 'type' => 'boolean'],
+					['key' => 'billing_require_sat_validation', 'value' => Input::post('billing_require_sat_validation', 0), 'type' => 'boolean'],
+					['key' => 'billing_max_file_size', 'value' => Input::post('billing_max_file_size'), 'type' => 'integer'],
+				];
+
+				foreach ($settings as $setting)
+				{
+					$this->save_setting('facturacion', $setting['key'], $setting['value'], $setting['type']);
+				}
+
+				Session::set_flash('success', 'Configuración de facturación guardada exitosamente.');
+				Response::redirect('admin/configuracion?tab=facturacion');
+			}
+			catch (Exception $e)
+			{
+				Session::set_flash('error', 'Error al guardar: ' . $e->getMessage());
+			}
+		}
+
+		$current_settings = $this->get_settings_by_category('facturacion');
+
+		$data = [
+			'title' => 'Configuración de Facturación',
+			'username' => Auth::get('username'),
+			'email' => Auth::get('email'),
+			'settings' => $current_settings
+		];
+
+		$data['content'] = View::forge('admin/configuracion/facturacion', $data);
+		$template_file = Helper_Template::get_template_file();
+		return View::forge($template_file, $data);
+	}
+
+	/**
+	 * NOTIFICACIONES - CONFIGURACIÓN DE NOTIFICACIONES
+	 */
+	public function action_notificaciones()
+	{
+		if (!Helper_Permission::can('config', 'edit'))
+		{
+			Session::set_flash('error', 'No tienes permisos para editar configuración');
+			Response::redirect('admin/configuracion');
+		}
+
+		$tenant_id = Session::get('tenant_id', 1);
+
+		if (Input::method() == 'POST')
+		{
+			try
+			{
+				$settings = [
+					['key' => 'notifications_enabled', 'value' => Input::post('notifications_enabled', 0), 'type' => 'boolean'],
+					['key' => 'notifications_email', 'value' => Input::post('notifications_email', 0), 'type' => 'boolean'],
+					['key' => 'notifications_sms', 'value' => Input::post('notifications_sms', 0), 'type' => 'boolean'],
+					['key' => 'notifications_push', 'value' => Input::post('notifications_push', 0), 'type' => 'boolean'],
+					['key' => 'notifications_frequency', 'value' => Input::post('notifications_frequency'), 'type' => 'string'],
+					['key' => 'notifications_quiet_hours_start', 'value' => Input::post('notifications_quiet_hours_start'), 'type' => 'string'],
+					['key' => 'notifications_quiet_hours_end', 'value' => Input::post('notifications_quiet_hours_end'), 'type' => 'string'],
+				];
+
+				foreach ($settings as $setting)
+				{
+					$this->save_setting('notificaciones', $setting['key'], $setting['value'], $setting['type']);
+				}
+
+				Session::set_flash('success', 'Configuración de notificaciones guardada exitosamente.');
+				Response::redirect('admin/configuracion?tab=notificaciones');
+			}
+			catch (Exception $e)
+			{
+				Session::set_flash('error', 'Error al guardar: ' . $e->getMessage());
+			}
+		}
+
+		$current_settings = $this->get_settings_by_category('notificaciones');
+
+		$data = [
+			'title' => 'Configuración de Notificaciones',
+			'username' => Auth::get('username'),
+			'email' => Auth::get('email'),
+			'settings' => $current_settings
+		];
+
+		$data['content'] = View::forge('admin/configuracion/notificaciones', $data);
+		$template_file = Helper_Template::get_template_file();
+		return View::forge($template_file, $data);
+	}
+
+	/**
+	 * SEGURIDAD - CONFIGURACIÓN DE SEGURIDAD
+	 */
+	public function action_seguridad()
+	{
+		if (!Helper_Permission::can('config', 'edit'))
+		{
+			Session::set_flash('error', 'No tienes permisos para editar configuración');
+			Response::redirect('admin/configuracion');
+		}
+
+		$tenant_id = Session::get('tenant_id', 1);
+
+		if (Input::method() == 'POST')
+		{
+			try
+			{
+				$settings = [
+					['key' => 'session_timeout', 'value' => Input::post('session_timeout'), 'type' => 'integer'],
+					['key' => 'max_login_attempts', 'value' => Input::post('max_login_attempts'), 'type' => 'integer'],
+					['key' => 'lockout_duration', 'value' => Input::post('lockout_duration'), 'type' => 'integer'],
+					['key' => 'password_min_length', 'value' => Input::post('password_min_length'), 'type' => 'integer'],
+					['key' => 'password_require_uppercase', 'value' => Input::post('password_require_uppercase', 0), 'type' => 'boolean'],
+					['key' => 'password_require_numbers', 'value' => Input::post('password_require_numbers', 0), 'type' => 'boolean'],
+					['key' => 'password_require_special', 'value' => Input::post('password_require_special', 0), 'type' => 'boolean'],
+					['key' => 'captcha_enabled', 'value' => Input::post('captcha_enabled', 0), 'type' => 'boolean'],
+					['key' => 'captcha_site_key', 'value' => Input::post('captcha_site_key'), 'type' => 'string'],
+					['key' => 'captcha_secret_key', 'value' => Input::post('captcha_secret_key'), 'type' => 'string'],
+					['key' => 'two_factor_enabled', 'value' => Input::post('two_factor_enabled', 0), 'type' => 'boolean'],
+				];
+
+				foreach ($settings as $setting)
+				{
+					$this->save_setting('seguridad', $setting['key'], $setting['value'], $setting['type']);
+				}
+
+				Session::set_flash('success', 'Configuración de seguridad guardada exitosamente.');
+				Response::redirect('admin/configuracion?tab=seguridad');
+			}
+			catch (Exception $e)
+			{
+				Session::set_flash('error', 'Error al guardar: ' . $e->getMessage());
+			}
+		}
+
+		$current_settings = $this->get_settings_by_category('seguridad');
+
+		$data = [
+			'title' => 'Configuración de Seguridad',
+			'username' => Auth::get('username'),
+			'email' => Auth::get('email'),
+			'settings' => $current_settings
+		];
+
+		$data['content'] = View::forge('admin/configuracion/seguridad', $data);
+		$template_file = Helper_Template::get_template_file();
+		return View::forge($template_file, $data);
+	}
+
+	/**
+	 * SAVE SETTING - Guardar o actualizar configuración
+	 */
+	private function save_setting($category, $key, $value, $type = 'string')
+	{
+		$tenant_id = Session::get('tenant_id', 1);
+
+		$exists = DB::select(DB::expr('COUNT(*) as count'))
+			->from('system_settings')
+			->where('tenant_id', $tenant_id)
+			->where('category', $category)
+			->where('setting_key', $key)
+			->execute()
+			->get('count');
+
+		if ($exists > 0)
+		{
+			DB::update('system_settings')
+				->set([
+					'setting_value' => $value,
+					'setting_type' => $type,
+					'updated_at' => DB::expr('CURRENT_TIMESTAMP')
+				])
+				->where('tenant_id', $tenant_id)
+				->where('category', $category)
+				->where('setting_key', $key)
+				->execute();
+		}
+		else
+		{
+			DB::insert('system_settings')
+				->set([
+					'tenant_id' => $tenant_id,
+					'category' => $category,
+					'setting_key' => $key,
+					'setting_value' => $value,
+					'setting_type' => $type,
+					'is_public' => 0
+				])
+				->execute();
+		}
+	}
+
+	/**
+	 * GET SETTINGS BY CATEGORY - Obtener configuraciones por categoría
+	 */
+	private function get_settings_by_category($category)
+	{
+		$tenant_id = Session::get('tenant_id', 1);
+
+		$settings = DB::select('*')
+			->from('system_settings')
+			->where('tenant_id', $tenant_id)
+			->where('category', $category)
+			->execute()
+			->as_array();
+
+		$result = [];
+		foreach ($settings as $setting)
+		{
+			$result[$setting['setting_key']] = $setting['setting_value'];
+		}
+
+		return $result;
+	}
+
+	/**
+	 * SAVE - GUARDAR CONFIGURACIÓN (MÉTODO LEGACY - MANTENER COMPATIBILIDAD)
 	 */
 	public function action_save()
 	{

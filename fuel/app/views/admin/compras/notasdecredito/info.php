@@ -41,7 +41,7 @@
           <div class="row">
             <div class="col-md-6 mb-3">
               <?php echo Form::label('Proveedor','provider'); ?>
-              <span class="form-control"><?php echo $nota->provider->name ?? '-'; ?></span>
+              <span class="form-control"><?php echo $nota->provider->company_name ?? '-'; ?></span>
             </div>
             <div class="col-md-6 mb-3">
               <?php echo Form::label('UUID','uuid'); ?>

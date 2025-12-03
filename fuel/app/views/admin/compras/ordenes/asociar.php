@@ -64,7 +64,7 @@
                   ]); ?>
                 </td>
                 <td><?php echo $f->uuid; ?></td>
-                <td><?php echo $f->provider ? $f->provider->name : 'N/D'; ?></td>
+                <td><?php echo $f->provider ? $f->provider->company_name : 'N/D'; ?></td>
                 <td class="text-right">$<?php echo number_format($f->total, 2); ?></td>
                 <td><?php echo date('d/m/Y', $f->created_at); ?></td>
               </tr>

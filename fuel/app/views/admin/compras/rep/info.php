@@ -95,7 +95,7 @@
                                     <?php foreach($facturas_asociadas as $fact): ?>
                                         <tr>
                                             <td><?= $fact->provider_bill ? $fact->provider_bill->uuid : '-'; ?></td>
-                                            <td><?= $fact->provider_bill && $fact->provider_bill->provider ? $fact->provider_bill->provider->name : '-'; ?></td>
+                                            <td><?= $fact->provider_bill && $fact->provider_bill->provider ? $fact->provider_bill->provider->company_name : '-'; ?></td>
                                             <td><?= $fact->provider_bill ? '$' . number_format($fact->provider_bill->total, 2) : '-'; ?></td>
                                             <td><?= $fact->provider_bill && $fact->provider_bill->created_at ? date('d/m/Y', strtotime($fact->provider_bill->created_at)) : '-'; ?></td>
                                             <td>

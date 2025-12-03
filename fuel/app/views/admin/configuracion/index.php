@@ -3,13 +3,17 @@
     <div class="col-md-12">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="mb-0"><i class="fas fa-cog me-2"></i>Configuración del Sitio</h2>
-                <p class="text-body-secondary">Administra todos los aspectos de tu sitio web</p>
+                <h2 class="mb-0"><i class="fas fa-cog me-2"></i>Configuración del Sistema</h2>
+                <p class="text-body-secondary">Administra todos los aspectos del sistema</p>
             </div>
             <div>
-                <a href="<?php echo Uri::create('admin/configuracion/templates'); ?>" class="btn btn-outline-primary">
-                    <i class="fas fa-palette me-1"></i>Cambiar Template
-                </a>
+                <!-- Estadísticas rápidas -->
+                <div class="badge bg-info">
+                    <?php echo $stats['total']; ?> Configuraciones
+                </div>
+                <div class="badge bg-success">
+                    <?php echo $stats['categories']; ?> Categorías
+                </div>
             </div>
         </div>
     </div>
@@ -22,75 +26,179 @@
     <!-- Tabs Navigation -->
     <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="general-tab" data-coreui-toggle="tab" data-coreui-target="#general" type="button">
+            <a class="nav-link <?php echo $active_tab == 'general' ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/configuracion/general'); ?>">
                 <i class="fas fa-home me-1"></i>General
-            </button>
+            </a>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="seo-tab" data-coreui-toggle="tab" data-coreui-target="#seo" type="button">
-                <i class="fas fa-search me-1"></i>SEO
-            </button>
+            <a class="nav-link <?php echo $active_tab == 'email' ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/configuracion/email'); ?>">
+                <i class="fas fa-envelope me-1"></i>Email/SMTP
+            </a>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="analytics-tab" data-coreui-toggle="tab" data-coreui-target="#analytics" type="button">
-                <i class="fas fa-chart-line me-1"></i>Analytics
-            </button>
+            <a class="nav-link <?php echo $active_tab == 'facturacion' ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/configuracion/facturacion'); ?>">
+                <i class="fas fa-file-invoice-dollar me-1"></i>Facturación
+            </a>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="smtp-tab" data-coreui-toggle="tab" data-coreui-target="#smtp" type="button">
-                <i class="fas fa-envelope me-1"></i>SMTP
-            </button>
+            <a class="nav-link <?php echo $active_tab == 'notificaciones' ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/configuracion/notificaciones'); ?>">
+                <i class="fas fa-bell me-1"></i>Notificaciones
+            </a>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="social-tab" data-coreui-toggle="tab" data-coreui-target="#social" type="button">
-                <i class="fas fa-share-alt me-1"></i>Redes Sociales
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="security-tab" data-coreui-toggle="tab" data-coreui-target="#security" type="button">
+            <a class="nav-link <?php echo $active_tab == 'seguridad' ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/configuracion/seguridad'); ?>">
                 <i class="fas fa-shield-alt me-1"></i>Seguridad
-            </button>
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" href="<?php echo Uri::create('admin/configuracion/templates'); ?>">
+                <i class="fas fa-palette me-1"></i>Templates
+            </a>
         </li>
     </ul>
 
     <!-- Tabs Content -->
     <div class="tab-content" id="configTabsContent">
         
-        <!-- GENERAL TAB -->
-        <div class="tab-pane fade show active" id="general" role="tabpanel">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Configuración General</h5>
+        <!-- Resumen General -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Bienvenido al Centro de Configuración</strong><br>
+                    Desde aquí puedes administrar todas las configuraciones del sistema organizadas por categorías.
+                    Selecciona una pestaña arriba para comenzar.
                 </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Nombre del Sitio</label>
-                            <input type="text" class="form-control" name="site_name" 
-                                   value="<?php echo htmlspecialchars($config['site_name'] ?? ''); ?>" 
-                                   placeholder="Mi Empresa">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">URL del Logo</label>
-                            <input type="text" class="form-control" name="site_logo" 
-                                   value="<?php echo htmlspecialchars($config['site_logo'] ?? ''); ?>" 
-                                   placeholder="/assets/img/logo.png">
-                            <small class="text-muted">Logo principal del sitio (recomendado: 200x60px)</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">URL del Favicon</label>
-                            <input type="text" class="form-control" name="site_favicon" 
-                                   value="<?php echo htmlspecialchars($config['site_favicon'] ?? ''); ?>" 
-                                   placeholder="/assets/img/favicon.ico">
-                            <small class="text-muted">Icono que aparece en la pestaña del navegador</small>
-                        </div>
+            </div>
+        </div>
+
+        <!-- Cards de Categorías -->
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <div class="card h-100 hover-shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-sliders-h text-primary"></i> General
+                        </h5>
+                        <p class="card-text">
+                            Configuración básica del sistema: nombre, logo, zona horaria, formato de fechas.
+                        </p>
+                        <a href="<?php echo Uri::create('admin/configuracion/general'); ?>" class="btn btn-sm btn-primary">
+                            Configurar <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 hover-shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-envelope text-info"></i> Email
+                        </h5>
+                        <p class="card-text">
+                            Configuración de servidor SMTP para envío de correos electrónicos.
+                        </p>
+                        <a href="<?php echo Uri::create('admin/configuracion/email'); ?>" class="btn btn-sm btn-info">
+                            Configurar <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 hover-shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-file-invoice-dollar text-success"></i> Facturación
+                        </h5>
+                        <p class="card-text">
+                            Parámetros del módulo de proveedores: términos de pago, validación SAT, días festivos.
+                        </p>
+                        <a href="<?php echo Uri::create('admin/configuracion/facturacion'); ?>" class="btn btn-sm btn-success">
+                            Configurar <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 hover-shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-bell text-warning"></i> Notificaciones
+                        </h5>
+                        <p class="card-text">
+                            Configuración de canales de notificación: email, SMS, push, horarios silenciosos.
+                        </p>
+                        <a href="<?php echo Uri::create('admin/configuracion/notificaciones'); ?>" class="btn btn-sm btn-warning">
+                            Configurar <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 hover-shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-shield-alt text-danger"></i> Seguridad
+                        </h5>
+                        <p class="card-text">
+                            Política de contraseñas, intentos de login, reCAPTCHA, autenticación de dos factores.
+                        </p>
+                        <a href="<?php echo Uri::create('admin/configuracion/seguridad'); ?>" class="btn btn-sm btn-danger">
+                            Configurar <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 hover-shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-palette text-purple"></i> Templates
+                        </h5>
+                        <p class="card-text">
+                            Administración de plantillas visuales y temas del sistema.
+                        </p>
+                        <a href="<?php echo Uri::create('admin/configuracion/templates'); ?>" class="btn btn-sm btn-secondary">
+                            Configurar <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- SEO TAB -->
-        <div class="tab-pane fade" id="seo" role="tabpanel">
+        <!-- Última actualización -->
+        <?php if (!empty($stats['last_updated'])): ?>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <p class="text-muted text-center">
+                    <i class="fas fa-clock"></i> Última actualización: <?php echo date('d/m/Y H:i:s', strtotime($stats['last_updated'])); ?>
+                </p>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<style>
+.hover-shadow {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.card-title i {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+}
+</style>
             <div class="card">
                 <div class="card-header">
                     <div class="form-check form-switch">

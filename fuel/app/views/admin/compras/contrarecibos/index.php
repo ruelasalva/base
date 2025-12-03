@@ -87,7 +87,7 @@
                                         <td><?php echo $cr->id; ?></td>
                                         <td><?php echo $cr->receipt_number ?? 'N/A'; ?></td>
                                         <td>
-                                            <?php echo $cr->provider->name ?? ''; ?>
+                                            <?php echo $cr->provider->company_name ?? ''; ?>
                                             <span class="small text-muted">(<?php echo $cr->provider->rfc ?? ''; ?>)</span>
                                         </td>
                                         <td>
