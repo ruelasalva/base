@@ -26,6 +26,7 @@
                 'business' => 'fa-briefcase',
                 'sales' => 'fa-shopping-cart',
                 'marketing' => 'fa-bullhorn',
+                'backend' => 'fa-server',
                 'system' => 'fa-cogs'
             ];
             $icon = isset($icons[$category]) ? $icons[$category] : 'fa-folder';

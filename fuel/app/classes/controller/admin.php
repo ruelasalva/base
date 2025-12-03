@@ -8,7 +8,7 @@
  */
 class Controller_Admin extends Controller_Baseadmin
 {
-	public $template = 'admin/template';
+	public $template = 'admin/template_coreui';
 
 	/**
 	 * BEFORE
@@ -40,15 +40,13 @@ class Controller_Admin extends Controller_Baseadmin
 				Response::redirect('admin/login');
 			}
 
-			# ASEGURAR QUE EXISTE TENANT_ID EN SESIÓN
-			if (!Session::get('tenant_id'))
-			{
-				Session::set('tenant_id', 1); // Default tenant
-			}
+		# ASEGURAR QUE EXISTE TENANT_ID EN SESIÓN
+		if (!Session::get('tenant_id'))
+		{
+			Session::set('tenant_id', 1); // Default tenant
 		}
 	}
-
-
+}
 	// /**
 	//  * LOGIN
 	//  *
@@ -339,12 +337,17 @@ class Controller_Admin extends Controller_Baseadmin
 			}
 		}
 
-		# RENDERIZAR VISTA
-		$data['content'] = View::forge('admin/index', $data);
-		
-		// Obtener template según preferencias del usuario
+		# RENDERIZAR VISTA CON TEMPLATE DINÁMICO
+		// Obtener el template según preferencias del usuario
 		$template_file = Helper_Template::get_template_file();
-		return View::forge($template_file, $data);
+		
+		// Si es diferente al default, cambiar el template
+		if ($template_file !== 'admin/template') {
+			$this->template = View::forge($template_file);
+		}
+		
+		$this->template->title = $data['title'];
+		$this->template->content = View::forge('admin/index', $data);
 	}
 
 	/**

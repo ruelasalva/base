@@ -442,4 +442,139 @@ class Helper_Dashboard
 			'expenses' => $expenses
 		];
 	}
+
+	/**
+	 * OBTENER DATOS PARA WIDGET: Actividad Reciente
+	 * 
+	 * @param int $tenant_id
+	 * @return array
+	 */
+	public static function widget_recent_activity($tenant_id)
+	{
+		try
+		{
+			$activities = DB::select('ua.id', 'ua.action', 'ua.description', 'ua.created_at', 'u.username')
+				->from(['user_activity', 'ua'])
+				->join(['users', 'u'], 'LEFT')
+				->on('ua.user_id', '=', 'u.id')
+				->order_by('ua.created_at', 'DESC')
+				->limit(10)
+				->execute()
+				->as_array();
+
+			// Formatear tiempo relativo
+			foreach ($activities as &$activity)
+			{
+				$time = strtotime($activity['created_at']);
+				$diff = time() - $time;
+				
+				if ($diff < 60) {
+					$activity['time_ago'] = 'Hace ' . $diff . ' segundos';
+				} elseif ($diff < 3600) {
+					$activity['time_ago'] = 'Hace ' . floor($diff / 60) . ' minutos';
+				} elseif ($diff < 86400) {
+					$activity['time_ago'] = 'Hace ' . floor($diff / 3600) . ' horas';
+				} else {
+					$activity['time_ago'] = 'Hace ' . floor($diff / 86400) . ' días';
+				}
+				
+				$activity['user'] = isset($activity['username']) ? $activity['username'] : 'Sistema';
+			}
+
+			return [
+				'count' => count($activities),
+				'activities' => $activities
+			];
+		}
+		catch (\Exception $e)
+		{
+			\Log::error('Error en widget_recent_activity: ' . $e->getMessage());
+			return ['count' => 0, 'activities' => []];
+		}
+	}
+
+	/**
+	 * OBTENER DATOS PARA WIDGET: Valor de Inventario
+	 * 
+	 * @param int $tenant_id
+	 * @return array
+	 */
+	public static function widget_inventory_value($tenant_id)
+	{
+		if (!Helper_Module::is_active('inventory', $tenant_id))
+		{
+			return ['total_value' => 0, 'total_products' => 0, 'total_stock' => 0];
+		}
+
+		try
+		{
+			$result = DB::select(
+					DB::expr('COUNT(*) as total_products'),
+					DB::expr('COALESCE(SUM(stock), 0) as total_stock'),
+					DB::expr('COALESCE(SUM(stock * price), 0) as total_value')
+				)
+				->from('products')
+				->where('tenant_id', $tenant_id)
+				->where('is_active', 1)
+				->execute()
+				->current();
+
+			return [
+				'total_value' => floatval($result['total_value']),
+				'total_products' => intval($result['total_products']),
+				'total_stock' => intval($result['total_stock'])
+			];
+		}
+		catch (\Exception $e)
+		{
+			\Log::error('Error en widget_inventory_value: ' . $e->getMessage());
+			return ['total_value' => 0, 'total_products' => 0, 'total_stock' => 0];
+		}
+	}
+
+	/**
+	 * OBTENER DATOS PARA WIDGET: Cuentas por Cobrar
+	 * 
+	 * @param int $tenant_id
+	 * @return array
+	 */
+	public static function widget_accounts_receivable($tenant_id)
+	{
+		if (!Helper_Module::is_active('finance', $tenant_id))
+		{
+			return ['total_receivable' => 0, 'overdue_count' => 0, 'pending_count' => 0];
+		}
+
+		try
+		{
+			// Total de cuentas por cobrar
+			$receivable = DB::select(
+					DB::expr('COUNT(*) as pending_count'),
+					DB::expr('COALESCE(SUM(amount), 0) as total_receivable')
+				)
+				->from('accounts_receivable')
+				->where('status', 'pending')
+				->execute()
+				->current();
+
+			// Cuentas vencidas
+			$overdue = DB::select(DB::expr('COUNT(*) as overdue_count'))
+				->from('accounts_receivable')
+				->where('status', 'pending')
+				->where('due_date', '<', DB::expr('CURDATE()'))
+				->execute()
+				->get('overdue_count', 0);
+
+			return [
+				'total_receivable' => floatval($receivable['total_receivable']),
+				'pending_count' => intval($receivable['pending_count']),
+				'overdue_count' => intval($overdue)
+			];
+		}
+		catch (\Exception $e)
+		{
+			\Log::error('Error en widget_accounts_receivable: ' . $e->getMessage());
+			return ['total_receivable' => 0, 'overdue_count' => 0, 'pending_count' => 0];
+		}
+	}
 }

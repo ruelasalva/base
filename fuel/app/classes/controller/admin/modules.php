@@ -36,6 +36,7 @@ class Controller_Admin_Modules extends Controller_Admin
 			'business' => 'Módulos de Negocio',
 			'sales' => 'Ventas y CRM',
 			'marketing' => 'Marketing Digital',
+			'backend' => 'Backends y APIs',
 			'system' => 'Sistema'
 		];
 

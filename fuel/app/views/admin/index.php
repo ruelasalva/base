@@ -4,9 +4,16 @@
 		<h2 class="mb-1"><?php echo isset($title) ? $title : 'Dashboard'; ?></h2>
 		<p class="text-muted mb-0">
 			<i class="fas fa-calendar-alt me-2"></i><?php echo isset($date) ? $date : date('d/m/Y'); ?>
+			<span class="ms-3 text-muted small">
+				<i class="fas fa-sync-alt me-1"></i>
+				<span id="last-update">Actualizado ahora</span>
+			</span>
 		</p>
 	</div>
-	<div>
+	<div class="d-flex gap-2">
+		<button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.location.reload();" title="Refrescar dashboard">
+			<i class="fas fa-sync-alt me-1"></i>Actualizar
+		</button>
 		<button type="button" class="btn btn-outline-primary" id="btn-configure-widgets">
 			<i class="fas fa-cog me-2"></i>Configurar Widgets
 		</button>
@@ -164,6 +171,54 @@
 				</div>
 			<?php endif; ?>
 			
+			<?php if ($widget_key === 'recent_activity'): ?>
+				<!-- WIDGET: Actividad Reciente -->
+				<div class="col-xl-6 mb-4">
+					<div class="card border-0 shadow-sm h-100">
+						<div class="card-header bg-white border-0 pb-0">
+							<h5 class="card-title mb-0">
+								<i class="fas fa-history me-2 text-info"></i>Actividad Reciente
+							</h5>
+						</div>
+						<div class="card-body">
+							<?php if (isset($widget['activities']) && is_array($widget['activities']) && count($widget['activities']) > 0): ?>
+								<div class="activity-timeline">
+									<?php foreach ($widget['activities'] as $activity): ?>
+										<div class="activity-item d-flex mb-3">
+											<div class="activity-icon me-3">
+												<div class="bg-primary bg-opacity-10 rounded-circle p-2">
+													<i class="fas fa-circle text-primary" style="font-size: 8px;"></i>
+												</div>
+											</div>
+											<div class="activity-content flex-grow-1">
+												<p class="mb-0"><?php echo isset($activity['description']) ? $activity['description'] : 'Actividad'; ?></p>
+												<small class="text-muted">
+													<?php echo isset($activity['user']) ? $activity['user'] : 'Sistema'; ?> • 
+													<?php echo isset($activity['time_ago']) ? $activity['time_ago'] : 'Hace un momento'; ?>
+												</small>
+											</div>
+										</div>
+									<?php endforeach; ?>
+								</div>
+							<?php else: ?>
+								<div class="text-center py-4 text-muted">
+									<i class="fas fa-info-circle fa-3x mb-3"></i>
+									<p class="mb-0">No hay actividad reciente</p>
+								</div>
+							<?php endif; ?>
+						</div>
+					</div>
+				</div>
+			<?php endif; ?>
+			
+			<?php if ($widget_key === 'inventory_value'): ?>
+				<!-- WIDGET: Valor de Inventario (ya existe arriba como card pequeña, esta es versión extendida) -->
+			<?php endif; ?>
+			
+			<?php if ($widget_key === 'accounts_receivable'): ?>
+				<!-- WIDGET: Cuentas por Cobrar (ya existe arriba como card pequeña, esta es versión extendida) -->
+			<?php endif; ?>
+			
 		<?php endforeach; ?>
 		
 	<?php else: ?>
@@ -252,35 +307,64 @@ document.addEventListener('DOMContentLoaded', function() {
 				selectedWidgets.push(checkbox.value);
 			});
 			
+			console.log('Widgets seleccionados:', selectedWidgets);
+			
+			// Mostrar loading
+			btnSaveWidgets.disabled = true;
+			btnSaveWidgets.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
+			
 			// AJAX para guardar configuración
 			fetch('<?php echo Uri::create('admin/save_widget_config'); ?>', {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json',
-					'X-CSRF-Token': '<?php echo Form::csrf(); ?>'
+					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
 					widgets: selectedWidgets
 				})
 			})
-			.then(response => response.json())
+			.then(response => {
+				console.log('Response status:', response.status);
+				return response.json();
+			})
 			.then(data => {
+				console.log('Response data:', data);
+				btnSaveWidgets.disabled = false;
+				btnSaveWidgets.innerHTML = '<i class="fas fa-save me-2"></i>Guardar Configuración';
+				
 				if (data.success) {
-					Swal.fire({
-						icon: 'success',
-						title: 'Guardado',
-						text: 'Configuración actualizada. Recargando dashboard...',
-						timer: 1500,
-						showConfirmButton: false
-					}).then(() => {
+					if (typeof Swal !== 'undefined') {
+						Swal.fire({
+							icon: 'success',
+							title: 'Guardado',
+							text: 'Configuración actualizada. Recargando dashboard...',
+							timer: 1500,
+							showConfirmButton: false
+						}).then(() => {
+							window.location.reload();
+						});
+					} else {
+						alert('Configuración guardada correctamente');
 						window.location.reload();
-					});
+					}
 				} else {
-					Swal.fire('Error', data.message || 'No se pudo guardar la configuración', 'error');
+					if (typeof Swal !== 'undefined') {
+						Swal.fire('Error', data.message || 'No se pudo guardar la configuración', 'error');
+					} else {
+						alert('Error: ' + (data.message || 'No se pudo guardar la configuración'));
+					}
 				}
 			})
 			.catch(error => {
-				Swal.fire('Error', 'Error al guardar la configuración', 'error');
+				console.error('Error al guardar:', error);
+				btnSaveWidgets.disabled = false;
+				btnSaveWidgets.innerHTML = '<i class="fas fa-save me-2"></i>Guardar Configuración';
+				
+				if (typeof Swal !== 'undefined') {
+					Swal.fire('Error', 'Error al guardar la configuración: ' + error.message, 'error');
+				} else {
+					alert('Error al guardar la configuración: ' + error.message);
+				}
 			});
 		});
 	}
@@ -440,5 +524,131 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 	<?php endif; ?>
 	
+	// Auto-refresh del dashboard cada 5 minutos (300000 ms)
+	<?php if (isset($widgets_config['refresh_interval']) && $widgets_config['refresh_interval'] > 0): ?>
+	const refreshInterval = <?php echo intval($widgets_config['refresh_interval']); ?> * 1000;
+	let refreshTimer = setInterval(function() {
+		console.log('Auto-refreshing dashboard...');
+		window.location.reload();
+	}, refreshInterval);
+	
+	// Actualizar "Última actualización"
+	let lastUpdateEl = document.getElementById('last-update');
+	let secondsSinceUpdate = 0;
+	
+	setInterval(function() {
+		secondsSinceUpdate++;
+		if (secondsSinceUpdate < 60) {
+			lastUpdateEl.textContent = 'Actualizado hace ' + secondsSinceUpdate + ' segundos';
+		} else if (secondsSinceUpdate < 3600) {
+			let minutes = Math.floor(secondsSinceUpdate / 60);
+			lastUpdateEl.textContent = 'Actualizado hace ' + minutes + ' minuto' + (minutes > 1 ? 's' : '');
+		} else {
+			let hours = Math.floor(secondsSinceUpdate / 3600);
+			lastUpdateEl.textContent = 'Actualizado hace ' + hours + ' hora' + (hours > 1 ? 's' : '');
+		}
+	}, 1000);
+	<?php endif; ?>
+	
 });
 </script>
+
+<style>
+.activity-timeline {
+	max-height: 350px;
+	overflow-y: auto;
+	padding-right: 10px;
+}
+.activity-timeline::-webkit-scrollbar {
+	width: 6px;
+}
+.activity-timeline::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 10px;
+}
+.activity-timeline::-webkit-scrollbar-thumb {
+	background: #888;
+	border-radius: 10px;
+}
+.activity-timeline::-webkit-scrollbar-thumb:hover {
+	background: #555;
+}
+.activity-item {
+	border-left: 2px solid #e9ecef;
+	padding-left: 0;
+	position: relative;
+}
+.activity-item:last-child {
+	border-left: none;
+}
+.activity-icon {
+	position: relative;
+	margin-left: -1px;
+}
+.card-header .btn-refresh {
+	padding: 0.25rem 0.5rem;
+	font-size: 0.875rem;
+	opacity: 0.7;
+	transition: opacity 0.2s;
+}
+.card-header .btn-refresh:hover {
+	opacity: 1;
+}
+
+/* Skeleton Loaders */
+.skeleton {
+	animation: skeleton-loading 1s linear infinite alternate;
+}
+@keyframes skeleton-loading {
+	0% {
+		background-color: hsl(200, 20%, 80%);
+	}
+	100% {
+		background-color: hsl(200, 20%, 95%);
+	}
+}
+.skeleton-text {
+	width: 100%;
+	height: 0.7rem;
+	margin-bottom: 0.5rem;
+	border-radius: 0.25rem;
+}
+.skeleton-text:last-child {
+	margin-bottom: 0;
+	width: 80%;
+}
+.skeleton-chart {
+	width: 100%;
+	height: 200px;
+	border-radius: 0.25rem;
+}
+
+/* Smooth transitions */
+.card {
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Badge animations */
+.badge {
+	animation: fadeIn 0.3s ease-in;
+}
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: scale(0.8);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* Chart.js responsive improvements */
+canvas {
+	max-height: 350px;
+}
+</style>

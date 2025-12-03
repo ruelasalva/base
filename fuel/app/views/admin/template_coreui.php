@@ -108,43 +108,56 @@
             <?php endif; ?>
 
             <li class="nav-divider"></li>
-            <li class="nav-title">Módulos</li>
 
-            <!-- Productos (TODO: Implementar) -->
-            <?php if (Helper_Permission::can('products', 'view')): ?>
+            <?php
+            // CARGAR MÓDULOS ACTIVOS DINÁMICAMENTE POR CATEGORÍA
+            $tenant_id = Session::get('tenant_id', 1);
+            $active_modules = Helper_Module::get_active_modules($tenant_id);
+            
+            // Agrupar por categoría
+            $modules_by_cat = [];
+            foreach ($active_modules as $mod) {
+                if (!$mod['is_core']) { // Excluir módulos core
+                    $cat = $mod['category'];
+                    if (!isset($modules_by_cat[$cat])) {
+                        $modules_by_cat[$cat] = [];
+                    }
+                    $modules_by_cat[$cat][] = $mod;
+                }
+            }
+            
+            // Nombres y orden de categorías
+            $categories = [
+                'business' => 'Módulos de Negocio',
+                'sales' => 'Ventas y CRM',
+                'marketing' => 'Marketing',
+                'backend' => 'Backends y APIs',
+                'system' => 'Sistema'
+            ];
+            
+            // Mostrar módulos por categoría
+            foreach ($categories as $cat_key => $cat_name):
+                if (isset($modules_by_cat[$cat_key]) && count($modules_by_cat[$cat_key]) > 0):
+            ?>
+            <li class="nav-title"><?php echo $cat_name; ?></li>
+            <?php
+                foreach ($modules_by_cat[$cat_key] as $module):
+                    $permission_key = $module['name'];
+                    $route = !empty($module['route']) ? $module['route'] : 'admin/' . $module['name'];
+                    
+                    if (Helper_Permission::can($permission_key, 'view')):
+            ?>
             <li class="nav-item">
-                <a class="nav-link" href="<?php echo Uri::create('admin/products'); ?>">
-                    <i class="nav-icon fas fa-box"></i> Productos
+                <a class="nav-link <?php echo (Uri::segment(2) == $module['name']) ? 'active' : ''; ?>" href="<?php echo Uri::create($route); ?>">
+                    <i class="nav-icon fas <?php echo $module['icon']; ?>"></i> <?php echo $module['display_name']; ?>
                 </a>
             </li>
-            <?php endif; ?>
-
-            <!-- Clientes (TODO: Implementar) -->
-            <?php if (Helper_Permission::can('customers', 'view')): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="<?php echo Uri::create('admin/customers'); ?>">
-                    <i class="nav-icon fas fa-user-friends"></i> Clientes
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <!-- Ventas (TODO: Implementar) -->
-            <?php if (Helper_Permission::can('sales', 'view')): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="<?php echo Uri::create('admin/sales'); ?>">
-                    <i class="nav-icon fas fa-shopping-cart"></i> Ventas
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <!-- Reportes (TODO: Implementar) -->
-            <?php if (Helper_Permission::can('reports', 'view')): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="<?php echo Uri::create('admin/reports'); ?>">
-                    <i class="nav-icon fas fa-chart-bar"></i> Reportes
-                </a>
-            </li>
-            <?php endif; ?>
+            <?php
+                    endif;
+                endforeach;
+                endif;
+            endforeach;
+            ?>
         </ul>
 
         <div class="sidebar-footer border-top d-none d-md-flex">
