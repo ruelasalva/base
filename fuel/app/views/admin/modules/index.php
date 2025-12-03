@@ -1,233 +1,258 @@
 <!-- Page Header -->
 <div class="row mb-4">
     <div class="col-md-12">
-        <h2 class="mb-0"><i class="fas fa-cubes me-2"></i>Gestión de Módulos</h2>
-        <p class="text-body-secondary">Activa o desactiva módulos según las necesidades de tu negocio</p>
+        <h2 class="mb-0"><i class="fa-solid fa-puzzle-piece me-2"></i>Gestión de Módulos</h2>
+        <p class="text-body-secondary">Activa o desactiva módulos según las necesidades de tu empresa</p>
     </div>
 </div>
 
 <!-- Info Alert -->
 <div class="alert alert-info alert-dismissible fade show" role="alert">
-    <i class="fas fa-info-circle me-2"></i>
-    <strong>Información:</strong> Los módulos marcados como "Core" no pueden ser desactivados ya que son esenciales para el funcionamiento del sistema.
+    <i class="fa-solid fa-circle-info me-2"></i>
+    <strong>Información:</strong> Los módulos del núcleo del sistema no pueden ser desactivados. Los módulos con registros existentes tampoco pueden desactivarse para proteger tus datos.
     <button type="button" class="btn-close" data-coreui-dismiss="alert" aria-label="Close"></button>
 </div>
 
 <!-- Modules by Category -->
-<?php if (isset($modules_by_category) && is_array($modules_by_category) && count($modules_by_category) > 0): ?>
-<?php foreach ($modules_by_category as $category => $modules): ?>
-<?php if (is_array($modules) && count($modules) > 0): ?>
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="mb-0">
-            <?php 
-            $icons = [
-                'core' => 'fa-cube',
-                'business' => 'fa-briefcase',
-                'sales' => 'fa-shopping-cart',
-                'marketing' => 'fa-bullhorn',
-                'backend' => 'fa-server',
-                'system' => 'fa-cogs'
-            ];
-            $icon = isset($icons[$category]) ? $icons[$category] : 'fa-folder';
-            ?>
-            <i class="fas <?php echo $icon; ?> me-2"></i>
-            <?php echo isset($category_names[$category]) ? $category_names[$category] : ucfirst($category); ?>
-        </h5>
-    </div>
-    <div class="card-body">
-        <div class="row g-3">
-            <?php foreach ($modules as $module): ?>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 <?php echo $module['is_active_for_tenant'] ? 'border-success' : 'border-secondary'; ?>">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <h6 class="mb-1">
-                                    <i class="fas <?php echo htmlspecialchars($module['icon']); ?> me-1"></i>
-                                    <?php echo htmlspecialchars($module['display_name']); ?>
-                                </h6>
-                                <?php if ($module['is_core']): ?>
-                                    <span class="badge bg-primary">Core</span>
+<?php if (isset($grouped_modules) && isset($ordered_categories)): ?>
+    <?php foreach ($ordered_categories as $category): ?>
+        <?php if (isset($grouped_modules[$category]) && count($grouped_modules[$category]) > 0): ?>
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-gradient">
+                <h5 class="mb-0">
+                    <i class="fa-solid <?php echo $category_icons[$category]; ?> me-2 text-primary"></i>
+                    <?php echo $category_names[$category]; ?>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <?php foreach ($grouped_modules[$category] as $module): ?>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card h-100 module-card <?php echo $module['is_tenant_active'] ? 'border-success' : 'border-secondary'; ?> hover-shadow">
+                            <div class="card-body d-flex flex-column">
+                                <!-- Header con icono y estado -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="module-icon-wrapper">
+                                        <i class="fa-solid <?php echo htmlspecialchars($module['icon']); ?> fa-2x text-<?php echo $module['is_tenant_active'] ? 'success' : 'muted'; ?>"></i>
+                                    </div>
+                                    <div>
+                                        <?php if ($module['can_deactivate'] == 0): ?>
+                                            <span class="badge bg-primary" title="Módulo del núcleo del sistema">
+                                                <i class="fa-solid fa-lock me-1"></i>Core
+                                            </span>
+                                        <?php endif; ?>
+                                        <?php if ($module['is_tenant_active']): ?>
+                                            <span class="badge bg-success">
+                                                <i class="fa-solid fa-circle-check me-1"></i>Activo
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-secondary">
+                                                <i class="fa-solid fa-circle-xmark me-1"></i>Inactivo
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nombre y descripción -->
+                                <h6 class="mb-2 fw-bold"><?php echo htmlspecialchars($module['display_name']); ?></h6>
+                                <p class="text-body-secondary small mb-3 flex-grow-1">
+                                    <?php echo htmlspecialchars($module['description']); ?>
+                                </p>
+
+                                <!-- Información adicional si está activo -->
+                                <?php if ($module['is_tenant_active'] && !empty($module['activated_at'])): ?>
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <i class="fa-solid fa-calendar me-1"></i>
+                                        Activado: <?php echo date('d/m/Y', strtotime($module['activated_at'])); ?>
+                                    </small>
+                                </div>
                                 <?php endif; ?>
-                                <?php if ($module['is_active_for_tenant']): ?>
-                                    <span class="badge bg-success">Activo</span>
-                                <?php else: ?>
-                                    <span class="badge bg-secondary">Inactivo</span>
-                                <?php endif; ?>
-                                <span class="badge bg-info">v<?php echo htmlspecialchars($module['version']); ?></span>
+
+                                <!-- Botones de acción -->
+                                <div class="mt-auto">
+                                    <?php if ($can_activate): ?>
+                                        <?php if ($module['can_deactivate'] == 0): ?>
+                                            <!-- Módulo core: no se puede desactivar -->
+                                            <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                                <i class="fa-solid fa-lock me-1"></i>
+                                                Módulo Esencial
+                                            </button>
+                                        <?php elseif ($module['is_tenant_active']): ?>
+                                            <!-- Módulo activo: botón para desactivar -->
+                                            <button class="btn btn-outline-danger btn-sm w-100 btn-toggle-module" 
+                                                    data-module-id="<?php echo $module['id']; ?>"
+                                                    data-module-name="<?php echo htmlspecialchars($module['display_name']); ?>"
+                                                    data-action="deactivate">
+                                                <i class="fa-solid fa-toggle-off me-1"></i>
+                                                Desactivar
+                                            </button>
+                                        <?php else: ?>
+                                            <!-- Módulo inactivo: botón para activar -->
+                                            <button class="btn btn-success btn-sm w-100 btn-toggle-module" 
+                                                    data-module-id="<?php echo $module['id']; ?>"
+                                                    data-module-name="<?php echo htmlspecialchars($module['display_name']); ?>"
+                                                    data-action="activate">
+                                                <i class="fa-solid fa-toggle-on me-1"></i>
+                                                Activar
+                                            </button>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <small class="text-muted text-center d-block">
+                                            <i class="fa-solid fa-ban me-1"></i>
+                                            Sin permisos para modificar
+                                        </small>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
-                        
-                        <p class="text-body-secondary small mb-3">
-                            <?php echo htmlspecialchars($module['description']); ?>
-                        </p>
-
-                        <?php if (!empty($module['requires_modules'])): ?>
-                        <div class="mb-3">
-                            <small class="text-muted">
-                                <i class="fas fa-link me-1"></i>
-                                Requiere: <?php echo htmlspecialchars($module['requires_modules']); ?>
-                            </small>
-                        </div>
-                        <?php endif; ?>
-
-                        <!-- Actions -->
-                        <?php if ($can_enable && !$module['is_core']): ?>
-                        <div class="d-grid">
-                            <?php if ($module['is_active_for_tenant']): ?>
-                                <button class="btn btn-outline-danger btn-sm btn-disable-module" 
-                                        data-module-id="<?php echo $module['id']; ?>"
-                                        data-module-name="<?php echo htmlspecialchars($module['display_name']); ?>">
-                                    <i class="fas fa-times-circle me-1"></i>Desactivar
-                                </button>
-                            <?php else: ?>
-                                <button class="btn btn-success btn-sm btn-enable-module" 
-                                        data-module-id="<?php echo $module['id']; ?>"
-                                        data-module-name="<?php echo htmlspecialchars($module['display_name']); ?>">
-                                    <i class="fas fa-check-circle me-1"></i>Activar
-                                </button>
-                            <?php endif; ?>
-                        </div>
-                        <?php elseif ($module['is_core']): ?>
-                        <div class="text-center">
-                            <small class="text-muted">
-                                <i class="fas fa-lock me-1"></i>Módulo esencial
-                            </small>
-                        </div>
-                        <?php endif; ?>
                     </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
-            <?php endforeach; ?>
         </div>
-    </div>
-</div>
-<?php endif; ?>
-<?php endforeach; ?>
+        <?php endif; ?>
+    <?php endforeach; ?>
 <?php else: ?>
 <div class="alert alert-warning">
-    <i class="fas fa-exclamation-triangle me-2"></i>
+    <i class="fa-solid fa-triangle-exclamation me-2"></i>
     No se encontraron módulos disponibles.
 </div>
 <?php endif; ?>
 
+<!-- CSS personalizado -->
+<style>
+.module-card {
+    transition: all 0.3s ease;
+    border-width: 2px;
+}
+
+.module-card:hover {
+    transform: translateY(-5px);
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+}
+
+.module-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.03);
+    border-radius: 10px;
+}
+
+.bg-gradient {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+</style>
+
 <!-- JavaScript para gestionar módulos -->
 <script>
 $(document).ready(function() {
-    // Activar módulo
-    $('.btn-enable-module').on('click', function() {
+    // Manejar activación/desactivación de módulos
+    $('.btn-toggle-module').on('click', function() {
         const btn = $(this);
         const moduleId = btn.data('module-id');
         const moduleName = btn.data('module-name');
+        const action = btn.data('action');
         
-        if (!confirm(`¿Estás seguro de activar el módulo "${moduleName}"?`)) {
-            return;
-        }
-
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Activando...');
-
-        $.ajax({
-            url: '<?php echo Uri::create('admin/modules/enable'); ?>',
-            method: 'POST',
-            data: { 
-                module_id: moduleId,
-                <?php echo \Config::get('security.csrf_token_key'); ?>: '<?php echo \Security::fetch_token(); ?>'
+        // Texto y colores según la acción
+        const actionTexts = {
+            activate: {
+                title: '¿Activar módulo?',
+                text: `Se activará el módulo "${moduleName}"`,
+                confirmText: 'Sí, activar',
+                confirmColor: '#198754',
+                processingText: '<i class="fa-solid fa-spinner fa-spin me-1"></i>Activando...'
             },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        text: response.message,
-                        showConfirmButton: false,
-                        timer: 2000
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: response.message
-                    });
-                    btn.prop('disabled', false).html('<i class="fas fa-check-circle me-1"></i>Activar');
-                }
-            },
-            error: function(xhr) {
-                let message = 'Error al activar el módulo';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: message
-                });
-                btn.prop('disabled', false).html('<i class="fas fa-check-circle me-1"></i>Activar');
+            deactivate: {
+                title: '¿Desactivar módulo?',
+                text: `Se desactivará el módulo "${moduleName}". Si existen registros relacionados, no podrá desactivarse.`,
+                confirmText: 'Sí, desactivar',
+                confirmColor: '#dc3545',
+                processingText: '<i class="fa-solid fa-spinner fa-spin me-1"></i>Desactivando...'
             }
-        });
-    });
+        };
 
-    // Desactivar módulo
-    $('.btn-disable-module').on('click', function() {
-        const btn = $(this);
-        const moduleId = btn.data('module-id');
-        const moduleName = btn.data('module-name');
-        
+        const texts = actionTexts[action];
+
         Swal.fire({
-            title: '¿Desactivar módulo?',
-            text: `Se desactivará "${moduleName}". Los datos no se eliminarán.`,
-            icon: 'warning',
+            title: texts.title,
+            text: texts.text,
+            icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, desactivar',
+            confirmButtonColor: texts.confirmColor,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: texts.confirmText,
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Desactivando...');
+                // Deshabilitar botón y mostrar spinner
+                const originalHtml = btn.html();
+                btn.prop('disabled', true).html(texts.processingText);
 
                 $.ajax({
-                    url: '<?php echo Uri::create('admin/modules/disable'); ?>',
+                    url: '<?php echo Uri::create('admin/modules/toggle'); ?>',
                     method: 'POST',
                     data: { 
                         module_id: moduleId,
+                        action: action,
                         <?php echo \Config::get('security.csrf_token_key'); ?>: '<?php echo \Security::fetch_token(); ?>'
                     },
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
+                            // Mostrar mensaje de éxito y recargar
                             Swal.fire({
                                 icon: 'success',
-                                title: '¡Desactivado!',
+                                title: '¡Éxito!',
                                 text: response.message,
-                                showConfirmButton: false,
-                                timer: 2000
+                                timer: 2000,
+                                showConfirmButton: false
                             }).then(() => {
                                 location.reload();
                             });
                         } else {
+                            // Mostrar mensaje de error
+                            let errorHtml = response.message;
+                            
+                            // Si hay detalles de uso, mostrarlos
+                            if (response.details && response.details.length > 0) {
+                                errorHtml += '<br><br><strong>Registros existentes:</strong><ul class="text-start">';
+                                response.details.forEach(function(detail) {
+                                    errorHtml += `<li>${detail.table}: ${detail.count} registro(s)</li>`;
+                                });
+                                errorHtml += '</ul>';
+                            }
+
                             Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: response.message
+                                icon: 'warning',
+                                title: 'No se puede desactivar',
+                                html: errorHtml
                             });
-                            btn.prop('disabled', false).html('<i class="fas fa-times-circle me-1"></i>Desactivar');
+                            
+                            // Restaurar botón
+                            btn.prop('disabled', false).html(originalHtml);
                         }
                     },
                     error: function(xhr) {
-                        let message = 'Error al desactivar el módulo';
+                        let message = 'Error al procesar la solicitud';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             message = xhr.responseJSON.message;
                         }
+                        
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
                             text: message
                         });
-                        btn.prop('disabled', false).html('<i class="fas fa-times-circle me-1"></i>Desactivar');
+                        
+                        // Restaurar botón
+                        btn.prop('disabled', false).html(originalHtml);
                     }
                 });
             }

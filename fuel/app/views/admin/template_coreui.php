@@ -107,6 +107,38 @@
             </li>
             <?php endif; ?>
 
+            <!-- Gestión del Sistema -->
+            <?php if (Helper_Permission::can('logs', 'view') || Helper_Permission::can('notifications', 'view') || Helper_Permission::can('modules', 'view')): ?>
+            <li class="nav-group">
+                <a class="nav-link nav-group-toggle" href="#">
+                    <i class="nav-icon fa-solid fa-shield-halved"></i> Gestión del Sistema
+                </a>
+                <ul class="nav-group-items compact">
+                    <?php if (Helper_Permission::can('modules', 'view')): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo Uri::create('admin/modules'); ?>">
+                            <span class="nav-icon"><i class="fa-solid fa-puzzle-piece text-primary"></i></span> Módulos
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if (Helper_Permission::can('logs', 'view')): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo Uri::create('admin/logs'); ?>">
+                            <span class="nav-icon"><i class="fa-solid fa-file-lines text-info"></i></span> Logs/Auditoría
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if (Helper_Permission::can('notifications', 'view')): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo Uri::create('admin/notifications'); ?>">
+                            <span class="nav-icon"><i class="fa-solid fa-bell text-warning"></i></span> Notificaciones
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                </ul>
+            </li>
+            <?php endif; ?>
+
             <li class="nav-divider"></li>
 
             <?php
@@ -114,11 +146,12 @@
             $tenant_id = Session::get('tenant_id', 1);
             $active_modules = Helper_Module::get_active_modules($tenant_id);
             
-            // Agrupar por categoría
+            // Agrupar por categoría (excluyendo módulos core)
             $modules_by_cat = [];
             foreach ($active_modules as $mod) {
-                if (!$mod['is_core']) { // Excluir módulos core
-                    $cat = $mod['category'];
+                $cat = $mod['category'];
+                // Excluir categoría 'core' del menú dinámico
+                if ($cat !== 'core') {
                     if (!isset($modules_by_cat[$cat])) {
                         $modules_by_cat[$cat] = [];
                     }
@@ -128,33 +161,41 @@
             
             // Nombres y orden de categorías
             $categories = [
-                'business' => 'Módulos de Negocio',
-                'sales' => 'Ventas y CRM',
-                'marketing' => 'Marketing',
-                'backend' => 'Backends y APIs',
-                'system' => 'Sistema'
+                'ventas' => ['name' => 'Ventas', 'icon' => 'fa-shopping-cart'],
+                'compras' => ['name' => 'Compras', 'icon' => 'fa-truck'],
+                'inventario' => ['name' => 'Inventario', 'icon' => 'fa-boxes'],
+                'crm' => ['name' => 'CRM', 'icon' => 'fa-handshake'],
+                'rrhh' => ['name' => 'Recursos Humanos', 'icon' => 'fa-users-cog'],
+                'finanzas' => ['name' => 'Finanzas', 'icon' => 'fa-dollar-sign'],
+                'reportes' => ['name' => 'Reportes', 'icon' => 'fa-chart-line'],
+                'otros' => ['name' => 'Otros', 'icon' => 'fa-ellipsis-h']
             ];
             
             // Mostrar módulos por categoría
-            foreach ($categories as $cat_key => $cat_name):
+            foreach ($categories as $cat_key => $cat_info):
                 if (isset($modules_by_cat[$cat_key]) && count($modules_by_cat[$cat_key]) > 0):
             ?>
-            <li class="nav-title"><?php echo $cat_name; ?></li>
+            <li class="nav-group">
+                <a class="nav-link nav-group-toggle" href="#">
+                    <i class="nav-icon fa-solid <?php echo $cat_info['icon']; ?>"></i> <?php echo $cat_info['name']; ?>
+                </a>
+                <ul class="nav-group-items compact">
             <?php
                 foreach ($modules_by_cat[$cat_key] as $module):
                     $permission_key = $module['name'];
-                    $route = !empty($module['route']) ? $module['route'] : 'admin/' . $module['name'];
-                    
-                    if (Helper_Permission::can($permission_key, 'view')):
+                    $route = 'admin/' . $module['name'];
             ?>
-            <li class="nav-item">
-                <a class="nav-link <?php echo (Uri::segment(2) == $module['name']) ? 'active' : ''; ?>" href="<?php echo Uri::create($route); ?>">
-                    <i class="nav-icon fas <?php echo $module['icon']; ?>"></i> <?php echo $module['display_name']; ?>
-                </a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo Uri::create($route); ?>">
+                            <span class="nav-icon"><i class="fa-solid <?php echo $module['icon']; ?>"></i></span> <?php echo $module['display_name']; ?>
+                        </a>
+                    </li>
+            <?php
+                endforeach;
+            ?>
+                </ul>
             </li>
             <?php
-                    endif;
-                endforeach;
                 endif;
             endforeach;
             ?>

@@ -1159,77 +1159,152 @@
 								</li>
 							<?php endif; ?>
 
-							<!-- REPORTES GENERALES -->
-							<?php if (
-								Helper_Permission::can('reportes_generales', 'view') ||
-								Helper_Permission::can('reportes_generales_departamento', 'view') ||
-								Helper_Permission::can('reportes_generales_financieros', 'view') ||
-								Helper_Permission::can('reportes_generales_operativos', 'view')
-							): ?>
-							<li class="nav-item">
-							<a class="nav-link <?php echo (Uri::segment(2) == 'reportes_generales') ? 'active' : ''; ?>"
-								href="#navbar-reportes-generales"
-								data-toggle="collapse"
-								role="button"
-								aria-expanded="<?php echo (Uri::segment(2) == 'reportes_generales') ? 'true' : 'false'; ?>"
-								aria-controls="navbar-reportes-generales">
-								<i class="fa-solid fa-chart-column text-primary"></i>
-								<span class="nav-link-text ml-2">Reportes Generales</span>
-								<i class="fa-solid fa-chevron-down float-right"></i>
-							</a>
+						<!-- REPORTES GENERALES -->
+						<?php if (
+							Helper_Permission::can('reportes_generales', 'view') ||
+							Helper_Permission::can('reportes_generales_departamento', 'view') ||
+							Helper_Permission::can('reportes_generales_financieros', 'view') ||
+							Helper_Permission::can('reportes_generales_operativos', 'view')
+						): ?>
+						<li class="nav-item">
+						<a class="nav-link <?php echo (Uri::segment(2) == 'reportes_generales') ? 'active' : ''; ?>"
+							href="#navbar-reportes-generales"
+							data-toggle="collapse"
+							role="button"
+							aria-expanded="<?php echo (Uri::segment(2) == 'reportes_generales') ? 'true' : 'false'; ?>"
+							aria-controls="navbar-reportes-generales">
+							<i class="fa-solid fa-chart-column text-primary"></i>
+							<span class="nav-link-text ml-2">Reportes Generales</span>
+							<i class="fa-solid fa-chevron-down float-right"></i>
+						</a>
 
-							<div class="collapse <?php echo (Uri::segment(2) == 'reportes_generales') ? 'show' : ''; ?>"
-								id="navbar-reportes-generales">
-								<ul class="nav nav-sm flex-column ml-3">
+						<div class="collapse <?php echo (Uri::segment(2) == 'reportes_generales') ? 'show' : ''; ?>"
+							id="navbar-reportes-generales">
+							<ul class="nav nav-sm flex-column ml-3">
 
-								<?php if (Helper_Permission::can('reportes_generales', 'view')): ?>
-									<li class="nav-item">
-									<?php echo Html::anchor(
-										'admin/reportes',
-										'<i class="fa-solid fa-table text-info"></i> <span>Módulo de Reportes</span>',
-										['class' => 'nav-link']
-									); ?>
-									</li>
-								<?php endif; ?>
-
-								<?php if (Helper_Permission::can('reportes_generales_departamento', 'view')): ?>
-									<li class="nav-item">
-									<?php echo Html::anchor(
-										'admin/reportes_generales/departamento',
-										'<i class="fa-solid fa-users text-success"></i> <span>Por Departamento</span>',
-										['class' => 'nav-link']
-									); ?>
-									</li>
-								<?php endif; ?>
-
-								<?php if (Helper_Permission::can('reportes_generales_financieros', 'view')): ?>
-									<li class="nav-item">
-									<?php echo Html::anchor(
-										'admin/reportes_generales/financieros',
-										'<i class="fa-solid fa-file-invoice-dollar text-warning"></i> <span>Financieros</span>',
-										['class' => 'nav-link']
-									); ?>
-									</li>
-								<?php endif; ?>
-
-								<?php if (Helper_Permission::can('reportes_generales_operativos', 'view')): ?>
-									<li class="nav-item">
-									<?php echo Html::anchor(
-										'admin/reportes_generales/operativos',
-										'<i class="fa-solid fa-gears text-purple"></i> <span>Operativos</span>',
-										['class' => 'nav-link']
-									); ?>
-									</li>
-								<?php endif; ?>
-
-								</ul>
-							</div>
-							</li>
+							<?php if (Helper_Permission::can('reportes_generales', 'view')): ?>
+								<li class="nav-item">
+								<?php echo Html::anchor(
+									'admin/reportes',
+									'<i class="fa-solid fa-table text-info"></i> <span>Módulo de Reportes</span>',
+									['class' => 'nav-link']
+								); ?>
+								</li>
 							<?php endif; ?>
 
+							<?php if (Helper_Permission::can('reportes_generales_departamento', 'view')): ?>
+								<li class="nav-item">
+								<?php echo Html::anchor(
+									'admin/reportes_generales/departamento',
+									'<i class="fa-solid fa-users text-success"></i> <span>Por Departamento</span>',
+									['class' => 'nav-link']
+								); ?>
+								</li>
+							<?php endif; ?>
 
+							<?php if (Helper_Permission::can('reportes_generales_financieros', 'view')): ?>
+								<li class="nav-item">
+								<?php echo Html::anchor(
+									'admin/reportes_generales/financieros',
+									'<i class="fa-solid fa-file-invoice-dollar text-warning"></i> <span>Financieros</span>',
+									['class' => 'nav-link']
+								); ?>
+								</li>
+							<?php endif; ?>
 
+							<?php if (Helper_Permission::can('reportes_generales_operativos', 'view')): ?>
+								<li class="nav-item">
+								<?php echo Html::anchor(
+									'admin/reportes_generales/operativos',
+									'<i class="fa-solid fa-gears text-purple"></i> <span>Operativos</span>',
+									['class' => 'nav-link']
+								); ?>
+								</li>
+							<?php endif; ?>
 
+							</ul>
+						</div>
+						</li>
+						<?php endif; ?>
+
+					<!-- SEGURIDAD Y RBAC -->
+					<?php if (
+						Helper_Permission::can('users', 'view') ||
+						Helper_Permission::can('roles', 'view') ||
+						Helper_Permission::can('permissions', 'view') ||
+						Helper_Permission::can('logs', 'view') ||
+						Helper_Permission::can('notifications', 'view')
+					): ?>
+					<li class="nav-item">
+						<a class="nav-link <?php echo (in_array(Uri::segment(2), ['users', 'roles', 'permissions', 'logs', 'notifications'])) ? 'active' : ''; ?>"
+							href="#navbar-security"
+							data-toggle="collapse"
+							role="button"
+							aria-expanded="<?php echo (in_array(Uri::segment(2), ['users', 'roles', 'permissions', 'logs', 'notifications'])) ? 'true' : 'false'; ?>"
+							aria-controls="navbar-security">
+							<i class="fa-solid fa-shield-halved text-danger"></i>
+							<span class="nav-link-text ml-2">Seguridad</span>
+							<i class="fa-solid fa-chevron-down float-right"></i>
+						</a>
+
+						<div class="collapse <?php echo (in_array(Uri::segment(2), ['users', 'roles', 'permissions', 'logs', 'notifications'])) ? 'show' : ''; ?>"
+							id="navbar-security">
+							<ul class="nav nav-sm flex-column ml-3">
+
+								<?php if (Helper_Permission::can('users', 'view')): ?>
+									<li class="nav-item">
+										<?php echo Html::anchor(
+											'admin/users',
+											'<i class="fa-solid fa-users text-primary"></i> <span>Usuarios</span>',
+											['class' => 'nav-link']
+										); ?>
+									</li>
+								<?php endif; ?>
+
+								<?php if (Helper_Permission::can('roles', 'view')): ?>
+									<li class="nav-item">
+										<?php echo Html::anchor(
+											'admin/roles',
+											'<i class="fa-solid fa-user-tag text-success"></i> <span>Roles</span>',
+											['class' => 'nav-link']
+										); ?>
+									</li>
+								<?php endif; ?>
+
+								<?php if (Helper_Permission::can('permissions', 'view')): ?>
+									<li class="nav-item">
+										<?php echo Html::anchor(
+											'admin/permissions',
+											'<i class="fa-solid fa-key text-warning"></i> <span>Permisos</span>',
+											['class' => 'nav-link']
+										); ?>
+									</li>
+								<?php endif; ?>
+
+								<?php if (Helper_Permission::can('logs', 'view')): ?>
+									<li class="nav-item">
+										<?php echo Html::anchor(
+											'admin/logs',
+											'<i class="fa-solid fa-list-check text-info"></i> <span>Auditoría</span>',
+											['class' => 'nav-link']
+										); ?>
+									</li>
+								<?php endif; ?>
+
+								<?php if (Helper_Permission::can('notifications', 'view')): ?>
+									<li class="nav-item">
+										<?php echo Html::anchor(
+											'admin/notifications',
+											'<i class="fa-solid fa-bell text-purple"></i> <span>Notificaciones</span>',
+											['class' => 'nav-link']
+										); ?>
+									</li>
+								<?php endif; ?>
+
+							</ul>
+						</div>
+					</li>
+					<?php endif; ?>
 
 						</ul>
 					</div>
