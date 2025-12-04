@@ -161,14 +161,16 @@
             
             // Nombres y orden de categorías
             $categories = [
-                'ventas' => ['name' => 'Ventas', 'icon' => 'fa-shopping-cart'],
+                'contabilidad' => ['name' => 'Contabilidad', 'icon' => 'fa-calculator'],
+                'finanzas' => ['name' => 'Finanzas', 'icon' => 'fa-dollar-sign'],
                 'compras' => ['name' => 'Compras', 'icon' => 'fa-truck'],
                 'inventario' => ['name' => 'Inventario', 'icon' => 'fa-boxes'],
-                'crm' => ['name' => 'CRM', 'icon' => 'fa-handshake'],
+                'sales' => ['name' => 'Ventas', 'icon' => 'fa-shopping-cart'],
                 'rrhh' => ['name' => 'Recursos Humanos', 'icon' => 'fa-users-cog'],
-                'finanzas' => ['name' => 'Finanzas', 'icon' => 'fa-dollar-sign'],
-                'reportes' => ['name' => 'Reportes', 'icon' => 'fa-chart-line'],
-                'otros' => ['name' => 'Otros', 'icon' => 'fa-ellipsis-h']
+                'marketing' => ['name' => 'Marketing', 'icon' => 'fa-bullhorn'],
+                'backend' => ['name' => 'Backend & Portales', 'icon' => 'fa-server'],
+                'integraciones' => ['name' => 'Integraciones', 'icon' => 'fa-plug'],
+                'system' => ['name' => 'Sistema', 'icon' => 'fa-gears']
             ];
             
             // Mostrar módulos por categoría

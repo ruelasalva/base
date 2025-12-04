@@ -40,8 +40,8 @@ class Controller_Admin_Modules extends Controller_Admin
             echo "<strong>Test de conexión DB:</strong>\n";
             try {
                 $test = DB::select('id', 'name', 'display_name', 'category')
-                    ->from('system_modules')
-                    ->where('is_active', 1)
+                    ->from('modules')
+                    ->where('is_enabled', 1)
                     ->limit(5)
                     ->execute()
                     ->as_array();
@@ -71,31 +71,35 @@ class Controller_Admin_Modules extends Controller_Admin
         // Nombres de categorías en español
         $category_names = [
             'core' => 'Núcleo del Sistema',
-            'ventas' => 'Ventas',
+            'contabilidad' => 'Contabilidad',
+            'finanzas' => 'Finanzas',
             'compras' => 'Compras',
             'inventario' => 'Inventario',
-            'crm' => 'CRM',
+            'sales' => 'Ventas',
             'rrhh' => 'Recursos Humanos',
-            'finanzas' => 'Finanzas',
-            'reportes' => 'Reportes',
-            'otros' => 'Otros'
+            'marketing' => 'Marketing',
+            'backend' => 'Backend & Portales',
+            'integraciones' => 'Integraciones',
+            'system' => 'Sistema'
         ];
 
         // Iconos por categoría
         $category_icons = [
             'core' => 'fa-cog',
-            'ventas' => 'fa-shopping-cart',
+            'contabilidad' => 'fa-calculator',
+            'finanzas' => 'fa-dollar-sign',
             'compras' => 'fa-truck',
             'inventario' => 'fa-boxes',
-            'crm' => 'fa-handshake',
+            'sales' => 'fa-shopping-cart',
             'rrhh' => 'fa-users-cog',
-            'finanzas' => 'fa-dollar-sign',
-            'reportes' => 'fa-chart-line',
-            'otros' => 'fa-ellipsis-h'
+            'marketing' => 'fa-bullhorn',
+            'backend' => 'fa-server',
+            'integraciones' => 'fa-plug',
+            'system' => 'fa-gears'
         ];
 
         // Ordenar categorías
-        $ordered_categories = ['core', 'ventas', 'compras', 'inventario', 'crm', 'rrhh', 'finanzas', 'reportes', 'otros'];
+        $ordered_categories = ['core', 'contabilidad', 'finanzas', 'compras', 'inventario', 'sales', 'rrhh', 'marketing', 'backend', 'integraciones', 'system'];
         
         // Preparar datos para la vista
         $data = [
@@ -232,6 +236,87 @@ class Controller_Admin_Modules extends Controller_Admin
     }
 
     /**
+     * Editar - Editar información de un módulo
+     */
+    public function action_editar($module_id = null)
+    {
+        // Verificar permiso (solo super admin)
+        if (!Helper_Permission::is_super_admin())
+        {
+            Session::set_flash('error', 'Solo los super administradores pueden editar módulos');
+            Response::redirect('admin/modules');
+        }
+
+        if (!$module_id)
+        {
+            Session::set_flash('error', 'ID de módulo no proporcionado');
+            Response::redirect('admin/modules');
+        }
+
+        // Obtener módulo
+        $module = DB::select('*')
+            ->from('modules')
+            ->where('id', $module_id)
+            ->execute()
+            ->current();
+
+        if (!$module)
+        {
+            Session::set_flash('error', 'Módulo no encontrado');
+            Response::redirect('admin/modules');
+        }
+
+        // Procesar formulario
+        if (Input::method() === 'POST')
+        {
+            try {
+                DB::update('modules')
+                    ->set([
+                        'display_name' => Input::post('display_name'),
+                        'description' => Input::post('description'),
+                        'icon' => Input::post('icon'),
+                        'category' => Input::post('category'),
+                        'menu_order' => (int)Input::post('menu_order'),
+                        'is_enabled' => (int)Input::post('is_enabled', 1)
+                    ])
+                    ->where('id', $module_id)
+                    ->execute();
+
+                // Log
+                Helper_Log::record(
+                    'module', 
+                    'edit', 
+                    $module_id, 
+                    "Módulo editado: {$module['display_name']}", 
+                    $module, 
+                    Input::post()
+                );
+
+                Session::set_flash('success', 'Módulo actualizado correctamente');
+                Response::redirect('admin/modules');
+
+            } catch (Exception $e) {
+                Session::set_flash('error', 'Error al actualizar módulo: ' . $e->getMessage());
+            }
+        }
+
+        // Preparar datos para la vista
+        $data = [
+            'title' => 'Editar Módulo: ' . $module['display_name'],
+            'username' => Auth::get('username'),
+            'email' => Auth::get('email'),
+            'is_super_admin' => Helper_Permission::is_super_admin(),
+            'is_admin' => Helper_Permission::is_admin(),
+            'module' => $module
+        ];
+
+        // Renderizar con el template del sistema
+        $data['content'] = View::forge('admin/modules/editar', $data);
+        $template_file = Helper_Template::get_template_file();
+        return View::forge($template_file, $data);
+    }
+
+    /**
      * Settings - Configuración de un módulo
      */
     public function action_settings($module_id = null)
@@ -253,20 +338,20 @@ class Controller_Admin_Modules extends Controller_Admin
 
         // Obtener módulo
         $module = DB::select(
-                'sm.id',
-                'sm.name',
-                'sm.display_name',
-                'sm.description',
-                'sm.icon',
-                'sm.category',
+                'm.id',
+                'm.name',
+                'm.display_name',
+                'm.description',
+                'm.icon',
+                'm.category',
                 'tm.config as settings',
                 'tm.is_active'
             )
-            ->from(['system_modules', 'sm'])
+            ->from(['modules', 'm'])
             ->join(['tenant_modules', 'tm'], 'LEFT')
-            ->on('sm.id', '=', 'tm.module_id')
+            ->on('m.id', '=', 'tm.module_id')
             ->on('tm.tenant_id', '=', DB::expr($tenant_id))
-            ->where('sm.id', $module_id)
+            ->where('m.id', $module_id)
             ->execute()
             ->current();
 

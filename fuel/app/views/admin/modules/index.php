@@ -36,7 +36,7 @@
                                         <i class="fa-solid <?php echo htmlspecialchars($module['icon']); ?> fa-2x text-<?php echo $module['is_tenant_active'] ? 'success' : 'muted'; ?>"></i>
                                     </div>
                                     <div>
-                                        <?php if ($module['can_deactivate'] == 0): ?>
+                                        <?php if ($module['is_core'] == 1): ?>
                                             <span class="badge bg-primary" title="Módulo del núcleo del sistema">
                                                 <i class="fa-solid fa-lock me-1"></i>Core
                                             </span>
@@ -71,8 +71,18 @@
 
                                 <!-- Botones de acción -->
                                 <div class="mt-auto">
+                                    <div class="d-flex gap-2 mb-2">
+                                        <?php if ($is_super_admin): ?>
+                                        <!-- Botón editar (solo super admin) -->
+                                        <a href="<?php echo Uri::create('admin/modules/editar/' . $module['id']); ?>" 
+                                           class="btn btn-outline-primary btn-sm flex-grow-1"
+                                           title="Editar módulo">
+                                            <i class="fa-solid fa-edit me-1"></i>Editar
+                                        </a>
+                                        <?php endif; ?>
+                                    </div>
                                     <?php if ($can_activate): ?>
-                                        <?php if ($module['can_deactivate'] == 0): ?>
+                                        <?php if ($module['is_core'] == 1): ?>
                                             <!-- Módulo core: no se puede desactivar -->
                                             <button class="btn btn-outline-secondary btn-sm w-100" disabled>
                                                 <i class="fa-solid fa-lock me-1"></i>

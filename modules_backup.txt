@@ -1,0 +1,41 @@
+﻿id	name	display_name	category
+1	dashboard	Dashboard	core
+2	users	Usuarios y Roles	core
+3	config	Configuración	core
+4	tenants	Multi-Tenant	core
+5	accounting	Contabilidad	business
+6	finance	Finanzas	business
+7	inventory	Inventario	business
+8	purchases	Compras	business
+9	sales	Ventas	sales
+10	crm	CRM	sales
+11	quotes	Cotizaciones	sales
+12	ecommerce	Tienda Online	marketing
+13	landing	Landing Pages	marketing
+14	email_marketing	Email Marketing	marketing
+15	reports	Reportes Avanzados	system
+16	documents	Documentos	system
+17	notifications	Notificaciones	system
+35	contabilidad	Contabilidad	business
+36	facturacion	Facturación Electrónica	business
+37	rrhh	Recursos Humanos	business
+38	nomina	Nómina	business
+39	business_intelligence	Business Intelligence	system
+45	client_portal	Portal de Clientes	backend
+46	rest_api	REST API	backend
+47	graphql_api	GraphQL API	backend
+48	webhooks	Webhooks	backend
+49	mobile_app_backend	Backend Mobile	
+50	supplier_portal	Portal de Proveedores	backend
+51	employee_portal	Portal de Empleados	backend
+56	almacenes	Almacén	business
+57	categorias	Categorías	business
+58	marcas	Marcas	business
+59	cuentas_contables	Cuentas Contables	business
+60	productos	Productos	business
+61	listas_precios	Listas de Precios	business
+62	inventario	Inventario	business
+63	ordenes_compra	Órdenes de Compra	business
+64	recepciones	Recepciones	business
+65	polizas	Pólizas Contables	business
+66	autorizaciones	Autorizaciones	system

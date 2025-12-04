@@ -12,7 +12,7 @@ class Helper_Module
      * Verifica si un módulo puede ser desactivado
      * 
      * Valida dos condiciones:
-     * 1. El flag can_deactivate debe ser 1 (módulos core no pueden desactivarse)
+     * 1. El flag is_core debe ser 0 (módulos core no pueden desactivarse)
      * 2. No debe existir ningún registro en las tablas asociadas al módulo
      * 
      * @param int $module_id ID del módulo
@@ -26,9 +26,9 @@ class Helper_Module
         }
 
         try {
-            // 1. Verificar flag can_deactivate
-            $module = DB::select('name', 'display_name', 'can_deactivate')
-                ->from('system_modules')
+            // 1. Verificar flag is_core
+            $module = DB::select('name', 'display_name', 'is_core')
+                ->from('modules')
                 ->where('id', $module_id)
                 ->execute()
                 ->current();
@@ -41,8 +41,8 @@ class Helper_Module
                 ];
             }
 
-            // Si el módulo es core (can_deactivate = 0), no se puede desactivar
-            if ($module['can_deactivate'] == 0) {
+            // Si el módulo es core (is_core = 1), no se puede desactivar
+            if ($module['is_core'] == 1) {
                 return [
                     'can_deactivate' => false,
                     'reason' => 'Este módulo es parte del núcleo del sistema y no puede desactivarse',
@@ -120,8 +120,8 @@ class Helper_Module
 
         try {
             // Verificar que el módulo existe
-            $module = DB::select('name', 'display_name', 'is_active')
-                ->from('system_modules')
+            $module = DB::select('name', 'display_name', 'is_enabled')
+                ->from('modules')
                 ->where('id', $module_id)
                 ->execute()
                 ->current();
@@ -133,7 +133,7 @@ class Helper_Module
                 ];
             }
 
-            if ($module['is_active'] == 0) {
+            if ($module['is_enabled'] == 0) {
                 return [
                     'success' => false,
                     'message' => 'Este módulo no está disponible en el sistema'
@@ -228,7 +228,7 @@ class Helper_Module
 
             // Obtener nombre del módulo
             $module = DB::select('name', 'display_name')
-                ->from('system_modules')
+                ->from('modules')
                 ->where('id', $module_id)
                 ->execute()
                 ->current();
@@ -294,27 +294,27 @@ class Helper_Module
 
         try {
             $query = DB::select(
-                    'sm.id',
-                    'sm.name',
-                    'sm.display_name',
-                    'sm.description',
-                    'sm.icon',
-                    'sm.category',
+                    'm.id',
+                    'm.name',
+                    'm.display_name',
+                    'm.description',
+                    'm.icon',
+                    'm.category',
                     'tm.config',
                     'tm.activated_at'
                 )
-                ->from(['system_modules', 'sm'])
+                ->from(['modules', 'm'])
                 ->join(['tenant_modules', 'tm'], 'INNER')
-                ->on('sm.id', '=', 'tm.module_id')
-                ->where('sm.is_active', 1)
+                ->on('m.id', '=', 'tm.module_id')
+                ->where('m.is_enabled', 1)
                 ->where('tm.tenant_id', $tenant_id)
                 ->where('tm.is_active', 1);
 
             if ($category !== null) {
-                $query->where('sm.category', $category);
+                $query->where('m.category', $category);
             }
 
-            $query->order_by('sm.order_position', 'ASC');
+            $query->order_by('m.menu_order', 'ASC');
 
             return $query->execute()->as_array();
 
@@ -341,45 +341,33 @@ class Helper_Module
             $tenant_id = Session::get('tenant_id', 1);
         }
 
-        \Log::error('=== DEBUG get_all_modules START ===');
-        \Log::error('tenant_id: ' . var_export($tenant_id, true));
-
         try {
             $query = DB::select(
-                    'sm.id',
-                    'sm.name',
-                    'sm.display_name',
-                    'sm.description',
-                    'sm.icon',
-                    'sm.category',
-                    'sm.can_deactivate',
-                    'sm.order_position',
+                    'm.id',
+                    'm.name',
+                    'm.display_name',
+                    'm.description',
+                    'm.icon',
+                    'm.category',
+                    'm.is_core',
+                    'm.menu_order',
                     [DB::expr('IFNULL(tm.is_active, 0)'), 'is_tenant_active'],
                     'tm.config',
                     'tm.activated_at'
                 )
-                ->from(['system_modules', 'sm'])
+                ->from(['modules', 'm'])
                 ->join(['tenant_modules', 'tm'], 'LEFT')
-                ->on('sm.id', '=', 'tm.module_id')
+                ->on('m.id', '=', 'tm.module_id')
                 ->on('tm.tenant_id', '=', DB::expr($tenant_id))
-                ->where('sm.is_active', 1)
-                ->order_by('sm.category', 'ASC')
-                ->order_by('sm.order_position', 'ASC');
-
-            \Log::error('Query compilada: ' . $query->compile());
+                ->where('m.is_enabled', 1)
+                ->order_by('m.category', 'ASC')
+                ->order_by('m.menu_order', 'ASC');
             
             $modules = $query->execute()->as_array();
-
-            \Log::error('Módulos encontrados: ' . count($modules));
-            if (!empty($modules)) {
-                \Log::error('Primer módulo: ' . print_r($modules[0], true));
-            }
 
             return $modules;
 
         } catch (Exception $e) {
-            \Log::error('EXCEPCIÓN: ' . $e->getMessage());
-            \Log::error('Trace: ' . $e->getTraceAsString());
             Helper_Log::record('module', 'error', 'Error al obtener todos los módulos', [
                 'tenant_id' => $tenant_id,
                 'error' => $e->getMessage()
@@ -525,11 +513,11 @@ class Helper_Module
 
         try {
             $result = DB::select(DB::expr('COUNT(*) as total'))
-                ->from('system_modules', 'sm')
+                ->from('modules', 'm')
                 ->join(['tenant_modules', 'tm'], 'INNER')
-                ->on('sm.id', '=', 'tm.module_id')
-                ->where('sm.name', $module_name)
-                ->where('sm.is_active', 1)
+                ->on('m.id', '=', 'tm.module_id')
+                ->where('m.name', $module_name)
+                ->where('m.is_enabled', 1)
                 ->where('tm.tenant_id', $tenant_id)
                 ->where('tm.is_active', 1)
                 ->execute()
