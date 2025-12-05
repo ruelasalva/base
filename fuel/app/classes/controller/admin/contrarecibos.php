@@ -1,407 +1,411 @@
 <?php
 
-/**
- * CONTROLADOR ADMIN_COMPRAS
- *
- * @package  app
- * @extends  Controller_Admin
- */
 class Controller_Admin_Contrarecibos extends Controller_Admin
 {
-	/**
-	 * BEFORE
-	 *
-	 * @return Void
-	 */
-	public function before()
-	{
-		# REQUERIDA PARA EL TEMPLATING
-        parent::before();
-
-		# SI EL USUARIO NO TIENE PERMISOS
-		if(!Auth::member(100))
-		{
-			# SE ESTABLECE EL MENSAJE DE ERROR
-			Session::set_flash('error', 'No tienes los permisos para acceder a esta sección.');
-
-			# SE REDIRECCIONA AL USUARIO
-			Response::redirect('admin');
-		}
-	}
-
-
-	/**
-	 * INDEX
-	 *
-	 * MUESTRA UNA LISTADO DE REGISTROS
-	 *
-	 * @access  public
-	 * @return  Void
-	 */
-	public function action_index($search = '')
+    public function action_index()
     {
-        # Verificar si el usuario es administrador
-        if (!Auth::check() || Auth::get('group') < 50) {
-            Session::set_flash('error', 'No tienes permisos para acceder a esta sección.');
-            Response::redirect('admin');
-        }
-
-        # SE INICIALIZAN LAS VARIABLES
-		$data        = array();
-		$contrarecibos_info = array();
-		$per_page    = 100;
-
-        # Obtener todos los contrarecibos generados
-        $contrarecibos = Model_Providers_Receipt::query();
-
-
-        # SI HAY UNA BUSQUEDA
-		if($search != '')
-		{
-			# SE ALMACENA LA BUSQUEDA ORIGINAL
-			$original_search = $search;
-
-			# SE LIMPIA LA CADENA DE BUSQUEDA
-			$search = str_replace('+', ' ', rawurldecode($search));
-
-			# SE REEMPLAZA LOS ESPACIOS POR PORCENTAJES
-			$search = str_replace(' ', '%', $search);
-
-			# SE AGREGA LA CLAUSULA
-			$contrarecibos = $contrarecibos->where(DB::expr("CONCAT(`t0`.`name`)"), 'like', '%'.$search.'%');
-		}
-
-        # SE ESTABLECE LA CONFIGURACION DE LA PAGINACION
-		$config = array(
-			'name'           => 'admin',
-			'pagination_url' => Uri::current(),
-			'total_items'    => $contrarecibos->count(),
-			'per_page'       => $per_page,
-			'uri_segment'    => 'pagina',
-		);
-
-		# SE CREA LA INSTANCIA DE LA PAGINACION
-		$pagination = Pagination::forge('contrarecibos', $config);
-
-        # SE EJECUTA EL QUERY
-		$contrarecibos = $contrarecibos->order_by('id', 'desc')
-		->rows_limit($pagination->per_page)
-		->rows_offset($pagination->offset)
-		->get();
-
-        # SI NO HAY RESULTADOS
-        if (!empty($contrarecibos)) 
-        {
+        // Filtros
+        $status = Input::get('status', null);
+        $provider_id = Input::get('provider_id', null);
+        $search = Input::get('search', '');
         
-            # SE RECORREN LOS CONTRARECIBOS
-        foreach ($contrarecibos as $receipt) 
-        {
-            #SE ALMACENA LA INFORMACIÓN DE CADA CONTRARECIBO
-            $contrarecibos_info[] = array(
-                'id'           => $receipt->id,
-                'uuid'         => $receipt->uuid,
-                'provider'     => $receipt->provider->name,
-                'total'        => '$' . number_format($receipt->total, 2),
-                'status'       => $receipt->status,
-                'payment_date' => ($receipt->payment_date) ? date('d/m/Y', strtotime($receipt->payment_date)) : 'Pendiente',
-                'created_at'   => date('d/m/Y H:i', strtotime($receipt->created_at)),
+        // Query base
+        $query = Model_Deliverynote::query()
+            ->where('deleted_at', null)
+            ->related('provider')
+            ->related('purchase')
+            ->related('purchase_order')
+            ->related('creator');
+        
+        // Aplicar filtros
+        if ($status) {
+            $query->where('status', $status);
+        }
+        
+        if ($provider_id) {
+            $query->where('provider_id', $provider_id);
+        }
+        
+        // Búsqueda
+        if (!empty($search)) {
+            $query->where_open()
+                ->where('code', 'LIKE', "%{$search}%")
+                ->or_where('notes', 'LIKE', "%{$search}%")
+                ->or_where('provider.company_name', 'LIKE', "%{$search}%")
+                ->where_close();
+        }
+        
+        // Ordenar y paginar
+        $query->order_by('delivery_date', 'DESC');
+        
+        $config = array(
+            'pagination_url' => Uri::create('admin/contrarecibos/index'),
+            'total_items' => $query->count(),
+            'per_page' => 20,
+            'uri_segment' => 3,
         );
-         }
-        }
-
-        #SE ALMACENA LA INFORMACIÓN DE LOS CONTRARECIBOS
-        $data['contrarecibos']  = $contrarecibos_info;
-        $data['pagination']     = $pagination->render();
-        $data['search']         =  str_replace('%', ' ', $search);
-
-        # Cargar vista
-        $this->template->title = 'Contrarecibos de Facturas';
-        $this->template->content = View::forge('admin/compras/contrarecibos/index', $data, false);
+        
+        $pagination = Pagination::forge('contrarecibos_pagination', $config);
+        $delivery_notes = $query->limit($pagination->per_page)->offset($pagination->offset)->get();
+        
+        // Estadísticas
+        $stats = array(
+            'total' => Model_Deliverynote::query()->where('deleted_at', null)->count(),
+            'pending' => Model_Deliverynote::query()->where('deleted_at', null)->where('status', 'pending')->count(),
+            'partial' => Model_Deliverynote::query()->where('deleted_at', null)->where('status', 'partial')->count(),
+            'completed' => Model_Deliverynote::query()->where('deleted_at', null)->where('status', 'completed')->count(),
+            'rejected' => Model_Deliverynote::query()->where('deleted_at', null)->where('status', 'rejected')->count(),
+        );
+        
+        // Cargar proveedores para filtro
+        $providers = Model_Provider::query()
+            ->where('deleted_at', null)
+            ->where('is_active', 1)
+            ->order_by('company_name', 'ASC')
+            ->get();
+        
+        $this->template->title = 'Contrarecibos';
+        $this->template->content = View::forge('admin/contrarecibos/index', array(
+            'delivery_notes' => $delivery_notes,
+            'pagination' => $pagination->render(),
+            'pagination_info' => array(
+                'offset' => $pagination->offset,
+                'per_page' => $pagination->per_page,
+                'total_items' => $pagination->total_items,
+                'total_pages' => $pagination->total_pages,
+            ),
+            'stats' => $stats,
+            'providers' => $providers,
+            'current_status' => $status,
+            'current_provider' => $provider_id,
+            'search' => $search,
+        ));
     }
-
-
-    /**
-     * OBTENER ESTADO DE LA FACTURA
-     *
-     * Esta función recibe el estado de la factura y devuelve una cadena descriptiva.
-     *
-     * @param int $status El estado de la factura (0: Pendiente, 1: En revisión, 2: Pagada, 3: Cancelada)
-     * @return string Descripción del estado de la factura
-     */
-    # FUNCIÓN PARA OBTENER EL ESTADO DE LA FACTURA
-    private function get_factura_status($status)
+    
+    public function action_create()
     {
-        switch ($status) {
-            case 0:
-                return 'Pendiente';
-            case 1:
-                return 'En revisión';
-            case 2:
-                return 'Pagada';
-            case 3:
-                return 'Cancelada';
-            default:
-                return 'Desconocido';
-        }
-    }
-
-
-
-
-
-	/**
-	 * BUSCAR
-	 *
-	 * REDIRECCIONA A LA URL DE BUSCAR REGISTROS
-	 *
-	 * @access  public
-	 * @return  Void
-	 */
-	public function action_buscar()
-	{
-		# SI SE UTILIZO EL METODO POST
-		if(Input::method() == 'POST')
-		{
-			# SE OBTIENEN LOS VALORES
-			$data = array(
-				'search' => ($_POST['search'] != '') ? $_POST['search'] : '',
-			);
-
-			# SE CREA LA VALIDACION DE LOS CAMPOS
-			$val = Validation::forge('search');
-			$val->add_callable('Rules');
-			$val->add_field('search', 'search', 'max_length[100]');
-
-			# SI NO HAY NINGUN PROBLEMA CON LA VALIDACION
-			if($val->run($data))
-			{
-				# SE REMPLAZAN ALGUNOS CARACTERES
-				$search = str_replace(' ', '+', $val->validated('search'));
-				$search = str_replace('*', '', $search);
-
-				# SE ALMACENA LA CADENA DE BUSQUEDA
-				$search = ($val->validated('search') != '') ? $search : '';
-
-				# SE REDIRECCIONA A BUSCAR
-				Response::redirect('admin/compras/index/'.$search);
-			}
-			else
-			{
-				# SE REDIRECCIONA AL USUARIO
-				Response::redirect('admin/compras');
-			}
-		}
-		else
-		{
-			# SE REDIRECCIONA AL USUARIO
-			Response::redirect('admin/compras');
-		}
-	}
-
-	
-	/**
-	 * INFO
-	 *
-	 * MUESTRA LA INFORMACIÓN DE UNA FACTURA DE PROVEEDOR
-	 *
-	 * @access  public
-	 * @return  Void
-	 */
-	public function action_info($factura_id = 0)
-    {
-        # VERIFICAR SI EL USUARIO ESTÁ AUTENTICADO Y ES ADMINISTRADOR
-        if (!Auth::check() || Auth::get('group') < 50) {
-            Session::set_flash('error', 'No tienes permisos para acceder a esta sección.');
-            Response::redirect('admin/compras');
-        }
-
-        # SE INICIALIZAN VARIABLES
-        $data    = array();
-        $classes = array();
-        $fields  = array('status','message', 'payment_date');
-        $errors  = array();
-
-        foreach ($fields as $field) {
-            $classes[$field] = array('form-group' => null, 'form-control' => null);
-        }
-
-        # OBTENER LA FACTURA Y SU PROVEEDOR
-        $factura = Model_Providers_Bill::query()
-            ->where('id', $factura_id)
-            ->related('provider') # Relacionar con la tabla de proveedores
-            ->get_one();
-
-        # DEFINIR ESTADOS Y COLORES
-        $status_labels = [
-            '0' => 'Pendiente',
-            '1' => 'En revisión',
-            '2' => 'Pagada',
-            '3' => 'Cancelada'
-        ];
-
-        $status_colors = [
-            '0' => 'warning',  # Amarillo
-            '1' => 'info',     # Azul
-            '2' => 'success',  # Verde
-            '3' => 'danger'    # Rojo
-        ];
-
-        # VALIDAR SI LA FACTURA EXISTE
-        if (!$factura) {
-            Session::set_flash('error', 'La factura no existe o fue eliminada.');
-            Response::redirect('admin/compras');
-        }
-
-        # OBTENER DATOS DEL PROVEEDOR
-        $provider_name = isset($factura->provider) ? $factura->provider->name : 'Desconocido';
-
-        # DESERIALIZAR DATOS DEL XML
-        $invoice_data = !empty($factura->invoice_data) ? unserialize($factura->invoice_data) : [];
-
-        # SI SE ENVÍA EL FORMULARIO PARA ACTUALIZAR EL ESTADO
         if (Input::method() == 'POST') {
-            try {
-                # OBTENER EL NUEVO ESTADO
-                $new_status     = Input::post('status');
-                $message        = Input::post('message', ''); # Campo opcional
-                $payment_date   = Input::post('payment_date', null); # Campo opcional
-
-                # VALIDAR QUE EL ESTADO NO ESTÉ VACÍO Y SEA UN VALOR VÁLIDO
-                if (!is_numeric($new_status) || $new_status < 0 || $new_status > 3) {
-                    $errors['status'] = 'Selecciona un estado válido.';
-                    $classes['status']['form-group'] = 'has-danger';
-                    $classes['status']['form-control'] = 'is-invalid';
-                }
-
-                # VALIDAR FORMATO DE FECHA SI SE LLENÓ
-                if (!empty($payment_date) && !strtotime($payment_date)) {
-                    $errors['payment_date'] = 'El formato de fecha es inválido.';
-                    $classes['payment_date']['form-group'] = 'has-danger';
-                    $classes['payment_date']['form-control'] = 'is-invalid';
-                }
-
-                # SI HAY ERRORES, MOSTRARLOS EN LA VISTA
-                if (!empty($errors)) {
-                    $data['errors'] = $errors;
-                    $data['classes'] = $classes;
-                } else {
-                    # ACTUALIZAR EL ESTADO DE LA FACTURA
-                    $factura->status = $new_status;
-                    $factura->message      = !empty($message) ? $message : null;
-
-                    # SOLO ACTUALIZAR FECHA SI SE SELECCIONA UNA
-                    if (!empty($payment_date)) {
-                        $factura->payment_date = strtotime($payment_date);
+            $val = $this->_validate_delivery_note();
+            
+            if ($val->run()) {
+                try {
+                    DB::start_transaction();
+                    
+                    // Crear contrarecibo
+                    $delivery_note = Model_Deliverynote::forge(array(
+                        'code' => Model_Deliverynote::generate_code(),
+                        'purchase_id' => Input::post('purchase_id') ?: null,
+                        'purchase_order_id' => Input::post('purchase_order_id') ?: null,
+                        'provider_id' => Input::post('provider_id'),
+                        'delivery_date' => Input::post('delivery_date'),
+                        'received_date' => Input::post('received_date') ?: null,
+                        'received_by' => Input::post('received_by') ?: null,
+                        'status' => Input::post('status', 'pending'),
+                        'notes' => Input::post('notes'),
+                        'created_by' => Auth::get_user_id()[1],
+                    ));
+                    
+                    if (!$delivery_note->save()) {
+                        throw new Exception('Error al guardar el contrarecibo');
                     }
                     
-                    if (!$factura->save()) {
-                        throw new Exception('Hubo un problema al actualizar el estado.');
+                    // Guardar líneas de productos
+                    $products = Input::post('products', array());
+                    $quantities_ordered = Input::post('quantities_ordered', array());
+                    $quantities_received = Input::post('quantities_received', array());
+                    $prices = Input::post('prices', array());
+                    $item_notes = Input::post('item_notes', array());
+                    
+                    foreach ($products as $index => $product_id) {
+                        if (!empty($product_id)) {
+                            $item = Model_Deliverynoteitem::forge(array(
+                                'delivery_note_id' => $delivery_note->id,
+                                'product_id' => $product_id,
+                                'quantity_ordered' => $quantities_ordered[$index] ?? 0,
+                                'quantity_received' => $quantities_received[$index] ?? 0,
+                                'unit_price' => $prices[$index] ?? 0,
+                                'notes' => $item_notes[$index] ?? null,
+                            ));
+                            
+                            if (!$item->save()) {
+                                throw new Exception('Error al guardar línea de producto');
+                            }
+                        }
                     }
-
-                    \Log::debug("✅ Estado de la factura ID {$factura->id} actualizado a '{$new_status}'.");
-
-                    # MENSAJE DE ÉXITO
-                    Session::set_flash('success', 'Estado actualizado correctamente.');
-                    Response::redirect('admin/compras/info/' . $factura_id);
+                    
+                    // Actualizar estado automáticamente
+                    $delivery_note->update_status();
+                    $delivery_note->save();
+                    
+                    DB::commit_transaction();
+                    
+                    Session::set_flash('success', 'Contrarecibo creado exitosamente');
+                    Response::redirect('admin/contrarecibos/view/' . $delivery_note->id);
+                    
+                } catch (Exception $e) {
+                    DB::rollback_transaction();
+                    Session::set_flash('error', 'Error al crear contrarecibo: ' . $e->getMessage());
                 }
-            } catch (Exception $e) {
-                \Log::error('Error al actualizar estado: ' . $e->getMessage());
-                Session::set_flash('error', $e->getMessage());
+            } else {
+                Session::set_flash('error', $val->error());
             }
         }
-
-        # SE INICIALIZA EL ARRAY DE PRODUCTOS Y SE VALIDA CADA CLAVE
-        $productos = [];
-        if (!empty($invoice_data['productos'])) {
-            foreach ($invoice_data['productos'] as $producto) {
-                $productos[] = [
-                    'noidentificacion'      => isset($producto['noidentificacion']) ? $producto['noidentificacion'] : 'N/A',
-                    'descripcion'           => isset($producto['descripcion']) ? $producto['descripcion'] : 'N/A',
-                    'cantidad'              => isset($producto['cantidad']) ? $producto['cantidad'] : 'N/A',
-                    'clave_unidad'          => isset($producto['clave_unidad']) ? $producto['clave_unidad'] : 'N/A',
-                    'valor_unitarioo'       => isset($producto['valor_unitario']) ? number_format($producto['valor_unitario'], 2) : '0.00',
-                    'importe'               => isset($producto['importe']) ? number_format($producto['importe'], 2) : '0.00',
-                ];
-            }
-        }
-
-        # OBTENER EL ESTADO Y EL COLOR
-        $estado_actual = isset($status_labels[$factura->status]) ? $status_labels[$factura->status] : 'Desconocido';
-        $badge_color = isset($status_colors[$factura->status]) ? $status_colors[$factura->status] : 'secondary';
-
-
-        # PASAR DATOS A LA VISTA
-        $data['estado_actual'] = $estado_actual; 
-        $data['badge_color']   = $badge_color;   
-        $data['factura']       = $factura;
-        $data['provider_name'] = $provider_name;
-        $data['invoice_data']  = $invoice_data;
-        $data['productos']     = $productos;
-        $data['classes']       = $classes;
-        $data['errors']        = $errors;
-
-        # CARGAR VISTA
-        $this->template->title = 'Información de la Factura';
-        $this->template->content = View::forge('admin/compras/facturas/info', $data);
+        
+        // Cargar datos para el formulario
+        $providers = Model_Provider::query()
+            ->where('deleted_at', null)
+            ->where('is_active', 1)
+            ->order_by('company_name', 'ASC')
+            ->get();
+        
+        $purchase_orders = Model_Purchaseorder::query()
+            ->where('deleted_at', null)
+            ->where('status', 'approved')
+            ->order_by('code', 'DESC')
+            ->get();
+        
+        $purchases = Model_Purchase::query()
+            ->where('deleted_at', null)
+            ->order_by('code', 'DESC')
+            ->get();
+        
+        $products = Model_Product::query()
+            ->where('is_active', 1)
+            ->order_by('name', 'ASC')
+            ->get();
+        
+        $users = Model_User::query()
+            ->order_by('username', 'ASC')
+            ->get();
+        
+        $this->template->title = 'Nuevo Contrarecibo';
+        $this->template->content = View::forge('admin/contrarecibos/form', array(
+            'delivery_note' => null,
+            'providers' => $providers,
+            'purchase_orders' => $purchase_orders,
+            'purchases' => $purchases,
+            'products' => $products,
+            'users' => $users,
+        ));
     }
-
-
-    /**
-	 * INFO
-	 *
-	 * MUESTRA LA INFORMACIÓN DE UNA FACTURA DE PROVEEDOR
-	 *
-	 * @access  public
-	 * @return  Void
-	 */
-    public function action_eliminar($factura_id)
+    
+    public function action_edit($id = null)
     {
-        # VERIFICAR SI EL USUARIO ESTÁ AUTENTICADO Y TIENE PERMISOS DE ADMINISTRADOR
-        if (!Auth::check() || Auth::get('group') < 50) {
-            Session::set_flash('error', 'No tienes permisos para realizar esta acción.');
-            Response::redirect('admin/compras');
+        $delivery_note = Model_Deliverynote::find($id);
+        
+        if (!$delivery_note || $delivery_note->deleted_at) {
+            Session::set_flash('error', 'Contrarecibo no encontrado');
+            Response::redirect('admin/contrarecibos/index');
         }
-
-        # OBTENER LA FACTURA
-        $factura = Model_Providers_Bill::query()
-            ->where('id', $factura_id)
-            ->get_one();
-
-        # VALIDAR SI LA FACTURA EXISTE
-        if (!$factura) {
-            Session::set_flash('error', 'La factura no existe o ya fue eliminada.');
-            Response::redirect('admin/compras');
+        
+        if (!$delivery_note->can_edit()) {
+            Session::set_flash('error', 'Este contrarecibo no puede ser editado');
+            Response::redirect('admin/contrarecibos/view/' . $id);
         }
-
-        try {
-            # ACTUALIZAR EL ESTADO A CANCELADA (3) Y MARCAR COMO ELIMINADA (deleted = 1)
-            $factura->status = 3;
-            $factura->deleted = 1;
-
-            if (!$factura->save()) {
-                throw new Exception('Error al eliminar la factura.');
+        
+        if (Input::method() == 'POST') {
+            $val = $this->_validate_delivery_note();
+            
+            if ($val->run()) {
+                try {
+                    DB::start_transaction();
+                    
+                    // Actualizar contrarecibo
+                    $delivery_note->purchase_id = Input::post('purchase_id') ?: null;
+                    $delivery_note->purchase_order_id = Input::post('purchase_order_id') ?: null;
+                    $delivery_note->provider_id = Input::post('provider_id');
+                    $delivery_note->delivery_date = Input::post('delivery_date');
+                    $delivery_note->received_date = Input::post('received_date') ?: null;
+                    $delivery_note->received_by = Input::post('received_by') ?: null;
+                    $delivery_note->status = Input::post('status');
+                    $delivery_note->notes = Input::post('notes');
+                    
+                    if (!$delivery_note->save()) {
+                        throw new Exception('Error al actualizar el contrarecibo');
+                    }
+                    
+                    // Eliminar líneas existentes
+                    foreach ($delivery_note->items as $item) {
+                        $item->delete();
+                    }
+                    
+                    // Guardar nuevas líneas
+                    $products = Input::post('products', array());
+                    $quantities_ordered = Input::post('quantities_ordered', array());
+                    $quantities_received = Input::post('quantities_received', array());
+                    $prices = Input::post('prices', array());
+                    $item_notes = Input::post('item_notes', array());
+                    
+                    foreach ($products as $index => $product_id) {
+                        if (!empty($product_id)) {
+                            $item = Model_Deliverynoteitem::forge(array(
+                                'delivery_note_id' => $delivery_note->id,
+                                'product_id' => $product_id,
+                                'quantity_ordered' => $quantities_ordered[$index] ?? 0,
+                                'quantity_received' => $quantities_received[$index] ?? 0,
+                                'unit_price' => $prices[$index] ?? 0,
+                                'notes' => $item_notes[$index] ?? null,
+                            ));
+                            
+                            if (!$item->save()) {
+                                throw new Exception('Error al guardar línea de producto');
+                            }
+                        }
+                    }
+                    
+                    // Actualizar estado automáticamente
+                    $delivery_note->update_status();
+                    $delivery_note->save();
+                    
+                    DB::commit_transaction();
+                    
+                    Session::set_flash('success', 'Contrarecibo actualizado exitosamente');
+                    Response::redirect('admin/contrarecibos/view/' . $delivery_note->id);
+                    
+                } catch (Exception $e) {
+                    DB::rollback_transaction();
+                    Session::set_flash('error', 'Error al actualizar contrarecibo: ' . $e->getMessage());
+                }
+            } else {
+                Session::set_flash('error', $val->error());
             }
-
-            # REGISTRAR EN LOGS
-            \Log::info("🗑️ Factura ID {$factura->id} marcada como eliminada.");
-
-            # MENSAJE DE ÉXITO
-            Session::set_flash('success', 'Factura eliminada correctamente.');
-            Response::redirect('admin/compras');
-
-        } catch (Exception $e) {
-            \Log::error('Error al eliminar factura: ' . $e->getMessage());
-            Session::set_flash('error', 'Hubo un problema al eliminar la factura.');
-            Response::redirect('admin/compras/info/' . $factura_id);
         }
+        
+        // Cargar datos para el formulario
+        $providers = Model_Provider::query()
+            ->where('deleted_at', null)
+            ->where('is_active', 1)
+            ->order_by('company_name', 'ASC')
+            ->get();
+        
+        $purchase_orders = Model_Purchaseorder::query()
+            ->where('deleted_at', null)
+            ->where('status', 'approved')
+            ->order_by('code', 'DESC')
+            ->get();
+        
+        $purchases = Model_Purchase::query()
+            ->where('deleted_at', null)
+            ->order_by('code', 'DESC')
+            ->get();
+        
+        $products = Model_Product::query()
+            ->where('is_active', 1)
+            ->order_by('name', 'ASC')
+            ->get();
+        
+        $users = Model_User::query()
+            ->order_by('username', 'ASC')
+            ->get();
+        
+        $this->template->title = 'Editar Contrarecibo';
+        $this->template->content = View::forge('admin/contrarecibos/form', array(
+            'delivery_note' => $delivery_note,
+            'providers' => $providers,
+            'purchase_orders' => $purchase_orders,
+            'purchases' => $purchases,
+            'products' => $products,
+            'users' => $users,
+        ));
     }
-
-
-
-
-
-
-	
-
-
+    
+    public function action_view($id = null)
+    {
+        $delivery_note = Model_Deliverynote::find($id);
+        
+        if (!$delivery_note || $delivery_note->deleted_at) {
+            Session::set_flash('error', 'Contrarecibo no encontrado');
+            Response::redirect('admin/contrarecibos/index');
+        }
+        
+        $this->template->title = 'Ver Contrarecibo';
+        $this->template->content = View::forge('admin/contrarecibos/view', array(
+            'delivery_note' => $delivery_note,
+        ));
+    }
+    
+    public function action_delete($id = null)
+    {
+        if (Input::method() == 'POST') {
+            $delivery_note = Model_Deliverynote::find($id);
+            
+            if (!$delivery_note || $delivery_note->deleted_at) {
+                Session::set_flash('error', 'Contrarecibo no encontrado');
+                Response::redirect('admin/contrarecibos/index');
+            }
+            
+            if (!$delivery_note->can_delete()) {
+                Session::set_flash('error', 'Este contrarecibo no puede ser eliminado');
+                Response::redirect('admin/contrarecibos/view/' . $id);
+            }
+            
+            try {
+                $delivery_note->deleted_at = date('Y-m-d H:i:s');
+                $delivery_note->save();
+                
+                Session::set_flash('success', 'Contrarecibo eliminado exitosamente');
+            } catch (Exception $e) {
+                Session::set_flash('error', 'Error al eliminar: ' . $e->getMessage());
+            }
+        }
+        
+        Response::redirect('admin/contrarecibos/index');
+    }
+    
+    public function action_mark_complete($id = null)
+    {
+        if (Input::method() == 'POST') {
+            $delivery_note = Model_Deliverynote::find($id);
+            
+            if (!$delivery_note || $delivery_note->deleted_at) {
+                Session::set_flash('error', 'Contrarecibo no encontrado');
+                Response::redirect('admin/contrarecibos/index');
+            }
+            
+            try {
+                $received_by = Input::post('received_by') ?: Auth::get_user_id()[1];
+                $delivery_note->mark_as_completed($received_by);
+                
+                Session::set_flash('success', 'Contrarecibo marcado como completado');
+            } catch (Exception $e) {
+                Session::set_flash('error', 'Error: ' . $e->getMessage());
+            }
+        }
+        
+        Response::redirect('admin/contrarecibos/view/' . $id);
+    }
+    
+    public function action_mark_rejected($id = null)
+    {
+        if (Input::method() == 'POST') {
+            $delivery_note = Model_Deliverynote::find($id);
+            
+            if (!$delivery_note || $delivery_note->deleted_at) {
+                Session::set_flash('error', 'Contrarecibo no encontrado');
+                Response::redirect('admin/contrarecibos/index');
+            }
+            
+            try {
+                $reason = Input::post('reason');
+                $delivery_note->mark_as_rejected($reason);
+                
+                Session::set_flash('success', 'Contrarecibo marcado como rechazado');
+            } catch (Exception $e) {
+                Session::set_flash('error', 'Error: ' . $e->getMessage());
+            }
+        }
+        
+        Response::redirect('admin/contrarecibos/view/' . $id);
+    }
+    
+    private function _validate_delivery_note()
+    {
+        $val = Validation::forge();
+        
+        $val->add_field('provider_id', 'Proveedor', 'required|valid_string[numeric]');
+        $val->add_field('delivery_date', 'Fecha de Entrega', 'required|valid_string[numeric]');
+        $val->add_field('status', 'Estado', 'required');
+        
+        return $val;
+    }
 }

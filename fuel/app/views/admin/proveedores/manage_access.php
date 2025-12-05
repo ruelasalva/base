@@ -113,7 +113,7 @@
 										   id="tenant_<?php echo $tenant['id']; ?>" 
 										   name="tenants[]" 
 										   value="<?php echo $tenant['id']; ?>"
-										   <?php echo ($tenant['id'] == $provider->tenant_id) ? 'checked' : ''; ?>>
+										   <?php $current_tenant = Helper_User_Tenant::get_default_tenant_id(); echo ($tenant['id'] == $current_tenant) ? 'checked' : ''; ?>>
 									<label class="custom-control-label" for="tenant_<?php echo $tenant['id']; ?>">
 										<?php echo $tenant['company_name']; ?> 
 										<small class="text-muted">(<?php echo $tenant['domain']; ?>)</small>
@@ -127,7 +127,7 @@
 							<select name="default_tenant" class="form-control">
 								<?php foreach ($all_tenants as $tenant): ?>
 									<option value="<?php echo $tenant['id']; ?>" 
-											<?php echo ($tenant['id'] == $provider->tenant_id) ? 'selected' : ''; ?>>
+											<?php echo ($tenant['id'] == $current_tenant) ? 'selected' : ''; ?>>
 										<?php echo $tenant['company_name']; ?>
 									</option>
 								<?php endforeach; ?>

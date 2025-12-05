@@ -152,15 +152,12 @@
 									<i class="fas fa-user-times mr-1"></i> Eliminar Usuario
 								</button>
 								<?php else: ?>
-									<!-- No tiene usuario: Crear -->
-								<button class="btn btn-sm shadow-sm btn-create-contact-user"
-										data-contact-id="<?php echo $c->id; ?>"
-										data-contact-name="<?php echo $c->get_full_name(); ?>"
-										data-contact-email="<?php echo $c->email; ?>"
-										data-contact-phone="<?php echo $c->phone; ?>"
-										style="background: #22c55e; color: white; border: none; border-radius: 6px; padding: 10px 16px; font-weight: 500; font-size: 0.8125rem;">
-									<i class="fas fa-user-plus mr-1"></i> Crear Usuario
-								</button>
+							<!-- No tiene usuario: Crear -->
+							<a href="<?php echo Uri::create('admin/proveedores/create_contact_user_form/' . $c->id); ?>"
+							   class="btn btn-sm shadow-sm"
+							   style="background: #22c55e; color: white; border: none; border-radius: 6px; padding: 10px 16px; font-weight: 500; font-size: 0.8125rem; text-decoration: none; display: block;">
+								<i class="fas fa-user-plus mr-1"></i> Crear Usuario
+							</a>
 								<?php endif; ?>
 							</div>
 

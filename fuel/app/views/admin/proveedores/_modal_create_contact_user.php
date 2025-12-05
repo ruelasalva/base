@@ -82,7 +82,7 @@
 									   name="tenant_ids[]" 
 									   value="<?php echo $tenant['id']; ?>">
 								<label class="custom-control-label" for="contact_tenant_<?php echo $tenant['id']; ?>">
-									<strong><?php echo $tenant['name']; ?></strong>
+									<strong><?php echo isset($tenant['name']) ? $tenant['name'] : $tenant['company_name']; ?></strong>
 									<?php if (!empty($tenant['description'])): ?>
 										<br><small class="text-muted"><?php echo $tenant['description']; ?></small>
 									<?php endif; ?>

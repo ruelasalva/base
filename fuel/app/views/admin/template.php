@@ -441,7 +441,7 @@
 
 						<!-- CATÁLOGO DE PRODUCTOS -->
 						<?php if (
-							Helper_Permission::can('catalogo_productos', 'view') ||
+							Helper_Permission::can('productos', 'view') ||
 							Helper_Permission::can('catalogo_marcas', 'view') ||
 							Helper_Permission::can('catalogo_categorias', 'view') ||
 							Helper_Permission::can('catalogo_subcategorias', 'view') ||
@@ -449,19 +449,19 @@
 							): ?>
 							<li class="nav-item">
 								<a class="nav-link <?php echo (
-									in_array(Uri::segment(3), ['productos','marcas','categorias','subcategorias','montos'])
+									in_array(Uri::segment(2), ['productos']) || in_array(Uri::segment(3), ['marcas','categorias','subcategorias','montos'])
 									) ? 'active' : ''; ?>" href="#navbar-productos" data-toggle="collapse"
-									role="button" aria-expanded="<?php echo (in_array(Uri::segment(3), ['productos','marcas','categorias','subcategorias','montos'])) ? 'true' : 'false'; ?>"
+									role="button" aria-expanded="<?php echo (in_array(Uri::segment(2), ['productos']) || in_array(Uri::segment(3), ['marcas','categorias','subcategorias','montos'])) ? 'true' : 'false'; ?>"
 									aria-controls="navbar-productos">
 									<i class="fa-solid fa-boxes-stacked text-info"></i>
 									<span class="nav-link-text ml-2">Catálogo de Productos</span>
 									<i class="fa-solid fa-chevron-down float-right"></i>
 								</a>
-								<div class="collapse <?php echo (in_array(Uri::segment(3), ['productos','marcas','categorias','subcategorias','montos'])) ? 'show' : ''; ?>" id="navbar-productos">
+								<div class="collapse <?php echo (in_array(Uri::segment(2), ['productos']) || in_array(Uri::segment(3), ['marcas','categorias','subcategorias','montos'])) ? 'show' : ''; ?>" id="navbar-productos">
 									<ul class="nav nav-sm flex-column ml-3">
-										<?php if (Helper_Permission::can('catalogo_productos', 'view')): ?>
+										<?php if (Helper_Permission::can('productos', 'view')): ?>
 											<li class="nav-item">
-												<?php echo Html::anchor('admin/catalogo/productos', '<i class="fa-solid fa-cube text-primary"></i> <span>Productos</span>', ['class' => 'nav-link']); ?>
+												<?php echo Html::anchor('admin/productos', '<i class="fa-solid fa-cube text-primary"></i> <span>Productos</span>', ['class' => 'nav-link']); ?>
 											</li>
 										<?php endif; ?>
 										<?php if (Helper_Permission::can('catalogo_marcas', 'view')): ?>

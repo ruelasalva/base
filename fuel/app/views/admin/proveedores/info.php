@@ -750,6 +750,26 @@ $(document).ready(function() {
 			}
 		});
 	});
+
+	// Forzar activación de pestañas manualmente (fix Bootstrap)
+	$('a[data-toggle="pill"]').on('click', function(e) {
+		e.preventDefault();
+		
+		// Remover clases activas
+		$('a[data-toggle="pill"]').removeClass('active');
+		$('.tab-pane').removeClass('show active');
+		
+		// Activar la pestaña clickeada
+		$(this).addClass('active');
+		var target = $(this).attr('href');
+		$(target).addClass('show active');
+	});
+	
+	// Si hay hash en la URL, activar esa pestaña
+	if (window.location.hash) {
+		var hash = window.location.hash;
+		$('a[data-toggle="pill"][href="' + hash + '"]').trigger('click');
+	}
 });
 </script>
 

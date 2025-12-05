@@ -7,29 +7,45 @@ class Model_Category extends \Orm\Model
 			"label" => "Id",
 			"data_type" => "int",
 		),
-		"slug" => array(
-			"label" => "Slug",
-			"data_type" => "varchar",
+		"parent_id" => array(
+			"label" => "Parent ID",
+			"data_type" => "int",
 		),
 		"name" => array(
 			"label" => "Name",
 			"data_type" => "varchar",
 		),
-		"deleted" => array(
-			"label" => "Deleted",
+		"slug" => array(
+			"label" => "Slug",
+			"data_type" => "varchar",
+		),
+		"description" => array(
+			"label" => "Description",
+			"data_type" => "text",
+		),
+		"image" => array(
+			"label" => "Image",
+			"data_type" => "varchar",
+		),
+		"sort_order" => array(
+			"label" => "Sort Order",
 			"data_type" => "int",
 		),
-		"status" => array(
-			"label" => "Status",
+		"is_active" => array(
+			"label" => "Is Active",
 			"data_type" => "int",
 		),
 		"created_at" => array(
 			"label" => "Created at",
-			"data_type" => "int",
+			"data_type" => "datetime",
 		),
 		"updated_at" => array(
 			"label" => "Updated at",
-			"data_type" => "int",
+			"data_type" => "datetime",
+		),
+		"deleted_at" => array(
+			"label" => "Deleted at",
+			"data_type" => "datetime",
 		),
 	);
 
@@ -54,7 +70,14 @@ class Model_Category extends \Orm\Model
 		'products' => array(
 			'key_from'       => 'id',
 			'model_to'       => 'Model_Product',
-			'key_to'         => 'subcategory_id',
+			'key_to'         => 'category_id',
+			'cascade_save'   => false,
+			'cascade_delete' => false,
+		),
+		'children' => array(
+			'key_from'       => 'id',
+			'model_to'       => 'Model_Category',
+			'key_to'         => 'parent_id',
 			'cascade_save'   => false,
 			'cascade_delete' => false,
 		)
@@ -67,6 +90,13 @@ class Model_Category extends \Orm\Model
 	);
 
 	protected static $_belongs_to = array(
+		'parent' => array(
+			'key_from'       => 'parent_id',
+			'model_to'       => 'Model_Category',
+			'key_to'         => 'id',
+			'cascade_save'   => false,
+			'cascade_delete' => false,
+		),
 	);
 
 	/* Functions */
@@ -75,7 +105,8 @@ class Model_Category extends \Orm\Model
 		$categories_info = array();
 
 		$categories = Model_Category::query()
-		->where('deleted', 0)
+		->where('deleted_at', 'IS', null)
+		->where('is_active', 1)
 		->order_by('name', 'asc')
 		->get();
 
@@ -97,7 +128,8 @@ class Model_Category extends \Orm\Model
 		$category_opts += array('todo' => 'Todo');
 
 		$categories = Model_Category::query()
-		->where('deleted', 0)
+		->where('deleted_at', 'IS', null)
+		->where('is_active', 1)
 		->order_by('name', 'asc')
 		->get();
 

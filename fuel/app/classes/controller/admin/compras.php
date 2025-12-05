@@ -1,294 +1,369 @@
 <?php
 
-/**
- * CONTROLADOR ADMIN_COMPRAS
- *
- * @package  app
- * @extends  Controller_Admin
- */
 class Controller_Admin_Compras extends Controller_Admin
 {
-	/**
-	 * BEFORE
-	 *
-	 * @return Void
-	 */
-	public function before()
-	{
-		# REQUERIDA PARA EL TEMPLATING
-        parent::before();
-
-		# SI EL USUARIO NO TIENE PERMISOS
-		if(!Auth::member(100))
-		{
-			# SE ESTABLECE EL MENSAJE DE ERROR
-			Session::set_flash('error', 'No tienes los permisos para acceder a esta sección.');
-
-			# SE REDIRECCIONA AL USUARIO
-			Response::redirect('admin');
-		}
-	}
-
-
-	public function action_index()
-{
-    // ======================
-    // FILTRO MES / AÑO CON SESIÓN
-    // ======================
-    $mes  = Input::get('mes', Session::get('dashboard_mes', date('m')));
-    $anio = Input::get('anio', Session::get('dashboard_anio', date('Y')));
-
-    // Guardar selección en sesión
-    Session::set('dashboard_mes', $mes);
-    Session::set('dashboard_anio', $anio);
-
-    $inicio = strtotime("{$anio}-{$mes}-01");
-    $fin    = strtotime(date("Y-m-t", $inicio));
-
-    // ======================
-    // PREVENIR WARNINGS
-    // ======================
-    $ordenes_abiertas   = 0;
-    $ultimos_rep_info   = [];
-    $ultimos_cr_info    = [];
-    $ultimas_notas_info = [];
-    $meses = [
-        '01'=>'Enero','02'=>'Febrero','03'=>'Marzo','04'=>'Abril','05'=>'Mayo','06'=>'Junio',
-        '07'=>'Julio','08'=>'Agosto','09'=>'Septiembre','10'=>'Octubre','11'=>'Noviembre','12'=>'Diciembre'
-    ];
-
-    // ======================
-    // KPIs FILTRADOS
-    // ======================
-    $ordenes_sin_factura = Model_Providers_Order::query()
-        ->where('deleted', 0)
-        ->where('status', 1)
-        ->where('created_at', '>=', $inicio)
-        ->where('created_at', '<=', $fin)
-        ->count();
-
-    $ordenes_abiertas = Model_Providers_Order::query()
-        ->where('deleted', 0)
-        ->where('status', 1)
-        ->where('created_at', '>=', $inicio)
-        ->where('created_at', '<=', $fin)
-        ->count();
-
-    $ordenes_concluidas = Model_Providers_Order::query()
-        ->where('deleted', 0)
-        ->where('status', 'IN', [3, 4])
-        ->where('created_at', '>=', $inicio)
-        ->where('created_at', '<=', $fin)
-        ->count();
-
-    $facturas_sin_orden = Model_Providers_Bill::query()
-        ->where('deleted', 0)
-        ->where('order_id', null)
-        ->where('created_at', '>=', $inicio)
-        ->where('created_at', '<=', $fin)
-        ->count();
-
-    $facturas_proceso = Model_Providers_Bill::query()
-        ->where('deleted', 0)
-        ->where('status', 'IN', [1, 2])
-        ->where('created_at', '>=', $inicio)
-        ->where('created_at', '<=', $fin)
-        ->count();
-
-    $facturas_pagadas = Model_Providers_Bill::query()
-        ->where('deleted', 0)
-        ->where('status', 3)
-        ->where('created_at', '>=', $inicio)
-        ->where('created_at', '<=', $fin)
-        ->count();
-
-    $facturas_rechazadas = Model_Providers_Bill::query()
-        ->where('deleted', 0)
-        ->where('status', 4)
-        ->where('created_at', '>=', $inicio)
-        ->where('created_at', '<=', $fin)
-        ->count();
-
-    $pagos_programados = Model_Providers_Bill_Rep::query()
-        ->where('deleted', 0)
-        ->where('status', 'IN', [0, 10])
-        ->where('created_at', '>=', $inicio)
-        ->where('created_at', '<=', $fin)
-        ->count();
-
-    $pagos_realizados = Model_Providers_Bill_Rep::query()
-        ->where('deleted', 0)
-        ->where('status', 2)
-        ->where('created_at', '>=', $inicio)
-        ->where('created_at', '<=', $fin)
-        ->count();
-
-    $notas_credito = Model_Providers_Creditnote::query()
-        ->where('deleted', 0)
-        ->where('created_at', '>=', $inicio)
-        ->where('created_at', '<=', $fin)
-        ->count();
-
-    // Proveedores activos (no tienen deleted)
-    $proveedores_activos = Model_Provider::query()->count();
-
-    // ======================
-    // PORCENTAJES
-    // ======================
-    $porcentaje_ordenes = ($ordenes_concluidas + $ordenes_sin_factura) > 0
-        ? round(($ordenes_concluidas / ($ordenes_concluidas + $ordenes_sin_factura)) * 100, 2)
-        : 0;
-
-    $porcentaje_facturas = ($facturas_pagadas + $facturas_proceso) > 0
-        ? round(($facturas_pagadas / ($facturas_pagadas + $facturas_proceso)) * 100, 2)
-        : 0;
-
-    // ======================
-    // TOP 5 PROVEEDORES DEL MES
-    // ======================
-    $top_proveedores = DB::select(
-            'providers.company_name',
-            [DB::expr('COUNT(providers_bills.id)'), 'facturas'],
-            [DB::expr('SUM(providers_bills.total)'), 'total']
-        )
-        ->from('providers_bills')
-        ->join('providers', 'LEFT')->on('providers.id', '=', 'providers_bills.provider_id')
-        ->where('providers_bills.deleted', '=', 0)
-        ->where('providers_bills.created_at', '>=', $inicio)
-        ->where('providers_bills.created_at', '<=', $fin)
-        ->group_by('providers.company_name')
-        ->order_by(DB::expr('SUM(providers_bills.total)'), 'desc')
-        ->limit(5)
-        ->execute()
-        ->as_array();
-
-    // ======================
-    // LISTAS RÁPIDAS
-    // ======================
-    $ultimas_ordenes = Model_Providers_Order::query()
-        ->related('provider')
-        ->where('deleted', 0)
-        ->order_by('created_at', 'desc')
-        ->limit(5)
-        ->get();
-
-    $ultimas_facturas = Model_Providers_Bill::query()
-        ->related('provider')
-        ->where('deleted', 0)
-        ->order_by('created_at', 'desc')
-        ->limit(5)
-        ->get();
-
-    $ultimos_pagos = Model_Providers_Bill_Rep::query()
-        ->where('deleted', 0)
-        ->order_by('created_at', 'desc')
-        ->limit(5)
-        ->get();
-
-    $ultimos_contrarecibos = Model_Providers_Receipt::query()
-        ->where('deleted', 0)
-        ->order_by('created_at', 'desc')
-        ->limit(5)
-        ->get();
-
-    $ultimas_notas = Model_Providers_Creditnote::query()
-        ->where('deleted', 0)
-        ->order_by('created_at', 'desc')
-        ->limit(5)
-        ->get();
-
-    // ======================
-    // PROCESAR INFO PARA VISTA
-    // ======================
-    foreach ($ultimos_pagos as $r) {
-        $ultimos_rep_info[] = [
-            'code'  => $r->uuid,
-            'fecha' => $r->payment_date ? date('d/m/Y', strtotime($r->payment_date)) : '-',
-        ];
-    }
-
-    foreach ($ultimos_contrarecibos as $cr) {
-        $ultimos_cr_info[] = [
-            'code'  => $cr->receipt_number ?? $cr->code_receipt ?? '---',
-            'fecha' => $cr->receipt_date ? date('d/m/Y', strtotime($cr->receipt_date)) : date('d/m/Y', $cr->created_at),
-        ];
-    }
-
-    foreach ($ultimas_notas as $n) {
-        $ultimas_notas_info[] = [
-            'code'  => $n->uuid,
-            'fecha' => date('d/m/Y', $n->created_at),
-        ];
-    }
-
-    // ======================
-    // PASAR DATOS A LA VISTA
-    // ======================
-    $view = View::forge('admin/compras/index');
-
-    // Filtros seleccionados y meses
-    $view->set('mes', $mes, false);
-    $view->set('anio', $anio, false);
-    $view->set('meses', $meses, false);
-
-    // KPIs
-    $view->set('ordenes_sin_factura', (int)$ordenes_sin_factura, false);
-    $view->set('facturas_sin_orden', (int)$facturas_sin_orden, false);
-    $view->set('ordenes_abiertas', (int)$ordenes_abiertas, false);
-    $view->set('facturas_proceso', (int)$facturas_proceso, false);
-    $view->set('facturas_rechazadas', (int)$facturas_rechazadas, false);
-    $view->set('notas_credito', (int)$notas_credito, false);
-    $view->set('pagos_programados', (int)$pagos_programados, false);
-    $view->set('proveedores_activos', (int)$proveedores_activos, false);
-
-    // Concluidos
-    $view->set('ordenes_concluidas', (int)$ordenes_concluidas, false);
-    $view->set('facturas_pagadas', (int)$facturas_pagadas, false);
-    $view->set('pagos_realizados', (int)$pagos_realizados, false);
-    $view->set('porcentaje_ordenes', (float)$porcentaje_ordenes, false);
-    $view->set('porcentaje_facturas', (float)$porcentaje_facturas, false);
-
-    // Listas rápidas
-    $view->set('ultimas_ordenes', $ultimas_ordenes, false);
-    $view->set('ultimas_facturas', $ultimas_facturas, false);
-    $view->set('ultimos_pagos', $ultimos_rep_info, false);
-    $view->set('ultimos_contrarecibos', $ultimos_cr_info, false);
-    $view->set('ultimos_rep', $ultimos_rep_info, false);
-    $view->set('ultimas_notas', $ultimas_notas_info, false);
-    $view->set('top_proveedores', $top_proveedores, false);
-
-    // Charts JSON
-    $dashboard_data = [
-        'ordenes_sin_factura' => $ordenes_sin_factura,
-        'facturas_sin_orden'  => $facturas_sin_orden,
-        'ordenes_abiertas'    => $ordenes_abiertas,
-        'facturas_proceso'    => $facturas_proceso,
-        'facturas_rechazadas' => $facturas_rechazadas,
-        'notas_credito'       => $notas_credito,
-        'pagos_programados'   => $pagos_programados,
-        'proveedores_activos' => $proveedores_activos,
-    ];
-
-    $view->set_global('dashboard_data_json', json_encode($dashboard_data));
-
-    $this->template->title   = 'Dashboard de Compras';
-    $this->template->content = $view;
-}
-
-
-
-
-    /**
-     * Convierte resultados ORM a array simple
-     */
-    private function to_array($items)
+    public function action_index()
     {
-        $out = [];
-        foreach ($items as $item) {
-            $out[] = $item->to_array();
+        // Filtros
+        $status = Input::get('status', null);
+        $provider_id = Input::get('provider_id', null);
+        $search = Input::get('search', '');
+        
+        // Query base
+        $query = Model_Purchase::query()
+            ->where('deleted_at', null)
+            ->related('provider')
+            ->related('purchase_order')
+            ->related('creator');
+        
+        // Aplicar filtros
+        if ($status) {
+            $query->where('status', $status);
         }
-        return $out;
-    }	
-
-
+        
+        if ($provider_id) {
+            $query->where('provider_id', $provider_id);
+        }
+        
+        // Búsqueda
+        if (!empty($search)) {
+            $query->where_open()
+                ->where('code', 'LIKE', "%{$search}%")
+                ->or_where('invoice_number', 'LIKE', "%{$search}%")
+                ->or_where('notes', 'LIKE', "%{$search}%")
+                ->or_where('provider.company_name', 'LIKE', "%{$search}%")
+                ->where_close();
+        }
+        
+        // Ordenar y paginar
+        $query->order_by('invoice_date', 'DESC');
+        
+        $config = array(
+            'pagination_url' => Uri::create('admin/compras/index'),
+            'total_items' => $query->count(),
+            'per_page' => 20,
+            'uri_segment' => 3,
+        );
+        
+        $pagination = Pagination::forge('purchases_pagination', $config);
+        $purchases = $query->limit($pagination->per_page)->offset($pagination->offset)->get();
+        
+        // Estadísticas
+        $stats = array(
+            'total' => Model_Purchase::query()->where('deleted_at', null)->count(),
+            'pending' => Model_Purchase::query()->where('deleted_at', null)->where('status', 'pending')->count(),
+            'paid' => Model_Purchase::query()->where('deleted_at', null)->where('status', 'paid')->count(),
+            'overdue' => Model_Purchase::query()->where('deleted_at', null)->where('status', 'overdue')->count(),
+            'partial' => Model_Purchase::query()->where('deleted_at', null)->where('status', 'partial')->count(),
+        );
+        
+        // Cargar proveedores para filtro
+        $providers = Model_Provider::query()
+            ->where('deleted_at', null)
+            ->where('is_active', 1)
+            ->order_by('company_name', 'ASC')
+            ->get();
+        
+        $this->template->title = 'Facturas de Compra';
+        $this->template->content = View::forge('admin/compras/index', array(
+            'purchases' => $purchases,
+            'pagination' => $pagination->render(),
+            'pagination_info' => array(
+                'offset' => $pagination->offset,
+                'per_page' => $pagination->per_page,
+                'total_items' => $pagination->total_items,
+                'total_pages' => $pagination->total_pages,
+            ),
+            'stats' => $stats,
+            'providers' => $providers,
+            'current_status' => $status,
+            'current_provider' => $provider_id,
+            'search' => $search,
+        ));
+    }
+    
+    public function action_create()
+    {
+        if (Input::method() == 'POST') {
+            $val = $this->_validate_purchase();
+            
+            if ($val->run()) {
+                try {
+                    // Manejar archivos subidos
+                    $xml_file = $this->_upload_file('xml_file', 'xml');
+                    $pdf_file = $this->_upload_file('pdf_file', 'pdf');
+                    
+                    $purchase = Model_Purchase::forge(array(
+                        'code' => Model_Purchase::generate_code(),
+                        'purchase_order_id' => Input::post('purchase_order_id') ?: null,
+                        'provider_id' => Input::post('provider_id'),
+                        'invoice_number' => Input::post('invoice_number'),
+                        'invoice_date' => Input::post('invoice_date'),
+                        'due_date' => Input::post('due_date') ?: null,
+                        'payment_date' => Input::post('payment_date') ?: null,
+                        'status' => Input::post('status', 'pending'),
+                        'payment_method' => Input::post('payment_method'),
+                        'subtotal' => Input::post('subtotal', 0),
+                        'tax' => Input::post('tax', 0),
+                        'total' => Input::post('total', 0),
+                        'paid_amount' => Input::post('paid_amount', 0),
+                        'notes' => Input::post('notes'),
+                        'xml_file' => $xml_file,
+                        'pdf_file' => $pdf_file,
+                        'created_by' => Auth::get_user_id()[1],
+                        'created_at' => date('Y-m-d H:i:s'),
+                    ));
+                    
+                    if ($purchase->save()) {
+                        $purchase->calculate_balance();
+                        
+                        Session::set_flash('success', 'Factura de compra creada exitosamente.');
+                        Response::redirect('admin/compras');
+                    } else {
+                        Session::set_flash('error', 'No se pudo guardar la factura.');
+                    }
+                } catch (Exception $e) {
+                    Session::set_flash('error', 'Error: ' . $e->getMessage());
+                }
+            } else {
+                Session::set_flash('error', 'Por favor corrija los errores.');
+            }
+        }
+        
+        // Cargar proveedores y órdenes de compra
+        $providers = Model_Provider::query()
+            ->where('deleted_at', null)
+            ->where('is_active', 1)
+            ->order_by('company_name', 'ASC')
+            ->get();
+        
+        $purchase_orders = Model_Purchaseorder::query()
+            ->where('deleted_at', null)
+            ->where('status', 'approved')
+            ->related('provider')
+            ->order_by('order_date', 'DESC')
+            ->get();
+        
+        $this->template->title = 'Nueva Factura de Compra';
+        $this->template->content = View::forge('admin/compras/form', array(
+            'purchase' => null,
+            'providers' => $providers,
+            'purchase_orders' => $purchase_orders,
+            'is_edit' => false,
+        ));
+    }
+    
+    public function action_edit($id = null)
+    {
+        $purchase = Model_Purchase::query()
+            ->where('id', $id)
+            ->where('deleted_at', null)
+            ->get_one();
+        
+        if (!$purchase) {
+            Session::set_flash('error', 'Factura no encontrada.');
+            Response::redirect('admin/compras');
+        }
+        
+        if (!$purchase->can_edit()) {
+            Session::set_flash('error', 'Esta factura no puede ser editada.');
+            Response::redirect('admin/compras/view/' . $id);
+        }
+        
+        if (Input::method() == 'POST') {
+            $val = $this->_validate_purchase();
+            
+            if ($val->run()) {
+                try {
+                    // Manejar archivos subidos
+                    $xml_file = $this->_upload_file('xml_file', 'xml');
+                    $pdf_file = $this->_upload_file('pdf_file', 'pdf');
+                    
+                    $purchase->purchase_order_id = Input::post('purchase_order_id') ?: null;
+                    $purchase->provider_id = Input::post('provider_id');
+                    $purchase->invoice_number = Input::post('invoice_number');
+                    $purchase->invoice_date = Input::post('invoice_date');
+                    $purchase->due_date = Input::post('due_date') ?: null;
+                    $purchase->payment_date = Input::post('payment_date') ?: null;
+                    $purchase->status = Input::post('status');
+                    $purchase->payment_method = Input::post('payment_method');
+                    $purchase->subtotal = Input::post('subtotal', 0);
+                    $purchase->tax = Input::post('tax', 0);
+                    $purchase->total = Input::post('total', 0);
+                    $purchase->paid_amount = Input::post('paid_amount', 0);
+                    $purchase->notes = Input::post('notes');
+                    $purchase->updated_at = date('Y-m-d H:i:s');
+                    
+                    if ($xml_file) $purchase->xml_file = $xml_file;
+                    if ($pdf_file) $purchase->pdf_file = $pdf_file;
+                    
+                    if ($purchase->save()) {
+                        $purchase->calculate_balance();
+                        
+                        Session::set_flash('success', 'Factura actualizada exitosamente.');
+                        Response::redirect('admin/compras');
+                    } else {
+                        Session::set_flash('error', 'No se pudo actualizar la factura.');
+                    }
+                } catch (Exception $e) {
+                    Session::set_flash('error', 'Error: ' . $e->getMessage());
+                }
+            } else {
+                Session::set_flash('error', 'Por favor corrija los errores.');
+            }
+        }
+        
+        // Cargar proveedores y órdenes de compra
+        $providers = Model_Provider::query()
+            ->where('deleted_at', null)
+            ->where('is_active', 1)
+            ->order_by('company_name', 'ASC')
+            ->get();
+        
+        $purchase_orders = Model_Purchaseorder::query()
+            ->where('deleted_at', null)
+            ->where('status', 'approved')
+            ->related('provider')
+            ->order_by('order_date', 'DESC')
+            ->get();
+        
+        $this->template->title = 'Editar Factura de Compra';
+        $this->template->content = View::forge('admin/compras/form', array(
+            'purchase' => $purchase,
+            'providers' => $providers,
+            'purchase_orders' => $purchase_orders,
+            'is_edit' => true,
+        ));
+    }
+    
+    public function action_view($id = null)
+    {
+        $purchase = Model_Purchase::query()
+            ->where('id', $id)
+            ->where('deleted_at', null)
+            ->related('provider')
+            ->related('purchase_order')
+            ->related('creator')
+            ->get_one();
+        
+        if (!$purchase) {
+            Session::set_flash('error', 'Factura no encontrada.');
+            Response::redirect('admin/compras');
+        }
+        
+        $this->template->title = 'Ver Factura de Compra';
+        $this->template->content = View::forge('admin/compras/view', array(
+            'purchase' => $purchase,
+        ));
+    }
+    
+    public function action_delete($id = null)
+    {
+        $purchase = Model_Purchase::find($id);
+        
+        if (!$purchase || $purchase->deleted_at) {
+            Session::set_flash('error', 'Factura no encontrada.');
+            Response::redirect('admin/compras');
+        }
+        
+        if (!$purchase->can_delete()) {
+            Session::set_flash('error', 'Esta factura no puede ser eliminada porque ya tiene pagos registrados.');
+            Response::redirect('admin/compras');
+        }
+        
+        $purchase->deleted_at = date('Y-m-d H:i:s');
+        
+        if ($purchase->save()) {
+            Session::set_flash('success', 'Factura eliminada exitosamente.');
+        } else {
+            Session::set_flash('error', 'No se pudo eliminar la factura.');
+        }
+        
+        Response::redirect('admin/compras');
+    }
+    
+    public function action_mark_paid($id = null)
+    {
+        $purchase = Model_Purchase::find($id);
+        
+        if (!$purchase || $purchase->deleted_at) {
+            Session::set_flash('error', 'Factura no encontrada.');
+            Response::redirect('admin/compras');
+        }
+        
+        $payment_date = Input::post('payment_date', date('Y-m-d'));
+        $payment_method = Input::post('payment_method', 'Efectivo');
+        
+        if ($purchase->mark_as_paid($payment_date, $payment_method)) {
+            Session::set_flash('success', 'Factura marcada como pagada.');
+        } else {
+            Session::set_flash('error', 'No se pudo actualizar la factura.');
+        }
+        
+        Response::redirect('admin/compras/view/' . $id);
+    }
+    
+    public function action_add_payment($id = null)
+    {
+        $purchase = Model_Purchase::find($id);
+        
+        if (!$purchase || $purchase->deleted_at) {
+            Session::set_flash('error', 'Factura no encontrada.');
+            Response::redirect('admin/compras');
+        }
+        
+        $amount = Input::post('amount', 0);
+        $payment_date = Input::post('payment_date', date('Y-m-d'));
+        $payment_method = Input::post('payment_method');
+        
+        if ($amount <= 0) {
+            Session::set_flash('error', 'El monto debe ser mayor a cero.');
+            Response::redirect('admin/compras/view/' . $id);
+        }
+        
+        if ($purchase->add_payment($amount, $payment_date, $payment_method)) {
+            Session::set_flash('success', 'Pago registrado exitosamente.');
+        } else {
+            Session::set_flash('error', 'No se pudo registrar el pago.');
+        }
+        
+        Response::redirect('admin/compras/view/' . $id);
+    }
+    
+    private function _validate_purchase()
+    {
+        $val = Validation::forge('purchase');
+        
+        $val->add_field('provider_id', 'Proveedor', 'required|valid_string[numeric]');
+        $val->add_field('invoice_number', 'Número de Factura', 'required|max_length[100]');
+        $val->add_field('invoice_date', 'Fecha de Factura', 'required|valid_string[alpha,numeric,dashes]');
+        $val->add_field('subtotal', 'Subtotal', 'required|valid_string[numeric,dots]');
+        $val->add_field('tax', 'IVA', 'required|valid_string[numeric,dots]');
+        $val->add_field('total', 'Total', 'required|valid_string[numeric,dots]');
+        
+        return $val;
+    }
+    
+    private function _upload_file($field_name, $type = 'pdf')
+    {
+        if (empty($_FILES[$field_name]['name'])) {
+            return null;
+        }
+        
+        $config = array(
+            'path' => DOCROOT . 'uploads/compras/',
+            'randomize' => true,
+            'ext_whitelist' => $type === 'xml' ? array('xml') : array('pdf'),
+        );
+        
+        Upload::process($config);
+        
+        if (Upload::is_valid()) {
+            Upload::save();
+            $file = Upload::get_files(0);
+            return 'uploads/compras/' . $file['saved_as'];
+        }
+        
+        return null;
+    }
 }

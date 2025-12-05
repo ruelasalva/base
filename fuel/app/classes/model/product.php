@@ -7,129 +7,145 @@ class Model_Product extends \Orm\Model
 			"label" => "Id",
 			"data_type" => "int",
 		),
-		"category_id" => array(
-			"label" => "Category id",
+		"tenant_id" => array(
+			"label" => "Tenant ID",
 			"data_type" => "int",
 		),
-		"subcategory_id" => array(
-			"label" => "Subcategory id",
-			"data_type" => "int",
+		"sku" => array(
+			"label" => "SKU",
+			"data_type" => "varchar",
 		),
-		"brand_id" => array(
-			"label" => "Brand id",
-			"data_type" => "int",
+		"barcode" => array(
+			"label" => "Barcode",
+			"data_type" => "varchar",
 		),
-		"slug" => array(
-			"label" => "Slug",
+		"codigo_venta" => array(
+			"label" => "Codigo Venta",
+			"data_type" => "varchar",
+		),
+		"codigo_compra" => array(
+			"label" => "Codigo Compra",
+			"data_type" => "varchar",
+		),
+		"codigo_externo" => array(
+			"label" => "Codigo Externo",
 			"data_type" => "varchar",
 		),
 		"name" => array(
 			"label" => "Name",
 			"data_type" => "varchar",
 		),
-		"name_order" => array(
-			"label" => "Name Order",
+		"slug" => array(
+			"label" => "Slug",
 			"data_type" => "varchar",
 		),
-		"code" => array(
-			"label" => "Code",
-			"data_type" => "varchar",
-		),
-		"code_order" => array(
-			"label" => "Code_order",
-			"data_type" => "varchar",
-		),
-		"sku" => array(
-			"label" => "Sku",
-			"data_type" => "varchar",
-		),
-		"factor" => array(
-			"label" => "Facrtor",
-			"data_type" => "int",
-		),
-		"purchase_unit_id" => array(
-			"label" => "Unidad compra",
-			"data_type" => "int",
-		),
-		"sale_unit_id" => array(
-			"label" => "Unidad venta",
-			"data_type" => "int",
-		),
-		"claveprodserv" => array(
-			"label" => "Clave Sat",
-			"data_type" => "int",
-		),
-		"claveunidad" => array(
-			"label" => "Clave Sat",
-			"data_type" => "varchar",
-		),
-		"codebar" => array(
-			"label" => "CodeBar",
-			"data_type" => "int",
-		),
-		"image" => array(
-			"label" => "Image",
+		"short_description" => array(
+			"label" => "Short Description",
 			"data_type" => "varchar",
 		),
 		"description" => array(
 			"label" => "Description",
-			"data_type" => "mediumtext",
+			"data_type" => "text",
 		),
-		"original_price" => array(
-			"label" => "Original price",
-			"data_type" => "float",
+		"tags" => array(
+			"label" => "Tags",
+			"data_type" => "text",
 		),
-		"available" => array(
-			"label" => "Available",
+		"category_id" => array(
+			"label" => "Category ID",
 			"data_type" => "int",
 		),
-		"minimum_sale" => array(
-			"label" => "Minimum Sale",
+		"provider_id" => array(
+			"label" => "Provider ID",
 			"data_type" => "int",
 		),
-		"minimum_order" => array(
-			"label" => "Minimum Order",
-			"data_type" => "int",
-		),
-		"weight" => array(
-			"label" => "Peso",
-			"data_type" => "float",
-		),
-		"price_per" => array(
-			"label" => "Price per",
+		"brand" => array(
+			"label" => "Brand",
 			"data_type" => "varchar",
 		),
-		"status" => array(
-			"label" => "Status",
+		"model" => array(
+			"label" => "Model",
+			"data_type" => "varchar",
+		),
+		"unit" => array(
+			"label" => "Unit",
+			"data_type" => "varchar",
+		),
+		"cost_price" => array(
+			"label" => "Cost Price",
+			"data_type" => "decimal",
+		),
+		"sale_price" => array(
+			"label" => "Sale Price",
+			"data_type" => "decimal",
+		),
+		"wholesale_price" => array(
+			"label" => "Wholesale Price",
+			"data_type" => "decimal",
+		),
+		"min_price" => array(
+			"label" => "Min Price",
+			"data_type" => "decimal",
+		),
+		"tax_rate" => array(
+			"label" => "Tax Rate",
+			"data_type" => "decimal",
+		),
+		"weight" => array(
+			"label" => "Weight",
+			"data_type" => "decimal",
+		),
+		"length" => array(
+			"label" => "Length",
+			"data_type" => "decimal",
+		),
+		"width" => array(
+			"label" => "Width",
+			"data_type" => "decimal",
+		),
+		"height" => array(
+			"label" => "Height",
+			"data_type" => "decimal",
+		),
+		"min_stock" => array(
+			"label" => "Min Stock",
 			"data_type" => "int",
 		),
-		"status_index" => array(
-			"label" => "Status index",
+		"max_stock" => array(
+			"label" => "Max Stock",
 			"data_type" => "int",
 		),
-		"soon" => array(
-			"label" => "Soon",
+		"stock_quantity" => array(
+			"label" => "Stock Quantity",
 			"data_type" => "int",
 		),
-		"newproduct" => array(
-			"label" => "New Product",
-			"data_type" => "int",
+		"is_featured" => array(
+			"label" => "Is Featured",
+			"data_type" => "tinyint",
 		),
-		"temporarily_sold_out" => array(
-			"label" => "Agotado temporalmente",
-			"data_type" => "int",
+		"is_active" => array(
+			"label" => "Is Active",
+			"data_type" => "tinyint",
 		),
-		"deleted" => array(
-			"label" => "Deteled",
+		"is_available" => array(
+			"label" => "Is Available",
+			"data_type" => "tinyint",
+		),
+		"sort_order" => array(
+			"label" => "Sort Order",
 			"data_type" => "int",
 		),
 		"created_at" => array(
 			"label" => "Created at",
-			"data_type" => "int",
+			"data_type" => "datetime",
 		),
 		"updated_at" => array(
 			"label" => "Updated at",
-			"data_type" => "int",
+			"data_type" => "datetime",
+		),
+		"deleted_at" => array(
+			"label" => "Deleted at",
+			"data_type" => "datetime",
 		),
     );
 
@@ -138,9 +154,9 @@ class Model_Product extends \Orm\Model
 	public static function get_highlighted()
 	{
 		$response = Model_Product::query()
-		->where('status', 1)
-		->where('status_index', 1)
-        ->where('deleted', 0)
+		->where('is_active', 1)
+		->where('is_featured', 1)
+        ->where('deleted_at', 'IS', null)
         ->order_by('id', 'desc')
 		->limit(8)
 		->get();
@@ -151,9 +167,9 @@ class Model_Product extends \Orm\Model
 	public static function get_news()
 	{
 		$response = Model_Product::query()
-		->where('status', 1)
-        ->where('deleted', 0)
-        ->where('newproduct', 1)
+		->where('is_active', 1)
+        ->where('deleted_at', 'IS', null)
+        ->where('is_featured', 1)
         ->order_by('id', 'desc')
 		->limit(12)
 		->get();
@@ -173,9 +189,9 @@ class Model_Product extends \Orm\Model
             }
         }
 
-        $response = $response->where('status', 1)
-        ->where('available', '>', 0)
-		->where('deleted', 0)
+        $response = $response->where('is_active', 1)
+        ->where('stock_quantity', '>', 0)
+		->where('deleted_at', 'IS', null)
 		->get_one();
 
 		if(empty($response))
@@ -190,8 +206,8 @@ class Model_Product extends \Orm\Model
 	            }
 	        }
 
-	        $response = $response->where('status', 1)
-			->where('deleted', 0)
+	        $response = $response->where('is_active', 1)
+			->where('deleted_at', 'IS', null)
 			->get_one();
 		}
 
@@ -212,9 +228,9 @@ class Model_Product extends \Orm\Model
             }
         }
 
-        $response = $response->where('status', 1)
+        $response = $response->where('is_active', 1)
         ->where('available', '>=', 0)
-		->where('deleted', 0)
+		->where('deleted_at', 'IS', null)
 		->get_one();
 
 		return $response;
@@ -236,8 +252,8 @@ class Model_Product extends \Orm\Model
         }
 
         $products = $products->where('category_id', '!=', 0)
-        ->where('status', 1)
-		->where('deleted', 0);
+        ->where('is_active', 1)
+		->where('deleted_at', 'IS', null);
 
 		# SI SE REQUIERE PAGINACION
 		if(isset($pagination))
@@ -283,8 +299,8 @@ class Model_Product extends \Orm\Model
 		$related_products = Model_Product::query()
 		->where('id', '!=', $id_product)
 		->where('category_id', $id_category)
-        ->where('status', 1)
-		->where('deleted', 0)
+        ->where('is_active', 1)
+		->where('deleted_at', 'IS', null)
 		->order_by(DB::expr('RAND()'))
 		->limit(4)
 		->get();
@@ -295,35 +311,22 @@ class Model_Product extends \Orm\Model
     public static function do_search($request)
     {
         $response = Model_Product::query()
-        ->where('status', 1)
-        ->where('deleted', 0)
+        ->where('is_active', 1)
+        ->where('deleted_at', 'IS', null)
         ->and_where_open();
 
         if (Arr::get($request, 'search'))
-			{
-				$search = $request['search'];
+		{
+			$search = $request['search'];
 
-				$response = $response
-					->where_open()
-						->where_open()
-							->where('name', 'like', '%'.$search.'%')
-							->or_where('code', 'like', '%'.$search.'%')
-							->or_where('sku', 'like', '%'.$search.'%')
-						->where_close()
-						->and_where('category.deleted', 0)
-						->and_where('brand.deleted', 0)
-						->or_where_open()
-							->related('category')
-							->where('category.name', 'like', '%'.$search.'%')
-							->where('category.deleted', 0)
-							->related('brand')
-							->where('brand.name', 'like', '%'.$search.'%')
-							->where('brand.deleted', 0)
-						->or_where_close()
-					->where_close();
-			}
-
-
+			$response = $response
+				->where_open()
+					->where('name', 'like', '%'.$search.'%')
+					->or_where('sku', 'like', '%'.$search.'%')
+					->or_where('barcode', 'like', '%'.$search.'%')
+					->or_where('brand', 'like', '%'.$search.'%')
+				->where_close();
+		}
         $response = $response->and_where_close()
         ->get();
 
@@ -407,44 +410,14 @@ class Model_Product extends \Orm\Model
 			'cascade_save'   => false,
 			'cascade_delete' => false,
 		),
-		'subcategory' => array(
-			'key_from'       => 'subcategory_id',
-			'model_to'       => 'Model_Subcategory',
+		'provider' => array(
+			'key_from'       => 'provider_id',
+			'model_to'       => 'Model_Provider',
 			'key_to'         => 'id',
 			'cascade_save'   => false,
 			'cascade_delete' => false,
 		),
-		'brand' => array(
-			'key_from'       => 'brand_id',
-			'model_to'       => 'Model_Brand',
-			'key_to'         => 'id',
-			'cascade_save'   => false,
-			'cascade_delete' => false,
-		),
-		'sale_unit' => array(
-			'key_from'       => 'sale_unit_id',
-			'model_to'       => 'Model_Sat_Unit',
-			'key_to'         => 'id',
-			'cascade_save'   => false,
-			'cascade_delete' => false,
-		),
-
-		'purchase_unit' => array(
-			'key_from'       => 'purchase_unit_id',
-			'model_to'       => 'Model_Sat_Unit',
-			'key_to'         => 'id',
-			'cascade_save'   => false,
-			'cascade_delete' => false,
-		),
-
-		'claveunidad_sat' => array(
-			'key_from'       => 'claveunidad',
-			'model_to'       => 'Model_Sat_Unit',
-			'key_to'         => 'code', 
-			'cascade_save'   => false,
-			'cascade_delete' => false,
-		),
-
 	);
 
 }
+
