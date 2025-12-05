@@ -9193,8 +9193,9 @@ public function post_save_generales_provider()
         if ($access_user && md5($access_user->login_hash) == $access_token) {
 
             $provider = Model_Provider::find($provider_id);
-            if ($provider && $provider->user_id) {
-                $user = Model_User::find($provider->user_id);
+            // Usar activated_by en lugar de user_id (campo actualizado)
+            if ($provider && $provider->activated_by) {
+                $user = Model_User::find($provider->activated_by);
 
                 // --- CAMPOS GENERALES ---
                 if ($provider->name !== $name) {

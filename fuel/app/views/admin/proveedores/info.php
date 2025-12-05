@@ -15,6 +15,7 @@
 				</div>
 				<div class="col-lg-6 col-5 text-right">
           <?php echo Html::anchor('admin/compras/ordenes/agregar?provider_id='.$id,'<i class="fas fa-file-invoice"></i> Crear orden de compra',['class' => 'btn btn-sm btn-success']); ?>
+					<?php echo Html::anchor('admin/proveedores/manage_access/'.$id, '<i class="fas fa-key"></i> Gestionar Acceso', ['class' => 'btn btn-sm btn-info']); ?>
 					<?php echo Html::anchor('admin/proveedores/csv/exportar_info/'.$provider_id, 'Exportar CSV', array('class' => 'btn btn-sm btn-neutral')); ?>
 					<?php echo Html::anchor('admin/proveedores/recuperar_contrasena_proveedores/'.$id, '<i class="fas fa-id-card"></i> Recuperacion de contraseña', ['class' => 'btn btn-sm btn-neutral']); ?>
 					<?php echo Html::anchor('admin/proveedores/editar/'.$id, '<i class="fas fa-edit"></i> Editar', ['class' => 'btn btn-sm btn-neutral']); ?>
@@ -204,66 +205,10 @@
 
           <!-- TAB: CONTACTOS -->
           <div class="tab-pane fade" id="panel-contactos-proveedor" role="tabpanel">
-            <div class="card shadow mb-4">
-              <div class="card-body">
-                <button class="btn btn-success btn-sm float-right mb-3 btn-add-contacto-provider" id="" data-provider-id="<?php echo $provider_id; ?>">
-                  <i class="fa fa-plus"></i> Agregar contacto
-                </button>
-                <div class="clearfix"></div>
-                <?php if (!empty($contact)): ?>
-                  <?php $contact = array_values($contact); ?>
-                  <?php foreach ($contact as $index => $c): ?>
-                    <fieldset class="mb-4">
-                      <legend class="heading">
-                        Contacto #<?php echo ($index + 1); ?>
-                        <button class="btn btn-info btn-xs ml-2 btn-edit-contacto-provider" data-id="<?php echo $c->id; ?>" data-provider-id="<?php echo $provider_id; ?>"> 
-                          <i class="fa fa-edit"></i>
-                        </button>
-                      </legend>
-                      <div class="form-row">
-                        <div class="col-md-6 mb-3">
-                          <div class="form-group">
-                            <?php echo Form::label('Identificador', 'idcontact', array('class' => 'form-control-label')); ?>
-                            <span class="form-control"><?php echo $c->idcontact; ?></span>
-                          </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                          <div class="form-group">
-                            <?php echo Form::label('Nombre', 'name', array('class' => 'form-control-label')); ?>
-                            <span class="form-control"><?php echo $c->name; ?></span>
-                          </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                          <div class="form-group">
-                            <?php echo Form::label('Apellido', 'last_name', array('class' => 'form-control-label')); ?>
-                            <span class="form-control"><?php echo $c->last_name; ?></span>
-                          </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                          <div class="form-group">
-                            <?php echo Form::label('Teléfono', 'phone', array('class' => 'form-control-label')); ?>
-                            <span class="form-control"><?php echo $c->phone; ?></span>
-                          </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                          <div class="form-group">
-                            <?php echo Form::label('Correo', 'email', array('class' => 'form-control-label')); ?>
-                            <span class="form-control"><?php echo $c->email; ?></span>
-                          </div>
-                        </div>
-                        <?php if (!empty($c->updated_at)): ?>
-                          <div class="col-md-12 mb-3">
-                            <small class="text-muted">Última modificación: <?php echo date('d/m/Y H:i', $c->updated_at); ?></small>
-                          </div>
-                        <?php endif; ?>
-                      </div>
-                    </fieldset>
-                  <?php endforeach; ?>
-                <?php else: ?>
-                  <div class="alert alert-info">No hay contactos registrados.</div>
-                <?php endif; ?>
-              </div>
-            </div>
+			<?php echo View::forge('admin/proveedores/_contactos_table', array(
+				'contact' => $contact,
+				'provider_id' => $provider_id
+			), false); ?>
           </div>
 
           <!-- TAB: ENTREGAS -->
@@ -767,5 +712,45 @@
   </div>
 </div>
 
+<!-- INCLUIR MODAL DE CREAR USUARIO PARA CONTACTO -->
+<?php echo View::forge('admin/proveedores/_modal_create_contact_user', array(
+	'provider_id' => $provider_id,
+	'all_tenants' => $all_tenants
+), false); ?>
+
+<script>
+$(document).ready(function() {
+	// Eliminar usuario de contacto
+	$(document).on('click', '.btn-delete-contact-user', function() {
+		var contactId = $(this).data('contact-id');
+		var providerId = $(this).data('provider-id');
+		
+		if (!confirm('¿Está seguro de eliminar el usuario de este contacto?\n\nEl contacto perderá acceso al portal pero sus datos permanecerán.')) {
+			return false;
+		}
+
+		$.ajax({
+			url: '<?php echo Uri::create("admin/proveedores/delete_contact_user"); ?>',
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				contact_id: contactId,
+				provider_id: providerId
+			},
+			success: function(response) {
+				if (response.success) {
+					alert(response.message || 'Usuario eliminado correctamente');
+					location.reload();
+				} else {
+					alert(response.error || 'Error al eliminar usuario');
+				}
+			},
+			error: function() {
+				alert('Error de conexión al eliminar usuario');
+			}
+		});
+	});
+});
+</script>
 
 

@@ -12,6 +12,7 @@ class Model_Providers_Contact extends \Orm\Model
 		'cel',
 		'email',
 		'departments',
+		'user_id',
 		'default',
 		'deleted',
 		'created_at',
@@ -43,6 +44,38 @@ class Model_Providers_Contact extends \Orm\Model
 			'model_to' => 'Model_Providers_Delivery',
 			'key_to' => 'id',
 		),
+		'user' => array(
+			'key_from' => 'user_id',
+			'model_to' => 'Model_User',
+			'key_to' => 'id',
+		),
 	);
+
+	/**
+	 * Verificar si el contacto tiene usuario
+	 */
+	public function has_user()
+	{
+		return !empty($this->user_id);
+	}
+
+	/**
+	 * Obtener usuario del contacto
+	 */
+	public function get_user()
+	{
+		if (!$this->has_user()) {
+			return null;
+		}
+		return Model_User::find($this->user_id);
+	}
+
+	/**
+	 * Obtener nombre completo
+	 */
+	public function get_full_name()
+	{
+		return trim($this->name . ' ' . $this->last_name);
+	}
 
 }

@@ -537,4 +537,71 @@ class Helper_SAT
             return [];
         }
     }
+    
+    /**
+     * Catálogo de formas de pago del SAT (c_FormaPago)
+     * Anexo 20 - Catálogos para CFDI 4.0
+     * 
+     * @return array Formas de pago oficiales
+     */
+    public static function get_formas_pago()
+    {
+        return array(
+            '01' => '01 - Efectivo',
+            '02' => '02 - Cheque nominativo',
+            '03' => '03 - Transferencia electrónica de fondos',
+            '04' => '04 - Tarjeta de crédito',
+            '05' => '05 - Monedero electrónico',
+            '06' => '06 - Dinero electrónico',
+            '08' => '08 - Vales de despensa',
+            '12' => '12 - Dación en pago',
+            '13' => '13 - Pago por subrogación',
+            '14' => '14 - Pago por consignación',
+            '15' => '15 - Condonación',
+            '17' => '17 - Compensación',
+            '23' => '23 - Novación',
+            '24' => '24 - Confusión',
+            '25' => '25 - Remisión de deuda',
+            '26' => '26 - Prescripción o caducidad',
+            '27' => '27 - A satisfacción del acreedor',
+            '28' => '28 - Tarjeta de débito',
+            '29' => '29 - Tarjeta de servicios',
+            '30' => '30 - Aplicación de anticipos',
+            '31' => '31 - Intermediario pagos',
+            '99' => '99 - Por definir',
+        );
+    }
+    
+    /**
+     * Obtener descripción de forma de pago por código
+     * 
+     * @param string $codigo Código SAT
+     * @return string Descripción
+     */
+    public static function get_forma_pago_descripcion($codigo)
+    {
+        $formas = self::get_formas_pago();
+        return isset($formas[$codigo]) ? $formas[$codigo] : $codigo . ' - Código no válido';
+    }
+    
+    /**
+     * Mapeo de métodos antiguos del sistema a códigos SAT
+     * Para compatibilidad con registros existentes
+     * 
+     * @param string $old_method Método antiguo del sistema
+     * @return string Código SAT
+     */
+    public static function map_old_payment_to_sat($old_method)
+    {
+        $mapping = array(
+            'transferencia' => '03', // Transferencia electrónica
+            'efectivo'      => '01', // Efectivo
+            'cheque'        => '02', // Cheque nominativo
+            'tarjeta'       => '04', // Tarjeta de crédito
+            'debito'        => '28', // Tarjeta de débito
+            'otro'          => '99', // Por definir
+        );
+        
+        return isset($mapping[$old_method]) ? $mapping[$old_method] : '99';
+    }
 }

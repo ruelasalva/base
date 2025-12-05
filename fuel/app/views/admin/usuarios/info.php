@@ -20,6 +20,7 @@
 					</nav>
 				</div>
 				<div class="col-lg-6 col-5 text-right">
+					<?php echo Html::anchor('admin/usuarios/manage_tenants/'.$id, '<i class="fas fa-building"></i> Gestionar Backends', array('class' => 'btn btn-sm btn-info')); ?>
 					<?php echo Html::anchor('admin/usuarios/editar/'.$id, 'Editar', array('class' => 'btn btn-sm btn-neutral')); ?>
 					<?php echo Html::anchor('admin/usuarios/agregar_facturacion/'.$id, 'Agregar datos de facturación', array('class' => 'btn btn-sm btn-neutral')); ?>
 					<?php echo Html::anchor('admin/usuarios/admin_recuperar_contrasena/'.$id, 'Recuperar Contraseña', array('class' => 'btn btn-sm btn-neutral')); ?>

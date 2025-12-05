@@ -17,7 +17,9 @@
 					</nav>
 				</div>
 				<div class="col-lg-6 col-5 text-right">
-					<?php echo Html::anchor('admin/proveedores/agregar', 'Agregar', array('class' => 'btn btn-sm btn-neutral')); ?>
+					<?php echo Html::anchor('admin/proveedores/pagos', '<i class="fas fa-money-bill-wave"></i> Pagos', array('class' => 'btn btn-sm btn-success mr-2')); ?>
+					<?php echo Html::anchor('admin/proveedores/recepciones', '<i class="fas fa-box-open"></i> Recepciones', array('class' => 'btn btn-sm btn-info mr-2')); ?>
+					<?php echo Html::anchor('admin/proveedores/agregar', '<i class="fas fa-plus"></i> Agregar', array('class' => 'btn btn-sm btn-neutral')); ?>
 				</div>
 			</div>
 		</div>
@@ -96,8 +98,11 @@
 													<i class="fas fa-ellipsis-v"></i>
 												</a>
 												<div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
-													<?php echo Html::anchor('admin/proveedores/info/'.$provider['id'], 'Ver', array('class' => 'dropdown-item')); ?>
-													<?php echo Html::anchor('admin/proveedores/editar/'.$provider['id'], 'Editar', array('class' => 'dropdown-item')); ?>
+													<?php echo Html::anchor('admin/proveedores/info/'.$provider['id'], '<i class="fas fa-eye"></i> Ver', array('class' => 'dropdown-item')); ?>
+													<?php echo Html::anchor('admin/proveedores/editar/'.$provider['id'], '<i class="fas fa-edit"></i> Editar', array('class' => 'dropdown-item')); ?>
+													<div class="dropdown-divider"></div>
+													<?php echo Html::anchor('admin/proveedores/pagos/create/'.$provider['id'], '<i class="fas fa-money-bill"></i> Crear Pago', array('class' => 'dropdown-item')); ?>
+													<?php echo Html::anchor('admin/proveedores/recepciones/create', '<i class="fas fa-truck-loading"></i> Nueva Recepción', array('class' => 'dropdown-item')); ?>
 												</div>
 											</div>
 										</td>

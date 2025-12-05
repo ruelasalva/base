@@ -14,6 +14,9 @@
 			</div>
 			<div>
 				<?php if ($can_edit): ?>
+				<a href="<?php echo Uri::create('admin/users/manage_tenants/' . $user['id']); ?>" class="btn btn-info">
+					<i class="fas fa-building me-2"></i>Gestionar Backends
+				</a>
 				<a href="<?php echo Uri::create('admin/users/edit/' . $user['id']); ?>" class="btn btn-warning">
 					<i class="fas fa-edit me-2"></i>Editar
 				</a>

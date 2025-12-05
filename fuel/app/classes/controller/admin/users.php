@@ -432,5 +432,118 @@ class Controller_Admin_Users extends Controller_Admin
 			]), 400, ['Content-Type' => 'application/json']);
 		}
 	}
+
+	/**
+	 * GESTIONAR TENANTS (BACKENDS) DE UN USUARIO
+	 */
+	public function action_manage_tenants($user_id = null)
+	{
+		if (!$user_id) {
+			Session::set_flash('error', 'ID de usuario no válido');
+			Response::redirect('admin/users');
+		}
+
+		// Verificar permisos
+		if (!Helper_Permission::can('users', 'edit'))
+		{
+			Session::set_flash('error', 'No tienes permisos para gestionar usuarios');
+			Response::redirect('admin/users');
+		}
+
+		$user = Model_User::find($user_id);
+		if (!$user) {
+			Session::set_flash('error', 'Usuario no encontrado');
+			Response::redirect('admin/users');
+		}
+
+		$data = array();
+		$data['user'] = $user;
+		$data['user_tenants'] = Helper_User_Tenant::get_user_tenants($user_id);
+		$data['all_tenants'] = Helper_User_Tenant::get_all_tenants();
+
+		$this->template->title = 'Gestionar Backends - ' . $user->username;
+		$this->template->content = View::forge('admin/users/manage_tenants', $data);
+	}
+
+	/**
+	 * ACTUALIZAR TENANTS DE UN USUARIO
+	 */
+	public function action_update_user_tenants()
+	{
+		if (Input::method() !== 'POST') {
+			Response::redirect('admin/users');
+		}
+
+		// Verificar permisos
+		if (!Helper_Permission::can('users', 'edit'))
+		{
+			Session::set_flash('error', 'No tienes permisos');
+			Response::redirect('admin/users');
+		}
+
+		$user_id = Input::post('user_id');
+
+		try {
+			$selected_tenants = Input::post('tenants', array());
+			$default_tenant = Input::post('default_tenant');
+
+			// Desactivar todos los actuales
+			DB::update('user_tenants')
+				->set(array('is_active' => 0, 'updated_at' => time()))
+				->where('user_id', $user_id)
+				->execute();
+
+			// Asignar los seleccionados
+			foreach ($selected_tenants as $tenant_id) {
+				$is_default = ($tenant_id == $default_tenant);
+				Helper_User_Tenant::assign($user_id, $tenant_id, $is_default);
+			}
+
+			Session::set_flash('success', 'Acceso a backends actualizado correctamente');
+			Response::redirect('admin/users/manage_tenants/' . $user_id);
+
+		} catch (Exception $e) {
+			Log::error('Error actualizando tenants: ' . $e->getMessage());
+			Session::set_flash('error', 'Error al actualizar acceso');
+			Response::redirect('admin/users/manage_tenants/' . $user_id);
+		}
+	}
+
+	/**
+	 * ASIGNAR TODOS LOS TENANTS A UN USUARIO (SUPER ADMIN)
+	 */
+	public function action_assign_all_tenants()
+	{
+		if (Input::method() !== 'POST') {
+			echo json_encode(array('error' => 'Método no permitido'));
+			exit;
+		}
+
+		// Verificar permisos
+		if (!Helper_Permission::can('users', 'edit'))
+		{
+			echo json_encode(array('error' => 'No tienes permisos'));
+			exit;
+		}
+
+		$user_id = Input::post('user_id');
+		$default_tenant = Input::post('default_tenant', 1);
+
+		try {
+			$count = Helper_User_Tenant::assign_all_tenants($user_id, $default_tenant);
+
+			echo json_encode(array(
+				'success' => true,
+				'message' => 'Usuario asignado a ' . $count . ' backends',
+				'count' => $count
+			));
+
+		} catch (Exception $e) {
+			Log::error('Error asignando todos los tenants: ' . $e->getMessage());
+			echo json_encode(array('error' => 'Error al asignar backends'));
+		}
+
+		exit;
+	}
 }
 
