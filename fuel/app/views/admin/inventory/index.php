@@ -3,23 +3,36 @@
 	<div class="col-md-12">
 		<div class="d-flex justify-content-between align-items-center">
 			<div>
-				<h2 class="mb-1"><i class="fas fa-boxes me-2"></i>Inventario</h2>
-				<p class="text-muted mb-0">Gestión de productos y stock</p>
+				<h2 class="mb-1"><i class="fas fa-boxes me-2"></i>Gestión de Inventario</h2>
+				<p class="text-muted mb-0">Control de stock y movimientos de inventario</p>
 			</div>
-			<?php if ($can_create): ?>
 			<div>
-				<a href="<?php echo Uri::create('admin/inventory/new'); ?>" class="btn btn-primary">
-					<i class="fas fa-plus me-2"></i>Nuevo Producto
+				<a href="<?php echo Uri::create('admin/productos/create'); ?>" class="btn btn-outline-primary">
+					<i class="fas fa-plus"></i> Agregar Producto
+				</a>
+				<a href="<?php echo Uri::create('admin/inventario/create/entry'); ?>" class="btn btn-success">
+					<i class="fas fa-arrow-down"></i> Entrada
+				</a>
+				<a href="<?php echo Uri::create('admin/inventario/create/exit'); ?>" class="btn btn-danger">
+					<i class="fas fa-arrow-up"></i> Salida
+				</a>
+				<a href="<?php echo Uri::create('admin/inventario/create/transfer'); ?>" class="btn btn-info">
+					<i class="fas fa-exchange-alt"></i> Traspaso
+				</a>
+				<a href="<?php echo Uri::create('admin/inventario/create/adjustment'); ?>" class="btn btn-warning">
+					<i class="fas fa-adjust"></i> Ajuste
+				</a>
+				<a href="<?php echo Uri::create('admin/inventario'); ?>" class="btn btn-secondary">
+					<i class="fas fa-list"></i> Ver Movimientos
 				</a>
 			</div>
-			<?php endif; ?>
 		</div>
 	</div>
 </div>
 
 <!-- STATS -->
 <div class="row mb-4">
-	<div class="col-md-4">
+	<div class="col-md-3">
 		<div class="card">
 			<div class="card-body">
 				<div class="d-flex justify-content-between">
@@ -34,7 +47,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-md-4">
+	<div class="col-md-3">
 		<div class="card">
 			<div class="card-body">
 				<div class="d-flex justify-content-between">
@@ -49,7 +62,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-md-4">
+	<div class="col-md-3">
 		<div class="card border-warning">
 			<div class="card-body">
 				<div class="d-flex justify-content-between">
@@ -59,6 +72,21 @@
 					</div>
 					<div class="text-warning">
 						<i class="fas fa-exclamation-triangle fa-2x"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-3">
+		<div class="card border-danger">
+			<div class="card-body">
+				<div class="d-flex justify-content-between">
+					<div>
+						<h6 class="text-muted mb-2">Sin Stock</h6>
+						<h3 class="mb-0 text-danger"><?php echo $stats['out_of_stock']; ?></h3>
+					</div>
+					<div class="text-danger">
+						<i class="fas fa-times-circle fa-2x"></i>
 					</div>
 				</div>
 			</div>

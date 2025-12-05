@@ -135,7 +135,12 @@ class Controller_Admin_Productos extends Controller_Admin
 					Session::set_flash('error', 'Error al crear el producto: ' . $e->getMessage());
 				}
 			} else {
-				Session::set_flash('error', 'Por favor corrige los errores en el formulario.');
+				$errors = $val->error();
+				$error_messages = [];
+				foreach ($errors as $field => $error) {
+					$error_messages[] = $error->get_message();
+				}
+				Session::set_flash('error', 'Errores en el formulario:<br>' . implode('<br>', $error_messages));
 			}
 		}
 
@@ -143,8 +148,7 @@ class Controller_Admin_Productos extends Controller_Admin
 		$this->template->content = View::forge('admin/productos/form', [
 			'product' => null,
 			'categories' => $this->_get_categories(),
-			'providers' => $this->_get_providers(),
-			'validation' => isset($val) ? $val : null
+			'providers' => $this->_get_providers()
 		]);
 	}
 
@@ -201,7 +205,12 @@ class Controller_Admin_Productos extends Controller_Admin
 					Session::set_flash('error', 'Error al actualizar el producto: ' . $e->getMessage());
 				}
 			} else {
-				Session::set_flash('error', 'Por favor corrige los errores en el formulario.');
+				$errors = $val->error();
+				$error_messages = [];
+				foreach ($errors as $field => $error) {
+					$error_messages[] = $error->get_message();
+				}
+				Session::set_flash('error', 'Errores en el formulario:<br>' . implode('<br>', $error_messages));
 			}
 		}
 
@@ -209,8 +218,7 @@ class Controller_Admin_Productos extends Controller_Admin
 		$this->template->content = View::forge('admin/productos/form', [
 			'product' => $product,
 			'categories' => $this->_get_categories(),
-			'providers' => $this->_get_providers(),
-			'validation' => isset($val) ? $val : null
+			'providers' => $this->_get_providers()
 		]);
 	}
 
@@ -329,7 +337,6 @@ class Controller_Admin_Productos extends Controller_Admin
 			->add_rule('valid_string', ['numeric']);
 
 		$val->add('stock_quantity', 'Stock Inicial')
-			->add_rule('required')
 			->add_rule('numeric_min', 0);
 
 		$val->add('min_stock', 'Stock Mínimo')

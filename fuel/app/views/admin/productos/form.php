@@ -266,9 +266,9 @@
 						<div class="row">
 							<div class="col-md-6">
 								<div class="mb-3">
-									<label class="form-label required">Stock Inicial</label>
-									<?php echo Form::input('stock_quantity', Input::post('stock_quantity', isset($product) ? $product->stock_quantity : '0'), ['class' => 'form-control', 'type' => 'number', 'min' => '0', 'required' => true]); ?>
-									<small class="text-muted">Cantidad actual en inventario</small>
+									<label class="form-label">Stock Inicial</label>
+									<?php echo Form::input('stock_quantity', Input::post('stock_quantity', isset($product) ? $product->stock_quantity : '0'), ['class' => 'form-control', 'type' => 'number', 'min' => '0']); ?>
+									<small class="text-muted">Cantidad actual en inventario (puede ser 0)</small>
 								</div>
 							</div>
 
