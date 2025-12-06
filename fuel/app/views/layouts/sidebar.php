@@ -58,38 +58,167 @@
         <?php endif; ?>
 
         <li class="nav-divider"></li>
+        <li class="nav-title">Catálogos</li>
 
-        <!-- Módulos Activos -->
-        <?php
-        $tenant_id = Session::get('tenant_id', 1);
-        $active_modules = Helper_Module::get_active_modules($tenant_id);
-        
-        foreach ($active_modules as $mod) {
-            if ($mod['category'] != 'core' && isset($mod['menu_items']) && !empty($mod['menu_items'])) {
-                ?>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?php echo Uri::create('admin/'.strtolower($mod['name'])); ?>">
-                        <i class="nav-icon <?php echo $mod['icon']; ?>"></i> <?php echo $mod['display_name']; ?>
-                    </a>
-                </li>
-                <?php
-            }
-        }
-        ?>
-
-        <!-- Almacenes (si existe el módulo) -->
+        <!-- Almacenes -->
+        <?php if (Helper_Permission::can('almacenes', 'view')): ?>
         <li class="nav-item">
             <a class="nav-link <?php echo (Uri::segment(2) == 'almacenes') ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/almacenes'); ?>">
                 <i class="nav-icon fas fa-warehouse"></i> Almacenes
             </a>
         </li>
+        <?php endif; ?>
 
-        <!-- Proveedores (si existe el módulo) -->
+        <!-- Proveedores -->
         <?php if (Helper_Permission::can('proveedores', 'view')): ?>
         <li class="nav-item">
             <a class="nav-link <?php echo (Uri::segment(2) == 'proveedores') ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/proveedores'); ?>">
                 <i class="nav-icon fas fa-truck"></i> Proveedores
             </a>
+        </li>
+        <?php endif; ?>
+
+        <!-- Marcas -->
+        <?php if (Helper_Permission::can('marcas', 'view')): ?>
+        <li class="nav-item">
+            <a class="nav-link <?php echo (Uri::segment(2) == 'marcas') ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/marcas'); ?>">
+                <i class="nav-icon fas fa-tag"></i> Marcas
+            </a>
+        </li>
+        <?php endif; ?>
+
+        <!-- Categorías -->
+        <?php if (Helper_Permission::can('categorias', 'view')): ?>
+        <li class="nav-item">
+            <a class="nav-link <?php echo (Uri::segment(2) == 'categorias') ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/categorias'); ?>">
+                <i class="nav-icon fas fa-folder"></i> Categorías
+            </a>
+        </li>
+        <?php endif; ?>
+
+        <li class="nav-divider"></li>
+        <li class="nav-title">Contabilidad</li>
+
+        <!-- Catálogo de Cuentas -->
+        <?php if (Helper_Permission::can('cuentas', 'view')): ?>
+        <li class="nav-item">
+            <a class="nav-link <?php echo (Uri::segment(2) == 'cuentascontables') ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/cuentascontables'); ?>">
+                <i class="nav-icon fas fa-list-alt"></i> Catálogo de Cuentas
+            </a>
+        </li>
+        <?php endif; ?>
+
+        <!-- Pólizas -->
+        <?php if (Helper_Permission::can('polizas', 'view')): ?>
+        <li class="nav-item">
+            <a class="nav-link <?php echo (Uri::segment(2) == 'polizas') ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/polizas'); ?>">
+                <i class="nav-icon fas fa-file-invoice"></i> Pólizas
+            </a>
+        </li>
+        <?php endif; ?>
+
+        <!-- Libro Mayor -->
+        <?php if (Helper_Permission::can('libromayor', 'view')): ?>
+        <li class="nav-item">
+            <a class="nav-link <?php echo (Uri::segment(2) == 'libromayor') ? 'active' : ''; ?>" href="<?php echo Uri::create('admin/libromayor'); ?>">
+                <i class="nav-icon fas fa-book"></i> Libro Mayor
+            </a>
+        </li>
+        <?php endif; ?>
+
+        <!-- Reportes Financieros -->
+        <?php if (Helper_Permission::can('reportes', 'view')): ?>
+        <li class="nav-group">
+            <a class="nav-link nav-group-toggle" href="#">
+                <i class="nav-icon fas fa-chart-line"></i> Reportes Financieros
+            </a>
+            <ul class="nav-group-items compact">
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/reportesfinancieros/balance'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Balance General
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/reportesfinancieros/resultados'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Estado de Resultados
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/reportesfinancieros/flujo'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Flujo de Efectivo
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <?php endif; ?>
+
+        <li class="nav-divider"></li>
+        <li class="nav-title">Facturación</li>
+
+        <!-- Facturación Electrónica -->
+        <?php if (Helper_Permission::can('facturacion', 'view')): ?>
+        <li class="nav-group">
+            <a class="nav-link nav-group-toggle" href="#">
+                <i class="nav-icon fas fa-file-invoice-dollar"></i> Facturación CFDI
+            </a>
+            <ul class="nav-group-items compact">
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/facturacion'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Facturas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/facturacion/create'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Nueva Factura
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/facturacion/configuracion'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Configuración
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <?php endif; ?>
+
+        <!-- Catálogos SAT -->
+        <?php if (Helper_Permission::can('sat', 'view')): ?>
+        <li class="nav-group">
+            <a class="nav-link nav-group-toggle" href="#">
+                <i class="nav-icon fas fa-building"></i> Catálogos SAT
+            </a>
+            <ul class="nav-group-items compact">
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/sat/productos'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Productos/Servicios
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/sat/unidades'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Unidades
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/sat/uso_cfdi'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Uso de CFDI
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/sat/formas_pago'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Formas de Pago
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/sat/metodos_pago'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Métodos de Pago
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo Uri::create('admin/sat/regimenes'); ?>">
+                        <span class="nav-icon"><span class="nav-icon-bullet"></span></span> Regímenes Fiscales
+                    </a>
+                </li>
+            </ul>
         </li>
         <?php endif; ?>
 

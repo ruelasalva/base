@@ -51,8 +51,9 @@ class Controller_Admin_Marcas extends Controller_Admin
 		'can_create' => Helper_Permission::can('marcas', 'create'),
 		'can_edit' => Helper_Permission::can('marcas', 'edit'),
 		'can_delete' => Helper_Permission::can('marcas', 'delete'),
-	), false);
-}`n`n/**
+	));
+}
+	/**
 	 * Crear nueva marca
 	 */
 	public function action_create()
@@ -99,8 +100,9 @@ class Controller_Admin_Marcas extends Controller_Admin
 	$this->template->title = 'Nueva Marca';
 	$this->template->content = View::forge('admin/marcas/form', array(
 		'brand' => null,
-	), false);
-}`n`n/**
+	));
+}
+	/**
 	 * Editar marca existente
 	 */
 	public function action_edit($id = null)
@@ -150,8 +152,10 @@ class Controller_Admin_Marcas extends Controller_Admin
 	$this->template->title = 'Editar Marca';
 	$this->template->content = View::forge('admin/marcas/form', array(
 		'brand' => $brand,
-	), false);
-}`n`n/**
+	));
+}
+
+	/**
 	 * Ver detalle de marca
 	 */
 	public function action_view($id = null)
@@ -181,8 +185,10 @@ class Controller_Admin_Marcas extends Controller_Admin
 		'products_count' => $products_count,
 		'can_edit' => Helper_Permission::can('marcas', 'edit'),
 		'can_delete' => Helper_Permission::can('marcas', 'delete'),
-	), false);
-}`n`n/**
+	));
+}
+
+	/**
 	 * Eliminar marca (soft delete)
 	 */
 	public function action_delete($id = null)
