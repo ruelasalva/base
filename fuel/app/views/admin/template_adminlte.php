@@ -151,36 +151,59 @@
                     <?php endif; ?>
                     <?php endif; ?>
 
-                    <!-- Módulos de Negocio -->
-                    <li class="nav-header">MÓDULOS</li>
-
+                    <?php
+                    // CARGAR MÓDULOS ACTIVOS DINÁMICAMENTE POR CATEGORÍA
+                    $tenant_id = Session::get('tenant_id', 1);
+                    $active_modules = Helper_Module::get_active_modules($tenant_id);
+                    
+                    // Agrupar por categoría (excluyendo módulos core)
+                    $modules_by_cat = [];
+                    foreach ($active_modules as $mod) {
+                        $cat = $mod['category'];
+                        // Excluir categoría 'core' del menú dinámico
+                        if ($cat !== 'core') {
+                            if (!isset($modules_by_cat[$cat])) {
+                                $modules_by_cat[$cat] = [];
+                            }
+                            $modules_by_cat[$cat][] = $mod;
+                        }
+                    }
+                    
+                    // Nombres y orden de categorías
+                    $categories = [
+                        'contabilidad' => ['name' => 'Contabilidad', 'icon' => 'fa-calculator', 'color' => 'primary'],
+                        'finanzas' => ['name' => 'Finanzas', 'icon' => 'fa-dollar-sign', 'color' => 'success'],
+                        'compras' => ['name' => 'Compras', 'icon' => 'fa-truck', 'color' => 'warning'],
+                        'inventario' => ['name' => 'Inventario', 'icon' => 'fa-boxes', 'color' => 'info'],
+                        'sales' => ['name' => 'Ventas', 'icon' => 'fa-shopping-cart', 'color' => 'danger'],
+                        'rrhh' => ['name' => 'Recursos Humanos', 'icon' => 'fa-users-cog', 'color' => 'secondary'],
+                        'marketing' => ['name' => 'Marketing', 'icon' => 'fa-bullhorn', 'color' => 'purple'],
+                        'backend' => ['name' => 'Backend & Portales', 'icon' => 'fa-server', 'color' => 'dark'],
+                        'integraciones' => ['name' => 'Integraciones', 'icon' => 'fa-plug', 'color' => 'info'],
+                        'system' => ['name' => 'Sistema', 'icon' => 'fa-gears', 'color' => 'secondary']
+                    ];
+                    
+                    // Mostrar módulos por categoría
+                    foreach ($categories as $cat_key => $cat_info):
+                        if (isset($modules_by_cat[$cat_key]) && count($modules_by_cat[$cat_key]) > 0):
+                    ?>
+                    <li class="nav-header"><?php echo strtoupper($cat_info['name']); ?></li>
+                    <?php
+                        foreach ($modules_by_cat[$cat_key] as $module):
+                            $route = 'admin/' . $module['name'];
+                    ?>
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-cube text-info"></i>
-                            <p>Productos</p>
+                        <a href="<?php echo Uri::create($route); ?>" 
+                           class="nav-link <?php echo (Uri::segment(2) == $module['name']) ? 'active' : ''; ?>">
+                            <i class="nav-icon fas <?php echo $module['icon']; ?> text-<?php echo $cat_info['color']; ?>"></i>
+                            <p><?php echo $module['display_name']; ?></p>
                         </a>
                     </li>
-
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-user-tie text-success"></i>
-                            <p>Clientes</p>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-shopping-cart text-warning"></i>
-                            <p>Ventas</p>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-chart-bar text-primary"></i>
-                            <p>Reportes</p>
-                        </a>
-                    </li>
+                    <?php
+                        endforeach;
+                        endif;
+                    endforeach;
+                    ?>
 
                 </ul>
             </nav>

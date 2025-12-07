@@ -289,4 +289,163 @@ class Model_Sale extends \Orm\Model
         )
 	);
 
+	/**
+	 * MÉTODOS HELPER MODERNOS
+	 */
+
+	/**
+	 * Obtiene badge HTML según el estado de la venta
+	 * 
+	 * @return string HTML badge
+	 */
+	public function get_status_badge()
+	{
+		$badges = array(
+			0 => '<span class="badge bg-secondary"><i class="fas fa-shopping-cart"></i> Carrito</span>',
+			1 => '<span class="badge bg-success"><i class="fas fa-check"></i> Pagada</span>',
+			2 => '<span class="badge bg-info"><i class="fas fa-exchange-alt"></i> En Transferencia</span>',
+			3 => '<span class="badge bg-warning"><i class="fas fa-clock"></i> Pendiente</span>',
+			4 => '<span class="badge bg-primary"><i class="fas fa-truck"></i> Enviada</span>',
+			5 => '<span class="badge bg-success"><i class="fas fa-check-double"></i> Entregada</span>',
+			-1 => '<span class="badge bg-danger"><i class="fas fa-times"></i> Cancelada</span>',
+		);
+		
+		return isset($badges[$this->status]) ? $badges[$this->status] : '<span class="badge bg-light">Desconocido</span>';
+	}
+
+	/**
+	 * Obtiene el nombre del estado de forma legible
+	 * 
+	 * @return string
+	 */
+	public function get_status_name()
+	{
+		$names = array(
+			0 => 'Carrito',
+			1 => 'Pagada',
+			2 => 'En Transferencia',
+			3 => 'Pendiente',
+			4 => 'Enviada',
+			5 => 'Entregada',
+			-1 => 'Cancelada',
+		);
+		
+		return isset($names[$this->status]) ? $names[$this->status] : 'Desconocido';
+	}
+
+	/**
+	 * Calcula el subtotal (sin descuento)
+	 * 
+	 * @return float
+	 */
+	public function get_subtotal()
+	{
+		return $this->total + $this->discount;
+	}
+
+	/**
+	 * Calcula el total neto (con descuento)
+	 * 
+	 * @return float
+	 */
+	public function get_total_net()
+	{
+		return $this->total - $this->discount;
+	}
+
+	/**
+	 * Verifica si la venta puede ser editada
+	 * 
+	 * @return bool
+	 */
+	public function can_edit()
+	{
+		// Solo se pueden editar carritos o pendientes
+		return in_array($this->status, array(0, 3));
+	}
+
+	/**
+	 * Verifica si la venta puede ser cancelada
+	 * 
+	 * @return bool
+	 */
+	public function can_cancel()
+	{
+		// No se puede cancelar si ya está cancelada, entregada o fue pagada hace mucho
+		return !in_array($this->status, array(-1, 5));
+	}
+
+	/**
+	 * Verifica si la venta requiere factura
+	 * 
+	 * @return bool
+	 */
+	public function requires_invoice()
+	{
+		if ($this->customer && $this->customer->require_bill == 1) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Obtiene el total de items en la venta
+	 * 
+	 * @return int
+	 */
+	public function get_total_items()
+	{
+		$total = 0;
+		foreach ($this->products as $item) {
+			$total += $item->quantity;
+		}
+		return $total;
+	}
+
+	/**
+	 * Genera código de referencia único para la venta
+	 * 
+	 * @return string
+	 */
+	public static function generate_code()
+	{
+		$prefix = 'VTA';
+		$year_month = date('Ym');
+		$code_prefix = $prefix . '-' . $year_month . '-';
+		
+		$last = DB::select(DB::expr('MAX(CAST(SUBSTRING(transaction, 12) AS UNSIGNED)) as last_number'))
+			->from('sales')
+			->where('transaction', 'LIKE', $code_prefix . '%')
+			->execute()
+			->current();
+		
+		$next_number = ($last && $last['last_number']) ? $last['last_number'] + 1 : 1;
+		
+		return $code_prefix . str_pad($next_number, 4, '0', STR_PAD_LEFT);
+	}
+
+	/**
+	 * Registra log de cambios en la venta
+	 * 
+	 * @param string $action Acción realizada
+	 * @param string $description Descripción del cambio
+	 * @param mixed $old_value Valor anterior
+	 * @param mixed $new_value Valor nuevo
+	 * @return bool
+	 */
+	public function log_change($action, $description, $old_value = null, $new_value = null)
+	{
+		if (class_exists('Helper_Log')) {
+			return Helper_Log::record(
+				'sales',
+				$action,
+				$this->id,
+				$description,
+				$old_value,
+				$new_value
+			);
+		}
+		return false;
+	}
+
 }

@@ -103,7 +103,7 @@
 						   class="form-control border-0" 
 						   style="background: #f9fafb;" 
 						   placeholder="Buscar por código, nombre o código de barras..." 
-						   value="<?php echo Html::chars($search); ?>">
+						   value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>">
 					<div class="input-group-append">
 						<button type="submit" class="btn" style="background: #4f46e5; color: white;">
 							<i class="fas fa-search"></i>
@@ -148,20 +148,20 @@
 							<?php foreach ($products as $product): ?>
 								<tr style="border-bottom: 1px solid #f3f4f6;">
 									<td class="align-middle" style="padding: 1rem;">
-										<span class="font-weight-bold" style="color: #4f46e5;"><?php echo Html::chars($product->code); ?></span>
+										<span class="font-weight-bold" style="color: #4f46e5;"><?php echo htmlspecialchars($product->code, ENT_QUOTES, 'UTF-8'); ?></span>
 										<?php if ($product->barcode): ?>
-											<br><small class="text-muted"><?php echo Html::chars($product->barcode); ?></small>
+											<br><small class="text-muted"><?php echo htmlspecialchars($product->barcode, ENT_QUOTES, 'UTF-8'); ?></small>
 										<?php endif; ?>
 									</td>
 									<td class="align-middle">
-										<div style="font-weight: 500; color: #1f2937;"><?php echo Html::chars($product->name); ?></div>
+										<div style="font-weight: 500; color: #1f2937;"><?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?></div>
 										<?php if ($product->is_service): ?>
 											<small><span class="badge badge-info">Servicio</span></small>
 										<?php endif; ?>
 									</td>
 									<td class="align-middle">
 										<?php if ($product->category): ?>
-											<span class="badge badge-secondary"><?php echo Html::chars($product->category->name); ?></span>
+											<span class="badge badge-secondary"><?php echo htmlspecialchars($product->category->name, ENT_QUOTES, 'UTF-8'); ?></span>
 										<?php else: ?>
 											<span class="text-muted">Sin categoría</span>
 										<?php endif; ?>
@@ -179,7 +179,7 @@
 									<td class="align-middle text-center">
 										<?php if (!$product->is_service): ?>
 											<span style="font-weight: 600; color: #1f2937;"><?php echo number_format($product->stock, 2); ?></span>
-											<small class="text-muted d-block"><?php echo Html::chars($product->unit_of_measure); ?></small>
+											<small class="text-muted d-block"><?php echo htmlspecialchars($product->unit_of_measure, ENT_QUOTES, 'UTF-8'); ?></small>
 										<?php else: ?>
 											<span class="text-muted">N/A</span>
 										<?php endif; ?>

@@ -218,33 +218,59 @@
             <?php endif; ?>
             <?php endif; ?>
 
-            <!-- Módulos -->
+            <?php
+            // CARGAR MÓDULOS ACTIVOS DINÁMICAMENTE POR CATEGORÍA
+            $tenant_id = Session::get('tenant_id', 1);
+            $active_modules = Helper_Module::get_active_modules($tenant_id);
+            
+            // Agrupar por categoría (excluyendo módulos core)
+            $modules_by_cat = [];
+            foreach ($active_modules as $mod) {
+                $cat = $mod['category'];
+                // Excluir categoría 'core' del menú dinámico
+                if ($cat !== 'core') {
+                    if (!isset($modules_by_cat[$cat])) {
+                        $modules_by_cat[$cat] = [];
+                    }
+                    $modules_by_cat[$cat][] = $mod;
+                }
+            }
+            
+            // Nombres y orden de categorías
+            $categories = [
+                'contabilidad' => ['name' => 'Contabilidad', 'icon' => 'fa-calculator'],
+                'finanzas' => ['name' => 'Finanzas', 'icon' => 'fa-dollar-sign'],
+                'compras' => ['name' => 'Compras', 'icon' => 'fa-truck'],
+                'inventario' => ['name' => 'Inventario', 'icon' => 'fa-boxes'],
+                'sales' => ['name' => 'Ventas', 'icon' => 'fa-shopping-cart'],
+                'rrhh' => ['name' => 'Recursos Humanos', 'icon' => 'fa-users-cog'],
+                'marketing' => ['name' => 'Marketing', 'icon' => 'fa-bullhorn'],
+                'backend' => ['name' => 'Backend & Portales', 'icon' => 'fa-server'],
+                'integraciones' => ['name' => 'Integraciones', 'icon' => 'fa-plug'],
+                'system' => ['name' => 'Sistema', 'icon' => 'fa-gears']
+            ];
+            
+            // Mostrar módulos por categoría
+            foreach ($categories as $cat_key => $cat_info):
+                if (isset($modules_by_cat[$cat_key]) && count($modules_by_cat[$cat_key]) > 0):
+            ?>
             <div class="nav-divider"></div>
-            <div class="nav-header">Módulos</div>
-
+            <div class="nav-header"><?php echo $cat_info['name']; ?></div>
+            <?php
+                foreach ($modules_by_cat[$cat_key] as $module):
+                    $route = 'admin/' . $module['name'];
+            ?>
             <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-cube"></i> Productos
+                <a class="nav-link <?php echo (Uri::segment(2) == $module['name']) ? 'active' : ''; ?>" 
+                   href="<?php echo Uri::create($route); ?>">
+                    <i class="fas <?php echo $module['icon']; ?>"></i> <?php echo $module['display_name']; ?>
                 </a>
             </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-user-tie"></i> Clientes
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-shopping-cart"></i> Ventas
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-chart-bar"></i> Reportes
-                </a>
-            </li>
+            <?php
+                endforeach;
+                endif;
+            endforeach;
+            ?>
         </ul>
     </nav>
 

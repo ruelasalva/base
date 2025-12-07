@@ -133,4 +133,137 @@ class Model_Sales_Product extends \Orm\Model
 		)
 	);
 
+	/**
+	 * MÉTODOS HELPER MODERNOS
+	 */
+
+	/**
+	 * Calcula el subtotal del item (precio unitario * cantidad)
+	 * 
+	 * @return float
+	 */
+	public function get_subtotal()
+	{
+		return $this->price * $this->quantity;
+	}
+
+	/**
+	 * Calcula el descuento si aplica
+	 * 
+	 * @param float $discount_percentage Porcentaje de descuento
+	 * @return float
+	 */
+	public function get_discount($discount_percentage = 0)
+	{
+		if ($discount_percentage > 0) {
+			return $this->get_subtotal() * ($discount_percentage / 100);
+		}
+		return 0;
+	}
+
+	/**
+	 * Obtiene información completa del producto
+	 * 
+	 * @return string HTML con información del producto
+	 */
+	public function get_product_info()
+	{
+		if ($this->product) {
+			return '<div class="product-info">' .
+				   '<strong>' . htmlspecialchars($this->product->name, ENT_QUOTES, 'UTF-8') . '</strong><br>' .
+				   '<small>SKU: ' . htmlspecialchars($this->product->sku, ENT_QUOTES, 'UTF-8') . '</small>' .
+				   '</div>';
+		}
+		return '<span class="text-muted">Producto no disponible</span>';
+	}
+
+	/**
+	 * Verifica si hay stock suficiente
+	 * 
+	 * @return bool
+	 */
+	public function has_stock()
+	{
+		if ($this->product) {
+			return $this->product->available >= $this->quantity;
+		}
+		return false;
+	}
+
+	/**
+	 * Obtiene el stock disponible del producto
+	 * 
+	 * @return int
+	 */
+	public function get_available_stock()
+	{
+		if ($this->product) {
+			return $this->product->available;
+		}
+		return 0;
+	}
+
+	/**
+	 * Formatea el precio para display
+	 * 
+	 * @param bool $with_currency Incluir símbolo de moneda
+	 * @return string
+	 */
+	public function get_formatted_price($with_currency = true)
+	{
+		$formatted = number_format($this->price, 2, '.', ',');
+		return $with_currency ? '$' . $formatted : $formatted;
+	}
+
+	/**
+	 * Formatea el total para display
+	 * 
+	 * @param bool $with_currency Incluir símbolo de moneda
+	 * @return string
+	 */
+	public function get_formatted_total($with_currency = true)
+	{
+		$formatted = number_format($this->total, 2, '.', ',');
+		return $with_currency ? '$' . $formatted : $formatted;
+	}
+
+	/**
+	 * Valida el item antes de guardar
+	 * 
+	 * @return array Array con errores (vacío si es válido)
+	 */
+	public function validate_item()
+	{
+		$errors = array();
+
+		if (!$this->product_id || $this->product_id <= 0) {
+			$errors[] = 'Producto inválido';
+		}
+
+		if (!$this->quantity || $this->quantity <= 0) {
+			$errors[] = 'Cantidad debe ser mayor a 0';
+		}
+
+		if (!$this->price || $this->price < 0) {
+			$errors[] = 'Precio inválido';
+		}
+
+		if (!$this->has_stock()) {
+			$errors[] = 'Stock insuficiente. Disponible: ' . $this->get_available_stock();
+		}
+
+		return $errors;
+	}
+
+	/**
+	 * Recalcula el total basado en cantidad y precio
+	 * 
+	 * @return float
+	 */
+	public function recalculate_total()
+	{
+		$this->total = $this->price * $this->quantity;
+		return $this->total;
+	}
+
 }

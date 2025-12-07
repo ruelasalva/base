@@ -88,62 +88,81 @@
 
 <!-- JavaScript -->
 <script>
-$(document).ready(function() {
-    $('.btn-select-template').on('click', function() {
-        const btn = $(this);
-        const template = btn.data('template');
-        const templateName = btn.data('template-name');
+// Esperar a que jQuery y el DOM estén disponibles
+(function initTemplateSelector() {
+    if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+        console.warn('jQuery no disponible, reintentando...');
+        setTimeout(initTemplateSelector, 100);
+        return;
+    }
+    
+    if (typeof Swal === 'undefined') {
+        console.error('SweetAlert2 no está cargado');
+        setTimeout(initTemplateSelector, 100);
+        return;
+    }
+    
+    $(document).ready(function() {
+        $('.btn-select-template').on('click', function() {
+            const btn = $(this);
+            const template = btn.data('template');
+            const templateName = btn.data('template-name');
 
-        Swal.fire({
-            title: '¿Cambiar template?',
-            text: `Se aplicará el template ${templateName}`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, cambiar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Aplicando...');
+            Swal.fire({
+                title: '¿Cambiar template?',
+                text: `Se aplicará el template ${templateName}`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cambiar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const originalHtml = btn.html();
+                    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Aplicando...');
 
-                $.ajax({
-                    url: '<?php echo Uri::create('admin/configuracion/set_template'); ?>',
-                    method: 'POST',
-                    data: {
-                        template: template,
-                        <?php echo \Config::get('security.csrf_token_key'); ?>: '<?php echo \Security::fetch_token(); ?>'
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Template cambiado!',
-                                text: 'Recargando página...',
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(() => {
-                                location.reload();
-                            });
-                        } else {
+                    $.ajax({
+                        url: '<?php echo Uri::create('admin/configuracion/set_template'); ?>',
+                        method: 'POST',
+                        data: {
+                            template: template,
+                            <?php echo \Config::get('security.csrf_token_key'); ?>: '<?php echo \Security::fetch_token(); ?>'
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡Template cambiado!',
+                                    text: 'Recargando página...',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message || 'No se pudo cambiar el template'
+                                });
+                                btn.prop('disabled', false).html(originalHtml);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error AJAX:', xhr, status, error);
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                text: response.message || 'No se pudo cambiar el template'
+                                text: 'Ocurrió un error al cambiar el template'
                             });
-                            btn.prop('disabled', false).html('<i class="fas fa-paint-brush me-1"></i>Aplicar');
+                            btn.prop('disabled', false).html(originalHtml);
                         }
-                    },
-                    error: function() {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Ocurrió un error al cambiar el template'
-                        });
-                        btn.prop('disabled', false).html('<i class="fas fa-paint-brush me-1"></i>Aplicar');
-                    }
-                });
-            }
+                    });
+                }
+            });
         });
     });
-});
+})();
 </script>

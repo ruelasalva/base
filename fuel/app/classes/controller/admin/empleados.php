@@ -1,646 +1,412 @@
 <?php
 
 /**
-* CONTROLADOR ADMIN_EMPLEADOS
-*
-* @package  app
-* @extends  Controller_Admin
-*/
+ * Controlador de Empleados
+ * Sistema Multi-Tenant
+ * 
+ * @package    App
+ * @category   Controller
+ * @author     Sistema Base
+ */
 class Controller_Admin_Empleados extends Controller_Admin
 {
 	/**
-	* BEFORE
-	*
-	* @return Void
-	*/
+	 * Verificación de permisos antes de cualquier acción
+	 */
 	public function before()
 	{
-		# REQUERIDA PARA EL TEMPLATING
 		parent::before();
 
-		# SI EL USUARIO NO TIENE PERMISOS
-		if(!Auth::member(100) && !Auth::member(50))
-		{
-			# SE ESTABLECE EL MENSAJE DE ERROR
-			Session::set_flash('error', 'No tienes los permisos para acceder a esta sección.');
+		$action = Request::active()->action;
+		$permission_map = [
+			'index' => 'view',
+			'create' => 'create',
+			'edit' => 'edit',
+			'delete' => 'delete',
+			'view' => 'view'
+		];
 
-			# SE REDIRECCIONA AL USUARIO
+		$required_permission = isset($permission_map[$action]) ? $permission_map[$action] : 'view';
+
+		if (!Helper_Permission::can('empleados', $required_permission)) {
+			Session::set_flash('error', 'No tienes permisos para realizar esta acción.');
 			Response::redirect('admin');
 		}
 	}
 
-
 	/**
-	* INDEX
-	*
-	* MUESTRA UNA LISTADO DE REGISTROS
-	*
-	* @access  public
-	* @return  Void
-	*/
-	public function action_index($search = '')
+	 * Listado de empleados con búsqueda y paginación
+	 */
+	public function action_index()
 	{
-		# SE INICIALIZAN LAS VARIABLES
-		$data       = array();
-		$users_info = array();
-		$per_page   = 100;
+		$search = Input::get('search', '');
+		$status = Input::get('status', '');
+		$department_id = Input::get('department', '');
+		$per_page = 25;
 
-		# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-		$users = Model_Employee::query()
-		->related('user')
-		->where('id','>=', 0);
+		$query = Model_Employee::query()
+			->where('deleted_at', 'IS', null);
 
-		# SI HAY UNA BUSQUEDA
-		if($search != '')
-		{
-			# SE ALMACENA LA BUSQUEDA ORIGINAL
-			$original_search = $search;
-
-			# SE LIMPIA LA CADENA DE BUSQUEDA
-			$search = str_replace('+', ' ', rawurldecode($search));
-
-			# SE REEMPLAZA LOS ESPACIOS POR PORCENTAJES
-			$search = str_replace(' ', '%', $search);
-
-			# SE AGREGA LA CLAUSULA
-			$users = $users->where(DB::expr("CONCAT(`t0`.`name`, ' ', `t0`.`email`,' ', `t0`.`codigo`,' ', `t1`.`username`)"), 'like', '%'.$search.'%');
+		// Filtro de búsqueda
+		if (!empty($search)) {
+			$query->where_open()
+				->where('first_name', 'like', "%{$search}%")
+				->or_where('last_name', 'like', "%{$search}%")
+				->or_where('second_last_name', 'like', "%{$search}%")
+				->or_where('code', 'like', "%{$search}%")
+				->or_where('email', 'like', "%{$search}%")
+				->or_where('rfc', 'like', "%{$search}%")
+				->or_where('curp', 'like', "%{$search}%")
+			->where_close();
 		}
 
-		# SE ESTABLECE LA CONFIGURACION DE LA PAGINACION
-		$config = array(
-			'name'           => 'admin',
-			'pagination_url' => Uri::current(),
-			'total_items'    => $users->count(),
-			'per_page'       => $per_page,
-			'uri_segment'    => 'pagina',
-			'show_first'     => true,
-    		'show_last'      => true,
-		);
-
-		# SE CREA LA INSTANCIA DE LA PAGINACION
-		$pagination = Pagination::forge('users', $config);
-
-		# SE EJECUTA EL QUERY
-		$users = $users->order_by('id', 'desc')
-		->rows_limit($pagination->per_page)
-		->rows_offset($pagination->offset)
-		->get();
-
-		# SI SE OBTIENE INFORMACION
-		if(!empty($users))
-		{
-			# SE RECORRE ELEMENTO POR ELEMENTO
-			foreach($users as $user)
-			{
-
-
-
-				# SE ALMACENA LA INFORMACION
-				$users_info[] = array(
-					'id' 			=> $user->id,
-					'codigo' 		=> $user->codigo ?: 'SN/E',
-					'username' 		=> $user->user ? $user->user->username : 'Sin Usuario',
-					'name' 			=> ($user->name && $user->last_name) ? ($user->name . ' ' . $user->last_name) : 'Sin nombre',
-					'code_seller' 	=> $user->code_seller ?: 'SN/V',
-					'email' 		=> $user->email ?: 'Sin correo electrónico',
-					'department_id' => $user->department ? $user->department->name : 'Sin departamento',
-					'phone' 		=> $user->phone ?: 'Sin teléfono',
-					'updated_at' 	=> $user->updated_at ? date('d/m/Y - H:i', $user->updated_at) : 'No ha sido actualizado',
-				);
-
-			}
+		// Filtro por estatus
+		if (!empty($status)) {
+			$query->where('employment_status', $status);
 		}
 
-		# SE ALMACENA LA INFORMACION PARA LA VISTA
-		$data['users']      = $users_info;
-		$data['search']     = str_replace('%', ' ', $search);
-		$data['pagination'] = $pagination->render();
+		// Filtro por departamento
+		if (!empty($department_id)) {
+			$query->where('department_id', $department_id);
+		}
 
-		# SE CARGA LA VISTA
-		$this->template->title   = 'Empleados';
-		$this->template->content = View::forge('admin/empleados/index', $data, false);
+		// Configuración de paginación
+		$config = [
+			'pagination_url' => Uri::create('admin/empleados/index'),
+			'total_items' => $query->count(),
+			'per_page' => $per_page,
+			'uri_segment' => 'page',
+		];
+
+		$pagination = Pagination::forge('empleados', $config);
+
+		$employees = $query
+			->order_by('id', 'desc')
+			->rows_limit($pagination->per_page)
+			->rows_offset($pagination->offset)
+			->get();
+
+		// Obtener departamentos para el filtro
+		$departments = Model_Department::query()
+			->where('is_active', 1)
+			->order_by('name', 'asc')
+			->get();
+
+		// Estadísticas
+		$stats = [
+			'total' => Model_Employee::query()->where('deleted_at', 'IS', null)->count(),
+			'active' => Model_Employee::query()->where('employment_status', 'active')->where('deleted_at', 'IS', null)->count(),
+			'inactive' => Model_Employee::query()->where('employment_status', 'inactive')->where('deleted_at', 'IS', null)->count(),
+			'on_leave' => Model_Employee::query()->where('employment_status', 'on_leave')->where('deleted_at', 'IS', null)->count(),
+		];
+
+		$this->template->title = 'Empleados';
+		$this->template->content = View::forge('admin/empleados/index', [
+			'employees' => $employees,
+			'departments' => $departments,
+			'search' => $search,
+			'status' => $status,
+			'department_id' => $department_id,
+			'pagination' => $pagination,
+			'stats' => $stats
+		]);
 	}
 
-
 	/**
-	* BUSCAR
-	*
-	* REDIRECCIONA A LA URL DE BUSCAR REGISTROS
-	*
-	* @access  public
-	* @return  Void
-	*/
-	public function action_buscar()
+	 * Formulario para crear nuevo empleado
+	 */
+	public function action_create()
 	{
-		# SI SE UTILIZO EL METODO POST
-		if(Input::method() == 'POST')
-		{
-			# SE OBTIENEN LOS VALORES
-			$data = array(
-				'search' => ($_POST['search'] != '') ? $_POST['search'] : '',
-			);
+		if (Input::method() === 'POST') {
+			$val = $this->_validation();
 
-			# SE CREA LA VALIDACION DE LOS CAMPOS
-			$val = Validation::forge('search');
-			$val->add_callable('Rules');
-			$val->add_field('search', 'search', 'max_length[100]');
-
-			# SI NO HAY NINGUN PROBLEMA CON LA VALIDACION
-			if($val->run($data))
-			{
-				# SE REMPLAZAN ALGUNOS CARACTERES
-				$search = str_replace(' ', '+', $val->validated('search'));
-				$search = str_replace('*', '', $search);
-
-				# SE ALMACENA LA CADENA DE BUSQUEDA
-				$search = ($val->validated('search') != '') ? $search : '';
-
-				# SE REDIRECCIONA A BUSCAR
-				Response::redirect('admin/empleados/index/'.$search);
-			}
-			else
-			{
-				# SE REDIRECCIONA AL USUARIO
-				Response::redirect('admin/empleados');
-			}
-		}
-		else
-		{
-			# SE REDIRECCIONA AL USUARIO
-			Response::redirect('admin/empleados');
-		}
-	}
-
-
-	/**
-	* INFO
-	*
-	* MUESTRA LA INFORMACION DE UN REGISTRO DE LA BASE DE DATOS
-	*
-	* @access  public
-	* @return  Void
-	*/
-	public function action_info($user_id = 0)
-	{
-		# SI NO SE RECIBE UN ID O NO ES UN NUMERO
-		if($user_id == 0 || !is_numeric($user_id))
-		{
-			# SE REDIRECCIONA AL USUARIO
-			Response::redirect('admin/empleados');
-		}
-
-		# SE INICIALIZAN LAS VARIABLES
-		$data           = array();
-		$addresses_info = array();
-		$tax_data_info  = array();
-
-		# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-		$user = Model_Employee::query()
-		->where('id', $user_id)
-		->get_one();
-
-		# SI SE OBTIENE INFORMACION
-		if(!empty($user))
-		{
-
-			# SE ALMACENA LA INFORMACION PARA LA VISTA
-			$data['username'] 			= ($user->user_id != '' && $user->user) ? $user->user->username : 'Nombre de usuario no disponible';
-			$data['email_user'] 		= ($user->user_id != '' && $user->user) ? $user->user->email : 'No cuenta con correo';
-			$data['email']        		= ($user->email != '') ? $user->email : 'Sin Email';
-			$data['name']         		= $user->name;
-			$data['codigo']         	= $user->codigo;
-			$data['code_seller']       	= $user->code_seller;
-			$data['last_name']    		= $user->last_name;
-			$data['phone']        		= ($user->phone != '') ? $user->phone : 'Sin Telefono';
-			$data['department_id']      = $user->department->name;
-
-		}
-		else
-		{
-			# SE REDIRECCIONA AL USUARIO
-			Response::redirect('admin/empleados');
-		}
-
-		# SE ALMACENA LA INFORMACION PARA LA VISTA
-		$data['id'] = $user_id;
-
-		# SE CARGA LA VISTA
-		$this->template->title   = 'Información del empleado';
-		$this->template->content = View::forge('admin/empleados/info', $data);
-	}
-
-
-	/**
-	* EDITAR
-	*
-	* PERMITE EDITAR UN REGISTRO DE LA BASE DE DATOS
-	*
-	* @access  public
-	* @return  Void
-	*/
-	public function action_editar($employee_id = 0)
-	{
-		# SI NO SE RECIBE UN ID O NO ES UN NUMERO
-		if($employee_id == 0 || !is_numeric($employee_id))
-		{
-			Response::redirect('admin/empleados');
-		}
-
-		# SE INICIALIZAN LAS VARIABLES
-		$data            = array();
-		$classes         = array();
-		$fields          = array('email', 'email_user', 'name', 'last_name', 'code_seller','phone', 'department_id', 'codigo', 'user_id');
-		$department_opts = array();
-		$user_opts       = array();
-
-		# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-		$employee = Model_Employee::query()
-		->related('user')
-		->where('id', $employee_id)
-		->get_one();
-
-		# SI NO SE OBTIENE INFORMACION
-		if(empty($employee))
-		{
-			Response::redirect('admin/empleados');
-		}
-
-		# SE RECORRE CAMPO POR CAMPO
-		foreach($fields as $field)
-		{
-			# SE CREAN LAS CLASES DEL CAMPO
-			$classes[$field] = array (
-				'form-group'   => null,
-				'form-control' => null,
-			);
-		}
-
-		# SI SE UTILIZO EL METODO POST
-		if(Input::method() == 'POST')
-		{
-			# SE CREA LA VALIDACION DE LOS CAMPOS
-			$val = Validation::forge('employee');
-			$val->add_field('email', 'Email', 'min_length[1]|valid_email');
-			$val->add_field('name', 'Nombre', 'required|min_length[1]|max_length[255]');
-			$val->add_field('last_name', 'Apellidos', 'required|min_length[1]|max_length[255]');
-			$val->add_field('phone', 'Teléfono', 'min_length[1]|max_length[255]');
-			$val->add_field('codigo', 'Código', 'min_length[1]|max_length[255]');
-			$val->add_field('code_seller', 'vendedor', 'min_length[1]|max_length[255]');
-			$val->add_field('department_id', 'Departamento', 'min_length[1]|max_length[255]');
-
-			# SI SE SLECCIONA UN USUARIO
-			if(Input::post('user_id') != 'none')
-			{
-				# SE AGREGA LA VALIDACION DEL CAMPO
-				$val->add_field('user_id', 'Usuario', 'min_length[1]');
-			}
-
-			# SI NO HAY NINGUN PROBLEMA CON LA VALIDACION
-			if($val->run())
-			{
-				# SI EXISTE UN CODIGO
-				if(!empty($val->validated('codigo')))
-				{
-					# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-					$existing_employee = Model_Employee::query()
-					->where('codigo', $val->validated('codigo'))
-					->where('id', '!=', $employee_id)
-					->get_one();
-
-					# SI EXISTE UN EMPLEADO CON EL CODIGO ASIGNADO
-					if(!empty($existing_employee))
-					{
-						Session::set_flash('error', 'No se pudo actualizar el empleado. Ya existe un empleado con el mismo código.');
-					}
-					else
-					{
-						# SE ESTEBLECE LA NUEVA INFORMACION
-						$employee->codigo = $val->validated('codigo');
-					}
-				}
-
-				# SI EXISTE UN USUARIO
-				if(!empty($val->validated('user_id')))
-				{
-					# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-					$existing_user_employee = Model_Employee::query()
-					->where('user_id', $val->validated('user_id'))
-					->where('id', '!=', $employee_id)
-					->get_one();
-
-					# SI EXISTE UN EMPLEADO CON EL USUARIO ASIGNADO
-					if(!empty($existing_user_employee))
-					{
-						Session::set_flash('error', 'No se pudo actualizar el empleado. Ya existe un empleado con el mismo código.');
-					}
-					else
-					{
-						# SE ESTEBLECE LA NUEVA INFORMACION
-						$employee->user_id   = $val->validated('user_id');
-					}
-				}
-
-				# SE ESTEBLECE LA NUEVA INFORMACION
-				$employee->name      		= $val->validated('name');
-				$employee->last_name 		= $val->validated('last_name');
-				$employee->phone     		= $val->validated('phone');
-				$employee->email     		= $val->validated('email');
-				$employee->code_seller     	= $val->validated('code_seller');
-				$employee->department_id    = $val->validated('department_id');
-
-				# SI SE ALMACENO EL REGISTRO EN LA BASE DE DATOS
-				if($employee->save())
-				{
-					# SE ESTABLECE EL MENSAJE DE EXITO
-					Session::set_flash('success', 'Se actualizó la información del empleado <b>'.$employee->name.'</b> correctamente.');
-
-					# SE REDIRECCIONA AL USUARIO
-					Response::redirect('admin/empleados/editar/'.$employee_id);
-				}
-			}
-			else
-			{
-				# SE ESTABLECE EL MENSAJE DE ERROR
-				Session::set_flash('error', 'Encontramos algunos errores en el formulario, por favor verifica.');
-
-				# SE ALMACENA LOS ERRORES DETECTADOS
-				$data['errors'] = $val->error();
-			}
-		}
-
-		# SE ESTBLECE LA OPCION POR DEFAULT
-		$department_opts += array('0' => 'Selecciona una opción');
-
-		# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-		$departments = Model_Employees_Department::query()->get();
-
-		# SI SE OBTIENE INFORMACION
-		if(!empty($departments))
-		{
-			# SE RECORRE ELEMENTO POR ELEMENTO
-			foreach($departments as $department)
-			{
-				# SE ALMACENA LA OPCION
-				$department_opts += array($department->id => $department->name);
-			}
-		}
-
-		# SE ESTBLECE LA OPCION POR DEFAULT
-		$user_opts += array('0' => 'Selecciona una opción');
-
-		# SE BUSCA LA INFORMACION A TRAVES DEL MODELO
-		$users = Model_User::query()->where('group', '>', '2')->get();
-
-		# SI SE OBTIENE INFORMACION
-		if(!empty($users))
-		{
-			# SE RECORRE ELEMENTO POR ELEMENTO
-			foreach($users as $user)
-			{
-				# SE ALMACENA LA OPCION
-				$user_opts += array($user->id => $user->username);
-			}
-		}
-
-		# SE ALMACENA LA INFORMACION PARA LA VISTA
-		$data['username'] 		 = ($employee->user_id && $employee->user) ? $employee->user->username : 'N/A';
-		$data['email_user'] 	 = ($employee->user_id && $employee->user) ? $employee->user->email : 'N/A';
-		$data['name'] 			 = $employee->name;
-		$data['last_name'] 		 = $employee->last_name;
-		$data['email'] 			 = $employee->email;
-		$data['codigo'] 		 = $employee->codigo;
-		$data['code_seller'] 	 = $employee->code_seller;
-		$data['user_id'] 		 = $employee->user_id;
-		$data['department_id'] 	 = $employee->department_id;
-		$data['phone'] 			 = ($employee->phone != '') ? $employee->phone : 'N/A';
-		$data['id'] 			 = $employee_id;
-		$data['classes'] 		 = $classes;
-		$data['department_opts'] = $department_opts;
-		$data['user_opts'] 		 = $user_opts;
-
-		# SE CARGA LA VISTA
-		$this->template->title = 'Editar Empleado';
-		$this->template->content = View::forge('admin/empleados/editar', $data);
-	}
-
-
-	/**
-	* AGREGAR EMPLEADO
-	*
-	* PERMITE AGREGAR UN REGISTRO DE LA BASE DE DATOS
-	*
-	* @access  public
-	* @return  Void
-	*/
-	public function action_agregar()
-	{
-		# SE INICIALIZAN LAS VARIABLES
-		$data = array();
-		$classes = array();
-		$fields = array('user_id', 'email_user', 'email', 'name', 'last_name', 'phone', 'department_id', 'codigo','code_seller');
-		$department_opts = array();
-		$user_opts = array('' => 'Seleccionar');
-
-		# OBTENER LA LISTA DE DEPARTAMENTOS
-		$departments = Model_Employees_Department::query()->get();
-		foreach ($departments as $department) {
-			$department_opts[$department->id] = $department->name;
-		}
-
-		# OBTENER LA LISTA DE USUARIOS
-		$users = Model_User::query()->where('group', '>', '2')->get();
-		foreach ($users as $user) {
-			$user_opts[$user->id] = $user->username;
-		}
-
-		# SE RECORRE CAMPO POR CAMPO
-		foreach ($fields as $field) {
-			# SE CREAN LAS CLASES DEL CAMPO
-			$classes[$field] = array(
-				'form-group' => null,
-				'form-control' => null,
-			);
-		}
-
-		# SI SE UTILIZA EL METODO POST
-		if (Input::method() == 'POST') {
-
-			# Se guarda la información ingresada por el usuario en caso de error
-			$data['user_id'] 		= Input::post('user_id');
-			$data['email_user'] 	= Input::post('email_user');
-			$data['email'] 			= Input::post('email');
-			$data['name'] 			= Input::post('name');
-			$data['last_name'] 		= Input::post('last_name');
-			$data['phone'] 			= Input::post('phone');
-			$data['department_id'] 	= Input::post('department_id');
-			$data['codigo'] 		= Input::post('codigo');
-			$data['code_seller'] 	= Input::post('code_seller');
-
-			# SE CREA LA VALIDACION DE LOS CAMPOS
-			$val = Validation::forge('employee');
-			$val->add_callable('Rules');
-			$val->add_field('user_id', 'ID de Usuario', 'min_length[1]');
-			$val->add_field('email_user', 'Email de Usuario', 'min_length[1]|max_length[255]');
-			$val->add_field('email', 'Email', 'min_length[7]|max_length[255]|valid_email');
-			$val->add_field('name', 'Nombre', 'required|min_length[1]|max_length[255]');
-			$val->add_field('last_name', 'Apellidos', 'required|min_length[1]|max_length[255]');
-			$val->add_field('phone', 'Teléfono', 'min_length[1]|max_length[255]');
-			$val->add_field('department_id', 'ID de Departamento', 'required|valid_string[numeric]');
-			$val->add_field('codigo', 'Código', 'min_length[1]|max_length[255]');
-			$val->add_field('code_seller', 'Vendedor', 'min_length[1]|max_length[255]');
-
-			# SI NO HAY NINGUN PROBLEMA CON LA VALIDACION
 			if ($val->run()) {
 				try {
-					// Verificar si el usuario ya está asignado a otro empleado
-					$existing_user_employee = Model_Employee::query()
-					->where('user_id', $val->validated('user_id'))
-					->get_one();
+					$employee = new Model_Employee([
+						'tenant_id' => Session::get('tenant_id', 1),
+						'code' => $val->validated('code'),
+						'first_name' => $val->validated('first_name'),
+						'last_name' => $val->validated('last_name'),
+						'second_last_name' => $val->validated('second_last_name'),
+						'gender' => $val->validated('gender'),
+						'birthdate' => $val->validated('birthdate'),
+						'curp' => strtoupper($val->validated('curp')),
+						'rfc' => strtoupper($val->validated('rfc')),
+						'nss' => $val->validated('nss'),
+						'email' => $val->validated('email'),
+						'phone' => $val->validated('phone'),
+						'phone_emergency' => $val->validated('phone_emergency'),
+						'emergency_contact_name' => $val->validated('emergency_contact_name'),
+						'address' => $val->validated('address'),
+						'city' => $val->validated('city'),
+						'state' => $val->validated('state'),
+						'postal_code' => $val->validated('postal_code'),
+						'country' => $val->validated('country'),
+						'department_id' => $val->validated('department_id'),
+						'position_id' => $val->validated('position_id'),
+						'hire_date' => $val->validated('hire_date'),
+						'employment_type' => $val->validated('employment_type'),
+						'employment_status' => $val->validated('employment_status'),
+						'salary' => $val->validated('salary'),
+						'salary_type' => $val->validated('salary_type'),
+						'bank_name' => $val->validated('bank_name'),
+						'bank_account' => $val->validated('bank_account'),
+						'clabe' => $val->validated('clabe'),
+						'notes' => $val->validated('notes'),
+						'is_active' => 1
+					]);
 
-					if ($existing_user_employee) {
-						// Usuario ya asignado a otro empleado
-						Session::set_flash('error', 'No se pudo agregar el empleado. El usuario ya está asignado a otro empleado.');
-					} else {
-						// Verificar si se proporcionó un código de empleado
-						$codigo = $val->validated('codigo');
-						if (!empty($codigo)) {
-							$existing_employee = Model_Employee::query()
-							->where('codigo', $codigo)
-							->get_one();
+					if ($employee->save()) {
+						// Registrar en log
+						Helper_Log::record(
+							'empleados',
+							'create',
+							$employee->id,
+							'Empleado creado: ' . $employee->get_full_name(),
+							null,
+							$employee->to_array()
+						);
 
-							if ($existing_employee) {
-								// Empleado con el mismo número de empleado ya existe
-								Session::set_flash('error', 'No se pudo agregar el empleado. Ya existe un empleado con el mismo número de empleado.');
-							} else {
-								# FECHA DE CREACION
-								$currentDate = time();
-
-								# SE ALMACENA LA INFORMACION EN EL MODELO
-								$employee_data = array(
-									'name'			=> $val->validated('name'),
-									'last_name' 	=> $val->validated('last_name'),
-									'phone' 		=> $val->validated('phone'),
-									'department_id' => $val->validated('department_id'),
-									'email' 		=> $val->validated('email'),
-									'codigo' 		=> $val->validated('codigo'),
-									'code_seller'	=> $val->validated('code_seller'),
-									'deleted' 		=> 0,
-									'created_at' 	=> $currentDate,
-								);
-
-								// Agregar user_id y email_user si se selecciona un usuario
-								$user_id = $val->validated('user_id');
-								if (!empty($user_id)) {
-									$employee_data['user_id'] = $user_id;
-
-									// Obtener el correo electrónico del usuario seleccionado
-									$selected_user = Model_User::find($user_id);
-									if ($selected_user) {
-										$employee_data['email_user'] = $selected_user->email;
-									}
-								}
-
-								$employee = Model_Employee::forge($employee_data);
-
-								# SI SE ALMACENO EL REGISTRO EN LA BASE DE DATOS
-								if ($employee->save()) {
-									# SE ESTABLECE EL MENSAJE DE EXITO
-									Session::set_flash('success', 'Se agregó el empleado <b>' . $val->validated('name') . '</b> correctamente.');
-
-									# SE REDIRECCIONA AL USUARIO
-									Response::redirect('admin/empleados');
-								}
-							}
-						} else {
-							# FECHA DE CREACION
-							$currentDate = time();
-
-							# SE ALMACENA LA INFORMACION EN EL MODELO
-							$employee_data = array(
-								'name' 			=> $val->validated('name'),
-								'last_name' 	=> $val->validated('last_name'),
-								'phone' 		=> $val->validated('phone'),
-								'department_id' => $val->validated('department_id'),
-								'email' 		=> $val->validated('email'),
-								'code_seller'	=> $val->validated('code_seller'),
-								'deleted' 		=> 0,
-								'created_at' 	=> $currentDate,
-							);
-
-							// Agregar user_id y email_user si se selecciona un usuario
-							$user_id = $val->validated('user_id');
-							if (!empty($user_id)) {
-								$employee_data['user_id'] = $user_id;
-
-								// Obtener el correo electrónico del usuario seleccionado
-								$selected_user = Model_User::find($user_id);
-								if ($selected_user) {
-									$employee_data['email_user'] = $selected_user->email;
-								}
-							}
-
-							$employee = Model_Employee::forge($employee_data);
-
-							# SI SE ALMACENO EL REGISTRO EN LA BASE DE DATOS
-							if ($employee->save()) {
-								# SE ESTABLECE EL MENSAJE DE EXITO
-								Session::set_flash('success', 'Se agregó el empleado <b>' . $val->validated('name') . '</b> correctamente.');
-
-								# SE REDIRECCIONA AL USUARIO
-								Response::redirect('admin/empleados');
-							}
-						}
+						Session::set_flash('success', 'Empleado creado exitosamente.');
+						Response::redirect('admin/empleados/view/' . $employee->id);
 					}
-				} catch (\Exception $e) {
-					# SE ESTABLECE EL MENSAJE DE ERROR
-					Session::set_flash('error', 'No se pudo agregar el empleado. Por favor intenta nuevamente.');
-
-					# SE RECORRE CLASE POR CLASE
-					foreach ($classes as $name => $class) {
-						# SE ESTABLECE EL VALOR DE LAS CLASES
-						$classes[$name]['form-group'] = 'has-danger';
-						$classes[$name]['form-control'] = 'is-invalid';
-					}
-
-					# ALMACENAR LA INFORMACION PARA LA VISTA
-					foreach ($fields as $field) {
-						$data[$field] = Input::post($field);
-					}
+				} catch (Exception $e) {
+					\Log::error('Error al crear empleado: ' . $e->getMessage());
+					Session::set_flash('error', 'Error al crear el empleado: ' . $e->getMessage());
 				}
 			} else {
-				# SE ESTABLECE EL MENSAJE DE ERROR
-				Session::set_flash('error', 'Encontramos algunos errores en el formulario, por favor verifica.');
-
-				# SE ALMACENA LOS ERRORES DETECTADOS
-				$data['errors'] = $val->error();
-
-				# SE RECORRE CLASE POR CLASE
-				foreach ($classes as $name => $class) {
-					# SE ESTABLECE EL VALOR DE LAS CLASES
-					$classes[$name]['form-group'] = ($val->error($name)) ? 'has-danger' : 'has-success';
-					$classes[$name]['form-control'] = ($val->error($name)) ? 'is-invalid' : 'is-valid';
-				}
-
-				# ALMACENAR LA INFORMACION PARA LA VISTA
-				foreach ($fields as $field) {
-					$data[$field] = Input::post($field);
-				}
+				Session::set_flash('error', 'Por favor corrige los errores en el formulario.');
 			}
 		}
 
-		# SE ALMACENA LA INFORMACION PARA LA VISTA
-		$data['classes'] = $classes;
-		$data['department_opts'] = $department_opts;
-		$data['user_opts'] = $user_opts;
+		// Obtener catálogos
+		$departments = Model_Department::query()
+			->where('is_active', 1)
+			->order_by('name', 'asc')
+			->get();
 
-		# CARGA LA VISTA
-		$this->template->title = 'Agregar empleado';
-		$this->template->content = View::forge('admin/empleados/agregar', $data);
+		$positions = Model_Position::query()
+			->where('is_active', 1)
+			->order_by('name', 'asc')
+			->get();
+
+		$this->template->title = 'Nuevo Empleado';
+		$this->template->content = View::forge('admin/empleados/create', [
+			'departments' => $departments,
+			'positions' => $positions
+		]);
 	}
 
+	/**
+	 * Ver detalle de empleado
+	 */
+	public function action_view($id = null)
+	{
+		if (!$id) {
+			Session::set_flash('error', 'ID de empleado requerido.');
+			Response::redirect('admin/empleados');
+		}
 
+		$employee = Model_Employee::find($id);
 
+		if (!$employee || $employee->deleted_at !== null) {
+			Session::set_flash('error', 'Empleado no encontrado.');
+			Response::redirect('admin/empleados');
+		}
 
+		// Obtener logs del empleado
+		$logs = DB::select('*')
+			->from('audit_logs')
+			->where('module', 'empleados')
+			->where('record_id', $id)
+			->order_by('created_at', 'desc')
+			->limit(20)
+			->execute()
+			->as_array();
 
+		$this->template->title = 'Empleado: ' . $employee->get_full_name();
+		$this->template->content = View::forge('admin/empleados/view', [
+			'employee' => $employee,
+			'logs' => $logs
+		]);
+	}
 
+	/**
+	 * Editar empleado existente
+	 */
+	public function action_edit($id = null)
+	{
+		if (!$id) {
+			Session::set_flash('error', 'ID de empleado requerido.');
+			Response::redirect('admin/empleados');
+		}
+
+		$employee = Model_Employee::find($id);
+
+		if (!$employee || $employee->deleted_at !== null) {
+			Session::set_flash('error', 'Empleado no encontrado.');
+			Response::redirect('admin/empleados');
+		}
+
+		if (Input::method() === 'POST') {
+			$val = $this->_validation();
+
+			if ($val->run()) {
+				try {
+					$old_data = $employee->to_array();
+
+					$employee->code = $val->validated('code');
+					$employee->first_name = $val->validated('first_name');
+					$employee->last_name = $val->validated('last_name');
+					$employee->second_last_name = $val->validated('second_last_name');
+					$employee->gender = $val->validated('gender');
+					$employee->birthdate = $val->validated('birthdate');
+					$employee->curp = strtoupper($val->validated('curp'));
+					$employee->rfc = strtoupper($val->validated('rfc'));
+					$employee->nss = $val->validated('nss');
+					$employee->email = $val->validated('email');
+					$employee->phone = $val->validated('phone');
+					$employee->phone_emergency = $val->validated('phone_emergency');
+					$employee->emergency_contact_name = $val->validated('emergency_contact_name');
+					$employee->address = $val->validated('address');
+					$employee->city = $val->validated('city');
+					$employee->state = $val->validated('state');
+					$employee->postal_code = $val->validated('postal_code');
+					$employee->country = $val->validated('country');
+					$employee->department_id = $val->validated('department_id');
+					$employee->position_id = $val->validated('position_id');
+					$employee->hire_date = $val->validated('hire_date');
+					$employee->termination_date = $val->validated('termination_date');
+					$employee->employment_type = $val->validated('employment_type');
+					$employee->employment_status = $val->validated('employment_status');
+					$employee->salary = $val->validated('salary');
+					$employee->salary_type = $val->validated('salary_type');
+					$employee->bank_name = $val->validated('bank_name');
+					$employee->bank_account = $val->validated('bank_account');
+					$employee->clabe = $val->validated('clabe');
+					$employee->notes = $val->validated('notes');
+
+					if ($employee->save()) {
+						// Registrar en log
+						Helper_Log::record(
+							'empleados',
+							'edit',
+							$employee->id,
+							'Empleado actualizado: ' . $employee->get_full_name(),
+							$old_data,
+							$employee->to_array()
+						);
+
+						Session::set_flash('success', 'Empleado actualizado exitosamente.');
+						Response::redirect('admin/empleados/view/' . $employee->id);
+					}
+				} catch (Exception $e) {
+					\Log::error('Error al actualizar empleado: ' . $e->getMessage());
+					Session::set_flash('error', 'Error al actualizar el empleado: ' . $e->getMessage());
+				}
+			} else {
+				Session::set_flash('error', 'Por favor corrige los errores en el formulario.');
+			}
+		}
+
+		// Obtener catálogos
+		$departments = Model_Department::query()
+			->where('is_active', 1)
+			->order_by('name', 'asc')
+			->get();
+
+		$positions = Model_Position::query()
+			->where('is_active', 1)
+			->order_by('name', 'asc')
+			->get();
+
+		$this->template->title = 'Editar Empleado';
+		$this->template->content = View::forge('admin/empleados/edit', [
+			'employee' => $employee,
+			'departments' => $departments,
+			'positions' => $positions
+		]);
+	}
+
+	/**
+	 * Eliminar empleado (soft delete)
+	 */
+	public function action_delete($id = null)
+	{
+		if (!$id) {
+			Session::set_flash('error', 'ID de empleado requerido.');
+			Response::redirect('admin/empleados');
+		}
+
+		$employee = Model_Employee::find($id);
+
+		if (!$employee || $employee->deleted_at !== null) {
+			Session::set_flash('error', 'Empleado no encontrado.');
+			Response::redirect('admin/empleados');
+		}
+
+		try {
+			$old_data = $employee->to_array();
+			
+			if ($employee->delete()) {
+				// Registrar en log
+				Helper_Log::record(
+					'empleados',
+					'delete',
+					$employee->id,
+					'Empleado eliminado: ' . $employee->get_full_name(),
+					$old_data,
+					null
+				);
+
+				Session::set_flash('success', 'Empleado eliminado exitosamente.');
+			}
+		} catch (Exception $e) {
+			\Log::error('Error al eliminar empleado: ' . $e->getMessage());
+			Session::set_flash('error', 'Error al eliminar el empleado: ' . $e->getMessage());
+		}
+
+		Response::redirect('admin/empleados');
+	}
+
+	/**
+	 * Validación del formulario
+	 */
+	protected function _validation()
+	{
+		$val = Validation::forge();
+
+		$val->add_field('code', 'Código', 'trim|max_length[50]');
+		$val->add_field('first_name', 'Nombre', 'required|trim|max_length[100]');
+		$val->add_field('last_name', 'Apellido Paterno', 'required|trim|max_length[100]');
+		$val->add_field('second_last_name', 'Apellido Materno', 'trim|max_length[100]');
+		$val->add_field('gender', 'Género', 'trim');
+		$val->add_field('birthdate', 'Fecha de Nacimiento', 'trim');
+		$val->add_field('curp', 'CURP', 'trim|max_length[18]');
+		$val->add_field('rfc', 'RFC', 'trim|max_length[13]');
+		$val->add_field('nss', 'NSS', 'trim|max_length[11]');
+		$val->add_field('email', 'Email', 'required|valid_email|max_length[255]');
+		$val->add_field('phone', 'Teléfono', 'trim|max_length[20]');
+		$val->add_field('phone_emergency', 'Teléfono de Emergencia', 'trim|max_length[20]');
+		$val->add_field('emergency_contact_name', 'Contacto de Emergencia', 'trim|max_length[200]');
+		$val->add_field('address', 'Dirección', 'trim');
+		$val->add_field('city', 'Ciudad', 'trim|max_length[100]');
+		$val->add_field('state', 'Estado', 'trim|max_length[100]');
+		$val->add_field('postal_code', 'Código Postal', 'trim|max_length[10]');
+		$val->add_field('country', 'País', 'trim|max_length[100]');
+		$val->add_field('department_id', 'Departamento', 'trim|numeric');
+		$val->add_field('position_id', 'Puesto', 'trim|numeric');
+		$val->add_field('hire_date', 'Fecha de Contratación', 'required|trim');
+		$val->add_field('termination_date', 'Fecha de Baja', 'trim');
+		$val->add_field('employment_type', 'Tipo de Empleo', 'trim');
+		$val->add_field('employment_status', 'Estatus', 'trim');
+		$val->add_field('salary', 'Salario', 'trim|valid_string[numeric]');
+		$val->add_field('salary_type', 'Tipo de Salario', 'trim');
+		$val->add_field('bank_name', 'Banco', 'trim|max_length[100]');
+		$val->add_field('bank_account', 'Cuenta Bancaria', 'trim|max_length[50]');
+		$val->add_field('clabe', 'CLABE', 'trim|max_length[18]');
+		$val->add_field('notes', 'Notas', 'trim');
+
+		return $val;
+	}
 }

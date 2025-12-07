@@ -90,12 +90,33 @@
 					<?php foreach ($sales as $sale): ?>
 					<tr>
 						<td>#<?php echo $sale['id']; ?></td>
-						<td><?php echo date('d/m/Y H:i', $sale['sale_date']); ?></td>
-						<td><?php echo htmlspecialchars($sale['customer_id'] ?? 'N/A'); ?></td>
+						<td><?php echo date('d/m/Y H:i', strtotime($sale['sale_date'])); ?></td>
+						<td>
+							<?php 
+							if (!empty($sale['company_name'])) {
+								echo htmlspecialchars($sale['company_name']);
+							} elseif (!empty($sale['first_name']) || !empty($sale['last_name'])) {
+								echo htmlspecialchars(trim($sale['first_name'] . ' ' . $sale['last_name']));
+							} else {
+								echo 'Cliente General';
+							}
+							?>
+						</td>
 						<td>-</td>
 						<td><strong>$<?php echo number_format($sale['total'], 2); ?></strong></td>
 						<td>
-							<span class="badge bg-success">Completada</span>
+							<?php
+							$status_badges = [
+								0 => '<span class="badge bg-secondary"><i class="fas fa-shopping-cart me-1"></i>Carrito</span>',
+								1 => '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Pagada</span>',
+								2 => '<span class="badge bg-info"><i class="fas fa-exchange-alt me-1"></i>Transferencia</span>',
+								3 => '<span class="badge bg-warning"><i class="fas fa-clock me-1"></i>Pendiente</span>',
+								4 => '<span class="badge bg-primary"><i class="fas fa-truck me-1"></i>Enviada</span>',
+								5 => '<span class="badge bg-success"><i class="fas fa-check-double me-1"></i>Entregada</span>',
+								-1 => '<span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Cancelada</span>'
+							];
+							echo $status_badges[$sale['status']] ?? '<span class="badge bg-secondary">Desconocido</span>';
+							?>
 						</td>
 						<td>
 							<a href="<?php echo Uri::create('admin/sales/view/' . $sale['id']); ?>" class="btn btn-sm btn-info" title="Ver detalle">

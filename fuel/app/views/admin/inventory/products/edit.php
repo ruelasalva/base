@@ -7,7 +7,7 @@
 					<i class="fas fa-edit mr-2" style="color: #4f46e5;"></i>
 					Editar Producto
 				</h2>
-				<p class="text-muted mb-0">Código: <strong><?php echo Html::chars($product->code); ?></strong></p>
+				<p class="text-muted mb-0">Código: <strong><?php echo htmlspecialchars($product->code, ENT_QUOTES, 'UTF-8'); ?></strong></p>
 			</div>
 
 			<form action="<?php echo Uri::create('admin/inventory/products/edit/' . $product->id); ?>" method="post">

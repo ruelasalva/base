@@ -27,15 +27,15 @@
                 <div class="row g-2">
                     <div class="col-md-3">
                         <input type="text" name="uuid" class="form-control" placeholder="UUID / Folio Fiscal" 
-                               value="<?= Html::chars($filters['uuid'] ?? '') ?>">
+                               value="<?= htmlspecialchars($filters['uuid'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     </div>
                     <div class="col-md-2">
                         <input type="text" name="rfc_emisor" class="form-control" placeholder="RFC Emisor" 
-                               value="<?= Html::chars($filters['rfc_emisor'] ?? '') ?>">
+                               value="<?= htmlspecialchars($filters['rfc_emisor'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     </div>
                     <div class="col-md-2">
                         <input type="text" name="rfc_receptor" class="form-control" placeholder="RFC Receptor" 
-                               value="<?= Html::chars($filters['rfc_receptor'] ?? '') ?>">
+                               value="<?= htmlspecialchars($filters['rfc_receptor'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     </div>
                     <div class="col-md-2">
                         <select name="tipo_comprobante" class="form-select">
@@ -63,11 +63,11 @@
                 <div class="row g-2 mt-2">
                     <div class="col-md-3">
                         <input type="date" name="fecha_desde" class="form-control" placeholder="Fecha Desde" 
-                               value="<?= Html::chars($filters['fecha_desde'] ?? '') ?>">
+                               value="<?= htmlspecialchars($filters['fecha_desde'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     </div>
                     <div class="col-md-3">
                         <input type="date" name="fecha_hasta" class="form-control" placeholder="Fecha Hasta" 
-                               value="<?= Html::chars($filters['fecha_hasta'] ?? '') ?>">
+                               value="<?= htmlspecialchars($filters['fecha_hasta'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     </div>
                     <div class="col-md-3">
                         <?php if (array_filter($filters)): ?>

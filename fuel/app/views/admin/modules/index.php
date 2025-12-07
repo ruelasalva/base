@@ -162,13 +162,28 @@
 
 <!-- JavaScript para gestionar módulos -->
 <script>
+// Usar jQuery cuando esté disponible
 $(document).ready(function() {
+    console.log('Módulos JS cargado - Botones encontrados:', $('.btn-toggle-module').length);
+    
+    // Verificar si SweetAlert2 está disponible
+    if (typeof Swal === 'undefined') {
+        console.error('ERROR: SweetAlert2 no está cargado');
+        alert('Error: La librería SweetAlert2 no está disponible. Por favor recarga la página.');
+        return;
+    }
+    
     // Manejar activación/desactivación de módulos
-    $('.btn-toggle-module').on('click', function() {
+    $('.btn-toggle-module').on('click', function(e) {
+        e.preventDefault();
+        console.log('Botón clickeado');
+        
         const btn = $(this);
         const moduleId = btn.data('module-id');
         const moduleName = btn.data('module-name');
         const action = btn.data('action');
+        
+        console.log('Datos del módulo:', {moduleId, moduleName, action});
         
         // Texto y colores según la acción
         const actionTexts = {
@@ -200,21 +215,31 @@ $(document).ready(function() {
             confirmButtonText: texts.confirmText,
             cancelButtonText: 'Cancelar'
         }).then((result) => {
+            console.log('Modal result:', result);
+            
             if (result.isConfirmed) {
                 // Deshabilitar botón y mostrar spinner
                 const originalHtml = btn.html();
                 btn.prop('disabled', true).html(texts.processingText);
+                
+                const ajaxUrl = '<?php echo Uri::create('admin/modules/toggle'); ?>';
+                const csrfKey = '<?php echo \Config::get('security.csrf_token_key'); ?>';
+                const csrfToken = '<?php echo \Security::fetch_token(); ?>';
+                
+                console.log('Enviando AJAX:', {url: ajaxUrl, moduleId, action, csrfKey, csrfToken});
 
                 $.ajax({
-                    url: '<?php echo Uri::create('admin/modules/toggle'); ?>',
+                    url: ajaxUrl,
                     method: 'POST',
                     data: { 
                         module_id: moduleId,
                         action: action,
-                        <?php echo \Config::get('security.csrf_token_key'); ?>: '<?php echo \Security::fetch_token(); ?>'
+                        [csrfKey]: csrfToken
                     },
                     dataType: 'json',
                     success: function(response) {
+                        console.log('Respuesta exitosa:', response);
+                        
                         if (response.success) {
                             // Mostrar mensaje de éxito y recargar
                             Swal.fire({
@@ -249,10 +274,17 @@ $(document).ready(function() {
                             btn.prop('disabled', false).html(originalHtml);
                         }
                     },
-                    error: function(xhr) {
+                    error: function(xhr, status, error) {
+                        console.error('Error AJAX:', {xhr, status, error});
+                        console.error('Response:', xhr.responseText);
+                        
                         let message = 'Error al procesar la solicitud';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             message = xhr.responseJSON.message;
+                        } else if (xhr.status === 404) {
+                            message = 'Ruta no encontrada (404). Verifica que el controlador existe.';
+                        } else if (xhr.status === 403) {
+                            message = 'Acceso denegado. Verifica el CSRF token.';
                         }
                         
                         Swal.fire({
@@ -267,6 +299,6 @@ $(document).ready(function() {
                 });
             }
         });
-    });
-});
+    }); // Fin evento click
+}); // Fin $(document).ready
 </script>

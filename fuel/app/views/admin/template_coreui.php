@@ -32,6 +32,28 @@
                 padding-left: 0;
             }
         }
+        
+        /* Colores personalizados para categorías */
+        .text-purple { color: #9b59b6 !important; }
+        .text-cyan { color: #17a2b8 !important; }
+        
+        /* Mejorar separación visual de categorías */
+        .nav-group {
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav-group > .nav-link {
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 0.25rem;
+            border-radius: 0.25rem;
+        }
+        
+        .nav-group-items {
+            padding-left: 0.5rem;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            margin-left: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -161,16 +183,16 @@
             
             // Nombres y orden de categorías
             $categories = [
-                'contabilidad' => ['name' => 'Contabilidad', 'icon' => 'fa-calculator'],
-                'finanzas' => ['name' => 'Finanzas', 'icon' => 'fa-dollar-sign'],
-                'compras' => ['name' => 'Compras', 'icon' => 'fa-truck'],
-                'inventario' => ['name' => 'Inventario', 'icon' => 'fa-boxes'],
-                'sales' => ['name' => 'Ventas', 'icon' => 'fa-shopping-cart'],
-                'rrhh' => ['name' => 'Recursos Humanos', 'icon' => 'fa-users-cog'],
-                'marketing' => ['name' => 'Marketing', 'icon' => 'fa-bullhorn'],
-                'backend' => ['name' => 'Backend & Portales', 'icon' => 'fa-server'],
-                'integraciones' => ['name' => 'Integraciones', 'icon' => 'fa-plug'],
-                'system' => ['name' => 'Sistema', 'icon' => 'fa-gears']
+                'contabilidad' => ['name' => 'Contabilidad', 'icon' => 'fa-calculator', 'color' => 'primary'],
+                'finanzas' => ['name' => 'Finanzas', 'icon' => 'fa-dollar-sign', 'color' => 'success'],
+                'compras' => ['name' => 'Compras', 'icon' => 'fa-truck', 'color' => 'warning'],
+                'inventario' => ['name' => 'Inventario', 'icon' => 'fa-boxes', 'color' => 'info'],
+                'sales' => ['name' => 'Ventas', 'icon' => 'fa-shopping-cart', 'color' => 'danger'],
+                'rrhh' => ['name' => 'Recursos Humanos', 'icon' => 'fa-users-cog', 'color' => 'secondary'],
+                'marketing' => ['name' => 'Marketing', 'icon' => 'fa-bullhorn', 'color' => 'purple'],
+                'backend' => ['name' => 'Backend & Portales', 'icon' => 'fa-server', 'color' => 'dark'],
+                'integraciones' => ['name' => 'Integraciones', 'icon' => 'fa-plug', 'color' => 'cyan'],
+                'system' => ['name' => 'Sistema', 'icon' => 'fa-gears', 'color' => 'secondary']
             ];
             
             // Mostrar módulos por categoría
@@ -179,7 +201,8 @@
             ?>
             <li class="nav-group">
                 <a class="nav-link nav-group-toggle" href="#">
-                    <i class="nav-icon fa-solid <?php echo $cat_info['icon']; ?>"></i> <?php echo $cat_info['name']; ?>
+                    <i class="nav-icon fa-solid <?php echo $cat_info['icon']; ?> text-<?php echo $cat_info['color']; ?>"></i> 
+                    <span class="fw-semibold"><?php echo $cat_info['name']; ?></span>
                 </a>
                 <ul class="nav-group-items compact">
             <?php
@@ -189,7 +212,7 @@
             ?>
                     <li class="nav-item">
                         <a class="nav-link" href="<?php echo Uri::create($route); ?>">
-                            <span class="nav-icon"><i class="fa-solid <?php echo $module['icon']; ?>"></i></span> <?php echo $module['display_name']; ?>
+                            <span class="nav-icon"><i class="fa-solid <?php echo $module['icon']; ?> text-<?php echo $cat_info['color']; ?>"></i></span> <?php echo $module['display_name']; ?>
                         </a>
                     </li>
             <?php
@@ -287,10 +310,20 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.1.0/dist/js/coreui.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.1.0/dist/js/coreui.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" crossorigin="anonymous"></script>
+    
+    <script>
+        // Verificar que las librerías se cargaron correctamente
+        window.addEventListener('load', function() {
+            console.log('✓ jQuery:', typeof jQuery !== 'undefined' ? 'OK' : 'FALLO');
+            console.log('✓ CoreUI:', typeof coreui !== 'undefined' ? 'OK' : 'FALLO');
+            console.log('✓ Chart.js:', typeof Chart !== 'undefined' ? 'OK' : 'FALLO');
+            console.log('✓ SweetAlert2:', typeof Swal !== 'undefined' ? 'OK' : 'FALLO');
+        });
+    </script>
 
     <script>
         // Auto-hide alerts after 5 seconds
@@ -305,6 +338,45 @@
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-coreui-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new coreui.Tooltip(tooltipTriggerEl)
+        });
+
+        // Guardar y restaurar estado del sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            var sidebar = document.querySelector('#sidebar');
+            if (sidebar) {
+                var sidebarInstance = coreui.Sidebar.getInstance(sidebar);
+                
+                // Restaurar estado guardado
+                var sidebarState = localStorage.getItem('sidebar-state');
+                if (sidebarState === 'unfoldable') {
+                    sidebar.classList.add('sidebar-narrow-unfoldable');
+                } else if (sidebarState === 'expanded') {
+                    sidebar.classList.remove('sidebar-narrow-unfoldable');
+                }
+                
+                // Guardar estado cuando cambia
+                sidebar.addEventListener('classtoggle.coreui.sidebar', function(e) {
+                    if (sidebar.classList.contains('sidebar-narrow-unfoldable')) {
+                        localStorage.setItem('sidebar-state', 'unfoldable');
+                    } else {
+                        localStorage.setItem('sidebar-state', 'expanded');
+                    }
+                });
+
+                // También capturar el click del botón toggler
+                var togglerBtn = document.querySelector('.sidebar-toggler');
+                if (togglerBtn) {
+                    togglerBtn.addEventListener('click', function() {
+                        setTimeout(function() {
+                            if (sidebar.classList.contains('sidebar-narrow-unfoldable')) {
+                                localStorage.setItem('sidebar-state', 'unfoldable');
+                            } else {
+                                localStorage.setItem('sidebar-state', 'expanded');
+                            }
+                        }, 100);
+                    });
+                }
+            }
         });
     </script>
 </body>

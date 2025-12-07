@@ -7,49 +7,77 @@ class Model_Customer extends \Orm\Model
 			"label" => "Id",
 			"data_type" => "int",
 		),
+		"tenant_id" => array(
+			"label" => "Tenant ID",
+			"data_type" => "int",
+		),
 		"user_id" => array(
-			"label" => "User id",
+			"label" => "User ID",
 			"data_type" => "int",
 		),
-		"employee_id" => array(
-			"label" => "Employer id",
-			"data_type" => "int",
-		),
-		"parent_id" => array(
-			"label" => "Parent id",
-			"data_type" => "int",
-		),
-		"type_id" => array(
-			"label" => "Type id",
-			"data_type" => "int",
-		),
-		"sap_code" => array(
-			"label" => "Codigo Sap",
+		"code" => array(
+			"label" => "Código",
 			"data_type" => "varchar",
 		),
-		"name" => array(
-			"label" => "Name",
+		"customer_type" => array(
+			"label" => "Tipo",
+			"data_type" => "varchar",
+		),
+		"company_name" => array(
+			"label" => "Razón Social",
+			"data_type" => "varchar",
+		),
+		"first_name" => array(
+			"label" => "Nombre",
 			"data_type" => "varchar",
 		),
 		"last_name" => array(
-			"label" => "Last name",
+			"label" => "Apellido",
+			"data_type" => "varchar",
+		),
+		"email" => array(
+			"label" => "Email",
 			"data_type" => "varchar",
 		),
 		"phone" => array(
-			"label" => "Phone",
+			"label" => "Teléfono",
 			"data_type" => "varchar",
 		),
-		"require_bill" => array(
-			"label" => "Require bill",
+		"phone_secondary" => array(
+			"label" => "Teléfono 2",
+			"data_type" => "varchar",
+		),
+		"tax_id" => array(
+			"label" => "RFC",
+			"data_type" => "varchar",
+		),
+		"credit_limit" => array(
+			"label" => "Límite de Crédito",
+			"data_type" => "decimal",
+		),
+		"balance" => array(
+			"label" => "Saldo",
+			"data_type" => "decimal",
+		),
+		"notes" => array(
+			"label" => "Notas",
+			"data_type" => "text",
+		),
+		"is_active" => array(
+			"label" => "Activo",
 			"data_type" => "int",
 		),
 		"created_at" => array(
-			"label" => "Created at",
-			"data_type" => "int",
+			"label" => "Creado",
+			"data_type" => "datetime",
 		),
 		"updated_at" => array(
-			"label" => "Updated at",
-			"data_type" => "int",
+			"label" => "Actualizado",
+			"data_type" => "datetime",
+		),
+		"deleted_at" => array(
+			"label" => "Eliminado",
+			"data_type" => "datetime",
 		),
     );
 
@@ -145,20 +173,57 @@ class Model_Customer extends \Orm\Model
 			'cascade_save'   => false,
 			'cascade_delete' => false,
 		),
-			'employee' => array(
-			'key_from'       => 'employee_id',
-			'model_to'       => 'Model_Employee',
-			'key_to'         => 'id',
-			'cascade_save'   => false,
-			'cascade_delete' => false,
-		),
-		'type' => array(
-			'key_from'       => 'type_id',
-			'model_to'       => 'Model_Customers_Type',
+		'tenant' => array(
+			'key_from'       => 'tenant_id',
+			'model_to'       => 'Model_Tenant',
 			'key_to'         => 'id',
 			'cascade_save'   => false,
 			'cascade_delete' => false,
 		)
 	);
+	
+	/**
+	 * Obtener nombre completo
+	 */
+	public function get_full_name()
+	{
+		if ($this->customer_type == 'business' && !empty($this->company_name)) {
+			return $this->company_name;
+		}
+		return trim($this->first_name . ' ' . $this->last_name);
+	}
+	
+	/**
+	 * Badge de tipo de cliente
+	 */
+	public function get_type_badge()
+	{
+		$badges = [
+			'individual' => '<span class="badge bg-info"><i class="fas fa-user me-1"></i>Individual</span>',
+			'business' => '<span class="badge bg-primary"><i class="fas fa-building me-1"></i>Empresa</span>'
+		];
+		return $badges[$this->customer_type] ?? '<span class="badge bg-secondary">N/A</span>';
+	}
+	
+	/**
+	 * Badge de estado
+	 */
+	public function get_status_badge()
+	{
+		return $this->is_active 
+			? '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Activo</span>'
+			: '<span class="badge bg-danger"><i class="fas fa-times me-1"></i>Inactivo</span>';
+	}
+	
+	/**
+	 * Verificar si tiene crédito disponible
+	 */
+	public function has_credit_available($amount = 0)
+	{
+		if (empty($this->credit_limit)) {
+			return false;
+		}
+		return ($this->balance + $amount) <= $this->credit_limit;
+	}
 
 }
